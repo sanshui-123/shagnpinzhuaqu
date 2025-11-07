@@ -1,0 +1,269 @@
+{
+  "generatedAt": "2025-10-26T09:53:10.113497",
+  "totalProducts": 32,
+  "categoryStats": {
+    "mens_bottoms": {
+      "expected": 100,
+      "actual": 32,
+      "unique_products": 32
+    }
+  },
+  "products": [
+    {
+      "productId": "C25226181",
+      "variantId": "C25226181_1021_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226181_.html?pid=C25226181_1021_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113381"
+    },
+    {
+      "productId": "C25226180",
+      "variantId": "C25226180_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226180_.html?pid=C25226180_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113419"
+    },
+    {
+      "productId": "C25226109",
+      "variantId": "C25226109_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226109_.html?pid=C25226109_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113422"
+    },
+    {
+      "productId": "C25226102",
+      "variantId": "C25226102_1020_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226102_.html?pid=C25226102_1020_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113424"
+    },
+    {
+      "productId": "C25226110",
+      "variantId": "C25226110_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226110_.html?pid=C25226110_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113426"
+    },
+    {
+      "productId": "C25226107",
+      "variantId": "C25226107_1180_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226107_.html?pid=C25226107_1180_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113427"
+    },
+    {
+      "productId": "C25226105",
+      "variantId": "C25226105_1040_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226105_.html?pid=C25226105_1040_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113429"
+    },
+    {
+      "productId": "C25226108",
+      "variantId": "C25226108_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226108_.html?pid=C25226108_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113430"
+    },
+    {
+      "productId": "C25226106",
+      "variantId": "C25226106_1020_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226106_.html?pid=C25226106_1020_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113432"
+    },
+    {
+      "productId": "C25226104",
+      "variantId": "C25226104_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226104_.html?pid=C25226104_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113433"
+    },
+    {
+      "productId": "C25226101",
+      "variantId": "C25226101_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226101_.html?pid=C25226101_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113434"
+    },
+    {
+      "productId": "C25226112",
+      "variantId": "C25226112_1040_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226112_.html?pid=C25226112_1040_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113436"
+    },
+    {
+      "productId": "C25226111",
+      "variantId": "C25226111_1021_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226111_.html?pid=C25226111_1021_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113437"
+    },
+    {
+      "productId": "C25226103",
+      "variantId": "C25226103_1040_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226103_.html?pid=C25226103_1040_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113439"
+    },
+    {
+      "productId": "C25226100",
+      "variantId": "C25226100_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226100_.html?pid=C25226100_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113440"
+    },
+    {
+      "productId": "H25226101",
+      "variantId": "H25226101_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/H25226101_.html?pid=H25226101_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113441"
+    },
+    {
+      "productId": "H25226100",
+      "variantId": "H25226100_1022_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/H25226100_.html?pid=H25226100_1022_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113442"
+    },
+    {
+      "productId": "H25226102",
+      "variantId": "H25226102_1040_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/H25226102_.html?pid=H25226102_1040_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113444"
+    },
+    {
+      "productId": "R25226100",
+      "variantId": "R25226100_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/R25226100_.html?pid=R25226100_1120_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113445"
+    },
+    {
+      "productId": "R25226101",
+      "variantId": "R25226101_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/R25226101_.html?pid=R25226101_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113449"
+    },
+    {
+      "productId": "H25226103",
+      "variantId": "H25226103_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/H25226103_.html?pid=H25226103_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113451"
+    },
+    {
+      "productId": "C25226113",
+      "variantId": "C25226113_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226113_.html?pid=C25226113_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113452"
+    },
+    {
+      "productId": "R25926100",
+      "variantId": "R25926100_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/R25926100_.html?pid=R25926100_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113454"
+    },
+    {
+      "productId": "H25226110",
+      "variantId": "H25226110_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/H25226110_.html?pid=H25226110_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113455"
+    },
+    {
+      "productId": "H25226106",
+      "variantId": "H25226106_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/H25226106_.html?pid=H25226106_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113457"
+    },
+    {
+      "productId": "C25226115",
+      "variantId": "C25226115_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226115_.html?pid=C25226115_1030_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113458"
+    },
+    {
+      "productId": "H25226111",
+      "variantId": "H25226111_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/H25226111_.html?pid=H25226111_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113459"
+    },
+    {
+      "productId": "H25226105",
+      "variantId": "H25226105_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/H25226105_.html?pid=H25226105_1120_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113461"
+    },
+    {
+      "productId": "C25226117",
+      "variantId": "C25226117_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226117_.html?pid=C25226117_1120_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113462"
+    },
+    {
+      "productId": "C25226116",
+      "variantId": "C25226116_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226116_.html?pid=C25226116_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113463"
+    },
+    {
+      "productId": "H25226104",
+      "variantId": "H25226104_1022_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/H25226104_.html?pid=H25226104_1022_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113465"
+    },
+    {
+      "productId": "C25226114",
+      "variantId": "C25226114_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/mens/bottoms/pants/C25226114_.html?pid=C25226114_1010_S",
+      "category": "mens_bottoms",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-26T09:53:10.113466"
+    }
+  ]
+}

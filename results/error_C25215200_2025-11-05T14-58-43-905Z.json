@@ -1,0 +1,8 @@
+{
+  "error": true,
+  "message": "page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"https://www.callawaygolf.jp/womens/tops/outer/C25215200_.html?pid=C25215200_1031_S\", waiting until \"networkidle\"\n",
+  "url": "https://www.callawaygolf.jp/womens/tops/outer/C25215200_.html?pid=C25215200_1031_S",
+  "productId": "C25215200",
+  "timestamp": "2025-11-05T14:58:43.902Z",
+  "processingTimeMs": 30646
+}

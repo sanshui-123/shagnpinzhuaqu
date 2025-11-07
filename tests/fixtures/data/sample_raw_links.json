@@ -1,0 +1,25 @@
+{
+  "scrapeInfo": {
+    "timestamp": "2025-11-04T12:00:00.000Z",
+    "category": "mens_tops",
+    "totalLinks": 3,
+    "source": "test_data"
+  },
+  "products": [
+    {
+      "url": "https://www.callawaygolf.jp/mens/tops/outer/C25215100_.html",
+      "productId": "C25215100",
+      "title": "テストアウター商品1"
+    },
+    {
+      "url": "https://www.callawaygolf.jp/mens/tops/outer/C25215101_.html", 
+      "productId": "C25215101",
+      "title": "テストアウター商品2"
+    },
+    {
+      "url": "https://www.callawaygolf.jp/mens/tops/outer/C25215102_.html",
+      "productId": "C25215102", 
+      "title": "テストアウター商品3"
+    }
+  ]
+}

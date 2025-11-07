@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2025-11-04T12:00:00.000Z",
+  "totalProducts": 2,
+  "products": {
+    "C25215100": {
+      "productName": "テストジャケット1",
+      "brand": "Callaway",
+      "price": "¥15,800",
+      "productUrl": "https://www.callawaygolf.jp/mens/tops/outer/C25215100_.html"
+    },
+    "C25215101": {
+      "productName": "テストジャケット2", 
+      "brand": "Callaway",
+      "price": "¥18,900",
+      "productUrl": "https://www.callawaygolf.jp/mens/tops/outer/C25215101_.html"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "scrapeInfo": {
+    "timestamp": "2025-10-29T05:33:14.368Z",
+    "version": "2.0.0",
+    "url": "https://www.callawaygolf.jp/mens/tops/outer/C25215107_.html",
+    "productId": "C25215107",
+    "totalVariants": 0,
+    "totalImages": 0,
+    "ossUploadCount": 0,
+    "processingTimeMs": 17133
+  },
+  "product": {
+    "productId": "C25215107",
+    "productName": "スターストレッチ2WAY中綿ブルゾン (MENS)",
+    "productUrl": "https://www.callawaygolf.jp/mens/tops/outer/C25215107_.html",
+    "price": "",
+    "description": "",
+    "category": "",
+    "stockStatus": "无货"
+  },
+  "variants": [],
+  "images": {
+    "product": [
+      {
+        "variantId": "main",
+        "originalUrl": "https://cdn2.webdamdb.com/1280_k09bitBkc7A21EKM.jpg?1758202504",
+        "ossUrl": "[DRY-RUN] https://cdn2.webdamdb.com/1280_k09bitBkc7A21EKM.jpg?1758202504"
+      }
+    ],
+    "variants": []
+  },
+  "ossLinks": {
+    "productImages": [
+      "[DRY-RUN] https://cdn2.webdamdb.com/1280_k09bitBkc7A21EKM.jpg?1758202504"
+    ],
+    "variantImages": {}
+  },
+  "sizeChart": null
+}

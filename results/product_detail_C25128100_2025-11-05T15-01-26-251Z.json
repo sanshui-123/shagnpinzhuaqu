@@ -1,0 +1,48 @@
+{
+  "scrapeInfo": {
+    "timestamp": "2025-11-05T15:01:26.248Z",
+    "version": "1.0.0",
+    "url": "https://www.callawaygolf.jp/mens/tops/polo/C25128100_.html",
+    "productId": "C25128100",
+    "totalVariants": 0,
+    "totalColors": 0,
+    "totalSizes": 0,
+    "totalImages": 0,
+    "processingTimeMs": 0,
+    "dataSources": [
+      "dom_enhanced"
+    ]
+  },
+  "product": {
+    "productId": "C25128100",
+    "title": "",
+    "productUrl": "https://www.callawaygolf.jp/mens/tops/polo/C25128100_.html",
+    "description": "",
+    "brand": "Callaway Golf",
+    "detailUrl": "https://www.callawaygolf.jp/mens/tops/polo/C25128100_.html",
+    "mainImage": "",
+    "sizeChart": {
+      "headers": [
+        "サイズ"
+      ],
+      "rows": []
+    }
+  },
+  "variants": [],
+  "colors": [],
+  "sizes": [],
+  "sizeChart": {
+    "headers": [
+      "サイズ"
+    ],
+    "rows": []
+  },
+  "images": {
+    "product": [],
+    "variants": {}
+  },
+  "ossLinks": {
+    "productImages": [],
+    "variantImages": {}
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "scrapeInfo": {
+    "timestamp": "2025-11-05T14:59:08.371Z",
+    "version": "1.0.0",
+    "url": "https://www.callawaygolf.jp/womens/tops/outer/C25215200_.html?pid=C25215200_1031_S",
+    "productId": "C25215200",
+    "totalVariants": 0,
+    "totalColors": 0,
+    "totalSizes": 0,
+    "totalImages": 0,
+    "processingTimeMs": 0,
+    "dataSources": [
+      "dom"
+    ]
+  },
+  "product": {
+    "productId": "C25215200",
+    "title": "2WAYハーフジップフーディーブルゾン (WOMENS)",
+    "productUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215200_.html?pid=C25215200_1031_S",
+    "description": "",
+    "brand": "Callaway Golf",
+    "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215200_.html?pid=C25215200_1031_S",
+    "mainImage": "",
+    "sizeChart": {
+      "headers": [
+        "サイズ"
+      ],
+      "rows": []
+    }
+  },
+  "variants": [],
+  "colors": [],
+  "sizes": [],
+  "sizeChart": {
+    "headers": [
+      "サイズ"
+    ],
+    "rows": []
+  },
+  "images": {
+    "product": [],
+    "variants": {}
+  },
+  "ossLinks": {
+    "productImages": [],
+    "variantImages": {}
+  }
+}

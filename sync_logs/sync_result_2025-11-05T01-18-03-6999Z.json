@@ -1,0 +1,11 @@
+{
+  "syncedAt": "2025-11-05T01:18:03.700016",
+  "inputFile": "/Users/sanshui/Desktop/cursor/CallawayJP/results/all_products_dedup_2025-11-05T01-17-49-5064Z.json",
+  "totalLocal": 191,
+  "existingInFeishu": 3,
+  "newProductsFound": 188,
+  "successCount": 188,
+  "failedBatches": [],
+  "totalBatches": 7,
+  "batchSize": 30
+}

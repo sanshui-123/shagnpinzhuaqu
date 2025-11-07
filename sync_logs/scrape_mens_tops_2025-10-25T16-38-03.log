@@ -1,0 +1,7 @@
+[2025-10-25T16:38:03.532Z] 开始抓取分类: mens_tops
+[2025-10-25T16:38:03.534Z] 访问URL: https://www.callawaygolf.jp/apparel/mens/tops/
+[2025-10-25T16:38:33.641Z] 
+❌ 抓取出错: page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.callawaygolf.jp/apparel/mens/tops/", waiting until "networkidle"
+

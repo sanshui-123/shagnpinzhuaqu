@@ -1,0 +1,1488 @@
+{
+  "mergedAt": "2025-10-27T11:38:49.010360",
+  "totalUniqueProducts": 184,
+  "categories": [
+    "womens_all"
+  ],
+  "categoryStats": {
+    "womens_all": {
+      "expected": 184,
+      "actual": 184,
+      "unique_products": 184
+    }
+  },
+  "products": [
+    {
+      "productId": "C25215200",
+      "variantId": "C25215200_1031_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215200_.html?pid=C25215200_1031_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010124"
+    },
+    {
+      "productId": "C25215201",
+      "variantId": "C25215201_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215201_.html?pid=C25215201_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010133"
+    },
+    {
+      "productId": "C25215202",
+      "variantId": "C25215202_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215202_.html?pid=C25215202_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010135"
+    },
+    {
+      "productId": "C25215203",
+      "variantId": "C25215203_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215203_.html?pid=C25215203_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010136"
+    },
+    {
+      "productId": "C25216201",
+      "variantId": "C25216201_1080_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25216201_.html?pid=C25216201_1080_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010138"
+    },
+    {
+      "productId": "C25216204",
+      "variantId": "C25216204_1020_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25216204_.html?pid=C25216204_1020_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010139"
+    },
+    {
+      "productId": "C25216203",
+      "variantId": "C25216203_1112_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25216203_.html?pid=C25216203_1112_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010140"
+    },
+    {
+      "productId": "C25217202",
+      "variantId": "C25217202_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25217202_.html?pid=C25217202_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010141"
+    },
+    {
+      "productId": "C25217203",
+      "variantId": "C25217203_1080_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25217203_.html?pid=C25217203_1080_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010142"
+    },
+    {
+      "productId": "C25217205",
+      "variantId": "C25217205_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25217205_.html?pid=C25217205_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010143"
+    },
+    {
+      "productId": "C25217204",
+      "variantId": "C25217204_1021_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25217204_.html?pid=C25217204_1021_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010144"
+    },
+    {
+      "productId": "C25218280",
+      "variantId": "C25218280_1100_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/knit/C25218280_.html?pid=C25218280_1100_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010145"
+    },
+    {
+      "productId": "C25217280",
+      "variantId": "C25217280_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25217280_.html?pid=C25217280_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010147"
+    },
+    {
+      "productId": "C25233280",
+      "variantId": "C25233280_1031_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25233280_.html?pid=C25233280_1031_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010148"
+    },
+    {
+      "productId": "C25215280",
+      "variantId": "C25215280_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215280_.html?pid=C25215280_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010149"
+    },
+    {
+      "productId": "C25217281",
+      "variantId": "C25217281_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25217281_.html?pid=C25217281_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010150"
+    },
+    {
+      "productId": "C25226280",
+      "variantId": "C25226280_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/C25226280_.html?pid=C25226280_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010151"
+    },
+    {
+      "productId": "C25228280",
+      "variantId": "C25228280_1030_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228280_.html?pid=C25228280_1030_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010152"
+    },
+    {
+      "productId": "C25291220",
+      "variantId": "C25291220_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291220_.html?pid=C25291220_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010153"
+    },
+    {
+      "productId": "C25291222",
+      "variantId": "C25291222_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/%E3%83%A9%E3%83%96%E3%82%AD%E3%83%A3%E3%83%AD%E3%82%A6%E3%82%A7%E3%82%A4/C25291222_.html?pid=C25291222_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010154"
+    },
+    {
+      "productId": "C25291221",
+      "variantId": "C25291221_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/%E3%83%A9%E3%83%96%E3%82%AD%E3%83%A3%E3%83%AD%E3%82%A6%E3%82%A7%E3%82%A4/C25291221_.html?pid=C25291221_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010155"
+    },
+    {
+      "productId": "C25293216",
+      "variantId": "C25293216_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293216_.html?pid=C25293216_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010156"
+    },
+    {
+      "productId": "C25298212",
+      "variantId": "C25298212_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298212_.html?pid=C25298212_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010158"
+    },
+    {
+      "productId": "C25293217",
+      "variantId": "C25293217_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293217_.html?pid=C25293217_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010159"
+    },
+    {
+      "productId": "C25293218",
+      "variantId": "C25293218_1020_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293218_.html?pid=C25293218_1020_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010160"
+    },
+    {
+      "productId": "C25218201",
+      "variantId": "C25218201_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/knit/C25218201_.html?pid=C25218201_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010161"
+    },
+    {
+      "productId": "C25218202",
+      "variantId": "C25218202_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/knit/C25218202_.html?pid=C25218202_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010162"
+    },
+    {
+      "productId": "C25219200",
+      "variantId": "C25219200_1080_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/knit/C25219200_.html?pid=C25219200_1080_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010164"
+    },
+    {
+      "productId": "C25219201",
+      "variantId": "C25219201_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/knit/C25219201_.html?pid=C25219201_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010165"
+    },
+    {
+      "productId": "C25218203",
+      "variantId": "C25218203_1112_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/knit/C25218203_.html?pid=C25218203_1112_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010166"
+    },
+    {
+      "productId": "C25218200",
+      "variantId": "C25218200_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/knit/C25218200_.html?pid=C25218200_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010167"
+    },
+    {
+      "productId": "C25228208",
+      "variantId": "C25228208_1030_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228208_.html?pid=C25228208_1030_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010168"
+    },
+    {
+      "productId": "C25228204",
+      "variantId": "C25228204_1080_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228204_.html?pid=C25228204_1080_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010169"
+    },
+    {
+      "productId": "C25226201",
+      "variantId": "C25226201_1180_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/C25226201_.html?pid=C25226201_1180_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010170"
+    },
+    {
+      "productId": "C25228202",
+      "variantId": "C25228202_1080_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228202_.html?pid=C25228202_1080_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010171"
+    },
+    {
+      "productId": "C25228210",
+      "variantId": "C25228210_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228210_.html?pid=C25228210_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010172"
+    },
+    {
+      "productId": "C25228209",
+      "variantId": "C25228209_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228209_.html?pid=C25228209_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010173"
+    },
+    {
+      "productId": "C25227201",
+      "variantId": "C25227201_1030_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/C25227201_.html?pid=C25227201_1030_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010174"
+    },
+    {
+      "productId": "C25226202",
+      "variantId": "C25226202_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/C25226202_.html?pid=C25226202_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010175"
+    },
+    {
+      "productId": "C25228200",
+      "variantId": "C25228200_1120_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228200_.html?pid=C25228200_1120_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010177"
+    },
+    {
+      "productId": "C25228207",
+      "variantId": "C25228207_1030_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228207_.html?pid=C25228207_1030_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010178"
+    },
+    {
+      "productId": "C25226203",
+      "variantId": "C25226203_1112_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/C25226203_.html?pid=C25226203_1112_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010179"
+    },
+    {
+      "productId": "C25227200",
+      "variantId": "C25227200_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/C25227200_.html?pid=C25227200_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010180"
+    },
+    {
+      "productId": "C25228211",
+      "variantId": "C25228211_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228211_.html?pid=C25228211_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010181"
+    },
+    {
+      "productId": "C25228205",
+      "variantId": "C25228205_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228205_.html?pid=C25228205_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010182"
+    },
+    {
+      "productId": "C25226200",
+      "variantId": "C25226200_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/C25226200_.html?pid=C25226200_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010183"
+    },
+    {
+      "productId": "C25228201",
+      "variantId": "C25228201_1180_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228201_.html?pid=C25228201_1180_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010184"
+    },
+    {
+      "productId": "C25226205",
+      "variantId": "C25226205_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/C25226205_.html?pid=C25226205_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010185"
+    },
+    {
+      "productId": "C25228203",
+      "variantId": "C25228203_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228203_.html?pid=C25228203_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010186"
+    },
+    {
+      "productId": "C25228206",
+      "variantId": "C25228206_1112_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/C25228206_.html?pid=C25228206_1112_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010187"
+    },
+    {
+      "productId": "C25233201",
+      "variantId": "C25233201_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25233201_.html?pid=C25233201_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010188"
+    },
+    {
+      "productId": "C25233204",
+      "variantId": "C25233204_1112_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25233204_.html?pid=C25233204_1112_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010189"
+    },
+    {
+      "productId": "C25233205",
+      "variantId": "C25233205_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25233205_.html?pid=C25233205_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010190"
+    },
+    {
+      "productId": "C25233206",
+      "variantId": "C25233206_1020_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25233206_.html?pid=C25233206_1020_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010191"
+    },
+    {
+      "productId": "C25233202",
+      "variantId": "C25233202_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25233202_.html?pid=C25233202_1120_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010192"
+    },
+    {
+      "productId": "C25233200",
+      "variantId": "C25233200_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25233200_.html?pid=C25233200_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010193"
+    },
+    {
+      "productId": "C25233203",
+      "variantId": "C25233203_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25233203_.html?pid=C25233203_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010194"
+    },
+    {
+      "productId": "C25291217",
+      "variantId": "C25291217_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291217_.html?pid=C25291217_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010196"
+    },
+    {
+      "productId": "C25298206",
+      "variantId": "C25298206_1020_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298206_.html?pid=C25298206_1020_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010197"
+    },
+    {
+      "productId": "R25226200",
+      "variantId": "R25226200_1030_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/R25226200_.html?pid=R25226200_1030_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010198"
+    },
+    {
+      "productId": "C25993200",
+      "variantId": "C25993200_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25993200_.html?pid=C25993200_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010199"
+    },
+    {
+      "productId": "R24298105",
+      "variantId": "R24298105_1010_NA",
+      "detailUrl": "https://www.callawaygolf.jp/mens/accessories/others/R24298105_.html?pid=R24298105_1010_NA",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010200"
+    },
+    {
+      "productId": "H25228204",
+      "variantId": "H25228204_1120_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/H25228204_.html?pid=H25228204_1120_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010201"
+    },
+    {
+      "productId": "H25228207",
+      "variantId": "H25228207_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/H25228207_.html?pid=H25228207_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010202"
+    },
+    {
+      "productId": "C25990200",
+      "variantId": "C25990200_1031_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25990200_.html?pid=C25990200_1031_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010203"
+    },
+    {
+      "productId": "R24298102",
+      "variantId": "R24298102_1050_NA",
+      "detailUrl": "https://www.callawaygolf.jp/mens/accessories/others/R24298102_.html?pid=R24298102_1050_NA",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010204"
+    },
+    {
+      "productId": "H25233202",
+      "variantId": "H25233202_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25233202_.html?pid=H25233202_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010206"
+    },
+    {
+      "productId": "C25234204",
+      "variantId": "C25234204_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25234204_.html?pid=C25234204_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010207"
+    },
+    {
+      "productId": "H25234205",
+      "variantId": "H25234205_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25234205_.html?pid=H25234205_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010208"
+    },
+    {
+      "productId": "C25291206",
+      "variantId": "C25291206_1112_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291206_.html?pid=C25291206_1112_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010209"
+    },
+    {
+      "productId": "C23989202",
+      "variantId": "C23989202_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/rainwear/C23989202_.html?pid=C23989202_1120_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010210"
+    },
+    {
+      "productId": "C25298211",
+      "variantId": "C25298211_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298211_.html?pid=C25298211_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010211"
+    },
+    {
+      "productId": "C25298209",
+      "variantId": "C25298209_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298209_.html?pid=C25298209_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010213"
+    },
+    {
+      "productId": "R24298101",
+      "variantId": "R24298101_1050_NA",
+      "detailUrl": "https://www.callawaygolf.jp/mens/accessories/others/R24298101_.html?pid=R24298101_1050_NA",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010214"
+    },
+    {
+      "productId": "C25990205",
+      "variantId": "C25990205_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25990205_.html?pid=C25990205_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010215"
+    },
+    {
+      "productId": "H25234202",
+      "variantId": "H25234202_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25234202_.html?pid=H25234202_1120_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010216"
+    },
+    {
+      "productId": "C24932201",
+      "variantId": "C24932201_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/inner/C24932201_.html?pid=C24932201_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010217"
+    },
+    {
+      "productId": "H25217201",
+      "variantId": "H25217201_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/H25217201_.html?pid=H25217201_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010218"
+    },
+    {
+      "productId": "H25233205",
+      "variantId": "H25233205_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25233205_.html?pid=H25233205_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010219"
+    },
+    {
+      "productId": "H25234207",
+      "variantId": "H25234207_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25234207_.html?pid=H25234207_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010220"
+    },
+    {
+      "productId": "C25234200",
+      "variantId": "C25234200_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25234200_.html?pid=C25234200_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010221"
+    },
+    {
+      "productId": "C25234203",
+      "variantId": "C25234203_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25234203_.html?pid=C25234203_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010222"
+    },
+    {
+      "productId": "C25293204",
+      "variantId": "C25293204_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293204_.html?pid=C25293204_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010223"
+    },
+    {
+      "productId": "C25291202",
+      "variantId": "C25291202_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291202_.html?pid=C25291202_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010224"
+    },
+    {
+      "productId": "C25292202",
+      "variantId": "C25292202_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25292202_.html?pid=C25292202_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010225"
+    },
+    {
+      "productId": "C23988201",
+      "variantId": "C23988201_1120_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/rainwear/C23988201_.html?pid=C23988201_1120_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010226"
+    },
+    {
+      "productId": "C23988202",
+      "variantId": "C23988202_1120_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/rainwear/C23988202_.html?pid=C23988202_1120_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010228"
+    },
+    {
+      "productId": "C25291218",
+      "variantId": "C25291218_1020_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291218_.html?pid=C25291218_1020_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010229"
+    },
+    {
+      "productId": "R25228200",
+      "variantId": "R25228200_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/R25228200_.html?pid=R25228200_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010230"
+    },
+    {
+      "productId": "H25234204",
+      "variantId": "H25234204_1040_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25234204_.html?pid=H25234204_1040_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010231"
+    },
+    {
+      "productId": "H25218200",
+      "variantId": "H25218200_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/knit/H25218200_.html?pid=H25218200_1120_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010232"
+    },
+    {
+      "productId": "H25217200",
+      "variantId": "H25217200_1022_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/H25217200_.html?pid=H25217200_1022_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010233"
+    },
+    {
+      "productId": "C25234202",
+      "variantId": "C25234202_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25234202_.html?pid=C25234202_1120_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010234"
+    },
+    {
+      "productId": "C23989200",
+      "variantId": "C23989200_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/rainwear/C23989200_.html?pid=C23989200_1120_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010235"
+    },
+    {
+      "productId": "C25293209",
+      "variantId": "C25293209_1021_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293209_.html?pid=C25293209_1021_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010236"
+    },
+    {
+      "productId": "C24986240",
+      "variantId": "C24986240_1030_22",
+      "detailUrl": "https://www.callawaygolf.jp/CALLAWAY_ALL/CALLAWAY_WOMENS/C24986240_.html?pid=C24986240_1030_22.5",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010237"
+    },
+    {
+      "productId": "C25293210",
+      "variantId": "C25293210_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293210_.html?pid=C25293210_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010238"
+    },
+    {
+      "productId": "C25293205",
+      "variantId": "C25293205_1120_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293205_.html?pid=C25293205_1120_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010239"
+    },
+    {
+      "productId": "C25291203",
+      "variantId": "C25291203_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291203_.html?pid=C25291203_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010240"
+    },
+    {
+      "productId": "C25292201",
+      "variantId": "C25292201_1160_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25292201_.html?pid=C25292201_1160_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010241"
+    },
+    {
+      "productId": "C23987201",
+      "variantId": "C23987201_1120_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/rainwear/C23987201_.html?pid=C23987201_1120_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010242"
+    },
+    {
+      "productId": "C25986230",
+      "variantId": "C25986230_1031_22",
+      "detailUrl": "https://www.callawaygolf.jp/womens/footwear/C25986230_.html?pid=C25986230_1031_22.5",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010243"
+    },
+    {
+      "productId": "C25298207",
+      "variantId": "C25298207_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298207_.html?pid=C25298207_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010244"
+    },
+    {
+      "productId": "C25291210",
+      "variantId": "C25291210_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291210_.html?pid=C25291210_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010245"
+    },
+    {
+      "productId": "C25298208",
+      "variantId": "C25298208_1020_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298208_.html?pid=C25298208_1020_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010246"
+    },
+    {
+      "productId": "R25233200",
+      "variantId": "R25233200_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/R25233200_.html?pid=R25233200_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010247"
+    },
+    {
+      "productId": "H25218201",
+      "variantId": "H25218201_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/knit/H25218201_.html?pid=H25218201_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010249"
+    },
+    {
+      "productId": "H25226201",
+      "variantId": "H25226201_1180_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/H25226201_.html?pid=H25226201_1180_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010250"
+    },
+    {
+      "productId": "C25990204",
+      "variantId": "C25990204_1033_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25990204_.html?pid=C25990204_1033_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010251"
+    },
+    {
+      "productId": "H25215200",
+      "variantId": "H25215200_1040_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/H25215200_.html?pid=H25215200_1040_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010252"
+    },
+    {
+      "productId": "C23988200",
+      "variantId": "C23988200_1120_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/rainwear/C23988200_.html?pid=C23988200_1120_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010253"
+    },
+    {
+      "productId": "H25228200",
+      "variantId": "H25228200_1120_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/H25228200_.html?pid=H25228200_1120_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010254"
+    },
+    {
+      "productId": "C25293206",
+      "variantId": "C25293206_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293206_.html?pid=C25293206_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010256"
+    },
+    {
+      "productId": "C25293203",
+      "variantId": "C25293203_1080_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293203_.html?pid=C25293203_1080_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010257"
+    },
+    {
+      "productId": "C25293215",
+      "variantId": "C25293215_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293215_.html?pid=C25293215_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010258"
+    },
+    {
+      "productId": "C25291207",
+      "variantId": "C25291207_1080_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291207_.html?pid=C25291207_1080_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010259"
+    },
+    {
+      "productId": "C25292200",
+      "variantId": "C25292200_1100_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25292200_.html?pid=C25292200_1100_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010260"
+    },
+    {
+      "productId": "C25292203",
+      "variantId": "C25292203_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25292203_.html?pid=C25292203_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010261"
+    },
+    {
+      "productId": "C25291219",
+      "variantId": "C25291219_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291219_.html?pid=C25291219_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010262"
+    },
+    {
+      "productId": "C25291205",
+      "variantId": "C25291205_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291205_.html?pid=C25291205_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010263"
+    },
+    {
+      "productId": "C25291216",
+      "variantId": "C25291216_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291216_.html?pid=C25291216_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010264"
+    },
+    {
+      "productId": "C25291213",
+      "variantId": "C25291213_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291213_.html?pid=C25291213_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010265"
+    },
+    {
+      "productId": "C25298201",
+      "variantId": "C25298201_1010_M",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298201_.html?pid=C25298201_1010_M",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010266"
+    },
+    {
+      "productId": "R25233201",
+      "variantId": "R25233201_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/R25233201_.html?pid=R25233201_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010267"
+    },
+    {
+      "productId": "H25228205",
+      "variantId": "H25228205_1010_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/H25228205_.html?pid=H25228205_1010_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010268"
+    },
+    {
+      "productId": "C25993202",
+      "variantId": "C25993202_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25993202_.html?pid=C25993202_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010269"
+    },
+    {
+      "productId": "H25234203",
+      "variantId": "H25234203_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25234203_.html?pid=H25234203_1120_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010271"
+    },
+    {
+      "productId": "C25234201",
+      "variantId": "C25234201_1080_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/C25234201_.html?pid=C25234201_1080_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010272"
+    },
+    {
+      "productId": "C23989201",
+      "variantId": "C23989201_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/rainwear/C23989201_.html?pid=C23989201_1120_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010273"
+    },
+    {
+      "productId": "C25293211",
+      "variantId": "C25293211_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293211_.html?pid=C25293211_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010274"
+    },
+    {
+      "productId": "C25293208",
+      "variantId": "C25293208_1021_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293208_.html?pid=C25293208_1021_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010275"
+    },
+    {
+      "productId": "C25293201",
+      "variantId": "C25293201_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293201_.html?pid=C25293201_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010276"
+    },
+    {
+      "productId": "C25293213",
+      "variantId": "C25293213_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293213_.html?pid=C25293213_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010277"
+    },
+    {
+      "productId": "C25291204",
+      "variantId": "C25291204_1120_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291204_.html?pid=C25291204_1120_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010278"
+    },
+    {
+      "productId": "C23987200",
+      "variantId": "C23987200_1120_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/rainwear/C23987200_.html?pid=C23987200_1120_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010279"
+    },
+    {
+      "productId": "C25298205",
+      "variantId": "C25298205_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298205_.html?pid=C25298205_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010280"
+    },
+    {
+      "productId": "C25291214",
+      "variantId": "C25291214_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291214_.html?pid=C25291214_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010281"
+    },
+    {
+      "productId": "C25298202",
+      "variantId": "C25298202_1010_M",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298202_.html?pid=C25298202_1010_M",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010282"
+    },
+    {
+      "productId": "C25990201",
+      "variantId": "C25990201_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25990201_.html?pid=C25990201_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010283"
+    },
+    {
+      "productId": "H25219200",
+      "variantId": "H25219200_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/knit/H25219200_.html?pid=H25219200_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010284"
+    },
+    {
+      "productId": "H25234200",
+      "variantId": "H25234200_1140_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25234200_.html?pid=H25234200_1140_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010285"
+    },
+    {
+      "productId": "H25217203",
+      "variantId": "H25217203_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/H25217203_.html?pid=H25217203_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010286"
+    },
+    {
+      "productId": "H25228202",
+      "variantId": "H25228202_1040_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/H25228202_.html?pid=H25228202_1040_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010287"
+    },
+    {
+      "productId": "C25293214",
+      "variantId": "C25293214_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293214_.html?pid=C25293214_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010288"
+    },
+    {
+      "productId": "C25291200",
+      "variantId": "C25291200_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291200_.html?pid=C25291200_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010291"
+    },
+    {
+      "productId": "R24298103",
+      "variantId": "R24298103_1160_NA",
+      "detailUrl": "https://www.callawaygolf.jp/mens/accessories/others/R24298103_.html?pid=R24298103_1160_NA",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010292"
+    },
+    {
+      "productId": "C25298210",
+      "variantId": "C25298210_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298210_.html?pid=C25298210_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010293"
+    },
+    {
+      "productId": "R25215200",
+      "variantId": "R25215200_1010_M",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/R25215200_.html?pid=R25215200_1010_M",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010294"
+    },
+    {
+      "productId": "R25217200",
+      "variantId": "R25217200_1010_M",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/R25217200_.html?pid=R25217200_1010_M",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010295"
+    },
+    {
+      "productId": "R25233202",
+      "variantId": "R25233202_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/R25233202_.html?pid=R25233202_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010296"
+    },
+    {
+      "productId": "R25192200",
+      "variantId": "R25192200_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/R25192200_.html?pid=R25192200_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010297"
+    },
+    {
+      "productId": "C24996230",
+      "variantId": "C24996230_1120_22",
+      "detailUrl": "https://www.callawaygolf.jp/womens/footwear/C24996230_.html?pid=C24996230_1120_22.5",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010298"
+    },
+    {
+      "productId": "H25228201",
+      "variantId": "H25228201_1030_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/H25228201_.html?pid=H25228201_1030_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010299"
+    },
+    {
+      "productId": "C24932200",
+      "variantId": "C24932200_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/inner/C24932200_.html?pid=C24932200_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010300"
+    },
+    {
+      "productId": "R23932200",
+      "variantId": "R23932200_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/inner/R23932200_.html?pid=R23932200_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010301"
+    },
+    {
+      "productId": "H25233206",
+      "variantId": "H25233206_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25233206_.html?pid=H25233206_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010302"
+    },
+    {
+      "productId": "H25217202",
+      "variantId": "H25217202_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/H25217202_.html?pid=H25217202_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010303"
+    },
+    {
+      "productId": "H25226200",
+      "variantId": "H25226200_1030_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/pants/H25226200_.html?pid=H25226200_1030_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010304"
+    },
+    {
+      "productId": "C25217201",
+      "variantId": "C25217201_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25217201_.html?pid=C25217201_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010305"
+    },
+    {
+      "productId": "H25234206",
+      "variantId": "H25234206_1010_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25234206_.html?pid=H25234206_1010_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010306"
+    },
+    {
+      "productId": "C23988203",
+      "variantId": "C23988203_1120_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/rainwear/C23988203_.html?pid=C23988203_1120_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010307"
+    },
+    {
+      "productId": "H25233200",
+      "variantId": "H25233200_1140_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25233200_.html?pid=H25233200_1140_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010308"
+    },
+    {
+      "productId": "H25233203",
+      "variantId": "H25233203_1030_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25233203_.html?pid=H25233203_1030_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010309"
+    },
+    {
+      "productId": "C25291201",
+      "variantId": "C25291201_1021_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291201_.html?pid=C25291201_1021_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010310"
+    },
+    {
+      "productId": "C25291211",
+      "variantId": "C25291211_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291211_.html?pid=C25291211_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010311"
+    },
+    {
+      "productId": "C25993201",
+      "variantId": "C25993201_1020_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25993201_.html?pid=C25993201_1020_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010312"
+    },
+    {
+      "productId": "C25291209",
+      "variantId": "C25291209_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291209_.html?pid=C25291209_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010314"
+    },
+    {
+      "productId": "C25292204",
+      "variantId": "C25292204_1160_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25292204_.html?pid=C25292204_1160_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010315"
+    },
+    {
+      "productId": "C23989203",
+      "variantId": "C23989203_1120_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/rainwear/C23989203_.html?pid=C23989203_1120_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010316"
+    },
+    {
+      "productId": "C25293212",
+      "variantId": "C25293212_1120_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293212_.html?pid=C25293212_1120_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010317"
+    },
+    {
+      "productId": "C25298204",
+      "variantId": "C25298204_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298204_.html?pid=C25298204_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010318"
+    },
+    {
+      "productId": "C25298203",
+      "variantId": "C25298203_1030_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25298203_.html?pid=C25298203_1030_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010319"
+    },
+    {
+      "productId": "C25291215",
+      "variantId": "C25291215_1021_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291215_.html?pid=C25291215_1021_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010321"
+    },
+    {
+      "productId": "R25215202",
+      "variantId": "R25215202_1010_M",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/R25215202_.html?pid=R25215202_1010_M",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010322"
+    },
+    {
+      "productId": "H25228203",
+      "variantId": "H25228203_1022_SS",
+      "detailUrl": "https://www.callawaygolf.jp/womens/bottoms/skirt/H25228203_.html?pid=H25228203_1022_SS",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010323"
+    },
+    {
+      "productId": "H25233201",
+      "variantId": "H25233201_1040_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/shirt/H25233201_.html?pid=H25233201_1040_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010324"
+    },
+    {
+      "productId": "C25992200",
+      "variantId": "C25992200_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/others/C25992200_.html?pid=C25992200_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010325"
+    },
+    {
+      "productId": "C25217200",
+      "variantId": "C25217200_1021_S",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25217200_.html?pid=C25217200_1021_S",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010326"
+    },
+    {
+      "productId": "R24298104",
+      "variantId": "R24298104_1160_NA",
+      "detailUrl": "https://www.callawaygolf.jp/mens/accessories/others/R24298104_.html?pid=R24298104_1160_NA",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010328"
+    },
+    {
+      "productId": "R24298100",
+      "variantId": "R24298100_1010_NA",
+      "detailUrl": "https://www.callawaygolf.jp/mens/accessories/others/R24298100_.html?pid=R24298100_1010_NA",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010329"
+    },
+    {
+      "productId": "C25293207",
+      "variantId": "C25293207_1031_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293207_.html?pid=C25293207_1031_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010331"
+    },
+    {
+      "productId": "C25293200",
+      "variantId": "C25293200_1120_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293200_.html?pid=C25293200_1120_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010332"
+    },
+    {
+      "productId": "C25293202",
+      "variantId": "C25293202_1021_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/socks/C25293202_.html?pid=C25293202_1021_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010333"
+    },
+    {
+      "productId": "C25291208",
+      "variantId": "C25291208_1010_FR",
+      "detailUrl": "https://www.callawaygolf.jp/womens/accessories/cap/C25291208_.html?pid=C25291208_1010_FR",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-10-27T11:38:49.010334"
+    }
+  ]
+}

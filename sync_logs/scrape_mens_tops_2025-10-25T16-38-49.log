@@ -1,0 +1,7 @@
+[2025-10-25T16:38:49.705Z] 开始抓取分类: mens_tops
+[2025-10-25T16:38:49.708Z] 访问URL: https://www.callawaygolf.jp/apparel/mens/tops/
+[2025-10-25T16:39:06.303Z] 
+❌ 抓取出错: page.waitForSelector: Timeout 10000ms exceeded.
+Call log:
+  - waiting for locator('.c-productCard') to be visible
+

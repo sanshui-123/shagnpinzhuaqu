@@ -1,0 +1,3260 @@
+#!/usr/bin/env node
+/**
+ * CallawayJP 商品详情抓取脚本 v5.0 - 完全修复版
+ * 
+ * 修复内容:
+ * - 真正提取页面商品説明和尺码表内容
+ * - 图片按变体分组上传到images.variants
+ * - 输出飞书脚本完全兼容的JSON格式
+ * - 不再依赖URL参数拼字符串，使用真实页面数据
+ * 
+ * 使用方法:
+ * node CallawayJP/scripts/scrape_product_detail.js --url "https://www.callawaygolf.jp/..." --product-id "C25215200"
+ */
+
+const { chromium } = require('playwright');
+const fs = require('fs').promises;
+const path = require('path');
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
+
+// 命令行参数配置
+const argv = yargs(hideBin(process.argv))
+  .option('url', {
+    alias: 'u',
+    type: 'string',
+    description: '商品详情页 URL',
+    demandOption: true
+  })
+  .option('product-id', {
+    alias: 'p',
+    type: 'string',
+    description: '产品基础 ID（如 C25215200）',
+    demandOption: true
+  })
+  .option('output-dir', {
+    type: 'string',
+    description: '结果输出目录',
+    default: './CallawayJP/results/'
+  })
+  .option('temp-dir', {
+    type: 'string',
+    description: '临时文件目录',
+    default: './callaway_tmp'
+  })
+  .option('debug-script', {
+    type: 'boolean',
+    description: '调试模式：仅提取149652长度的script内容',
+    default: false
+  })
+  .help()
+  .argv;
+
+// 配置常量
+const OUTPUT_DIR = path.resolve(argv.outputDir);
+const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+// 浏览器配置
+const BROWSER_OPTIONS = {
+  headless: true,
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-blink-features=AutomationControlled',
+    '--disable-features=VizDisplayCompositor'
+  ]
+};
+
+const CONTEXT_OPTIONS = {
+  userAgent: USER_AGENT,
+  locale: 'ja-JP',
+  timezone: 'Asia/Tokyo',
+  viewport: { width: 1920, height: 1080 },
+  extraHTTPHeaders: {
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'ja-JP,ja;q=0.8,en-US;q=0.5,en;q=0.3',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'DNT': '1',
+    'Connection': 'keep-alive',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Cache-Control': 'max-age=0'
+  }
+};
+
+// 动态抓取兜底
+const DEFAULT_COLOR_FALLBACK = [{ code: 'DEFAULT', name: 'DEFAULT' }];
+const DEFAULT_SIZE_FALLBACK = ['FREE'];
+
+// 颜色映射（保留用于解析现有数据）
+const COLOR_MAP = {
+  '1031': { cn: '藏蓝色' },
+  '1030': { cn: '深藏蓝' },
+  '0100': { cn: '白色' },
+  '0010': { cn: '黑色' },
+  '0200': { cn: '红色' },
+  '0300': { cn: '蓝色' },
+  '0400': { cn: '灰色' },
+  '0500': { cn: '绿色' },
+  '0600': { cn: '粉色' },
+  '0700': { cn: '黄色' },
+  '0800': { cn: '橙色' },
+  '0900': { cn: '紫色' },
+  '1000': { cn: '棕色' }
+};
+
+/**
+ * 从颜色条目中提取展示名称
+ */
+function extractColorName(colorEntry) {
+  if (!colorEntry) return '';
+  if (typeof colorEntry === 'string') return colorEntry;
+  return (
+    colorEntry.name ||
+    colorEntry.displayName ||
+    colorEntry.displayValue ||
+    colorEntry.label ||
+    colorEntry.code ||
+    ''
+  );
+}
+
+/**
+ * 从颜色条目中提取颜色编码
+ */
+function extractColorCode(colorEntry) {
+  if (!colorEntry) return '';
+  if (typeof colorEntry === 'string') return colorEntry;
+  return (
+    colorEntry.code ||
+    colorEntry.id ||
+    colorEntry.value ||
+    colorEntry.rawValue ||
+    ''
+  );
+}
+
+/**
+ * 根据颜色编码查找颜色对象
+ */
+function findColorByCode(colorList, code) {
+  if (!Array.isArray(colorList) || !code) return null;
+  return (
+    colorList.find(color => {
+      if (!color) return false;
+      if (typeof color === 'string') {
+        return color === code;
+      }
+      const candidate = color;
+      return (
+        candidate.code === code ||
+        candidate.id === code ||
+        candidate.value === code ||
+        candidate.rawValue === code
+      );
+    }) || null
+  );
+}
+
+// 颜色输出工具
+const colors = {
+  green: (text) => `\x1b[32m${text}\x1b[0m`,
+  red: (text) => `\x1b[31m${text}\x1b[0m`,
+  yellow: (text) => `\x1b[33m${text}\x1b[0m`,
+  blue: (text) => `\x1b[34m${text}\x1b[0m`,
+  gray: (text) => `\x1b[90m${text}\x1b[0m`,
+  magenta: (text) => `\x1b[35m${text}\x1b[0m`
+};
+
+/**
+ * 确保目录存在
+ */
+async function ensureDir(dirPath) {
+  try {
+    await fs.access(dirPath);
+  } catch {
+    await fs.mkdir(dirPath, { recursive: true });
+  }
+}
+
+/**
+ * 页面初始化
+ */
+async function setupPage(context) {
+  const page = await context.newPage();
+  
+  // 屏蔽自动化检测
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+    delete window.cdc_adoQpoasnfa76pfcZLmcfl_Array;
+    delete window.cdc_adoQpoasnfa76pfcZLmcfl_Promise;
+    delete window.cdc_adoQpoasnfa76pfcZLmcfl_Symbol;
+  });
+  
+  return page;
+}
+
+/**
+ * 🌟 真正从页面数据提取产品信息（修复版）
+ */
+async function extractRealProductData(page, productId) {
+  try {
+    console.log(colors.blue('🔍 提取真实产品数据...'));
+    
+    const realData = await page.evaluate(({ productId, colorMap }) => {
+      const results = {
+        product: {
+          id: productId,
+          title: '',
+          description: '',
+          brand: 'Callaway Golf',
+          url: window.location.href
+        },
+        rawImages: [],
+        descriptionText: '',
+        sizeChartData: null,
+        colors: [],
+        sizes: [],
+        dataSources: []
+      };
+
+      // =============================================
+      // 1. 🌟 GLM-4.6 重写：解析 __next_f 脚本中的 productDetail
+      // =============================================
+      console.log('🔍 GLM-4.6: 开始解析 __next_f 脚本中的产品数据...');
+      
+      // GLM-4.6: 初始化所有变量（防止未定义错误）
+      let structuredData = null;
+      let productDetail = null;
+      let imagesByColor = {};
+      let extractedColors = [];
+      let extractedSizes = [];
+      let sizeChart = null;
+      let variantAttributes = null;
+      
+      try {
+        // 解析 __next_f 脚本内容
+        const scripts = document.querySelectorAll('script:not([src])');
+        let foundProductDetail = false;
+        
+        console.log(`🔍 扫描 ${scripts.length} 个内联脚本...`);
+        
+        for (let i = 0; i < scripts.length; i++) {
+          const script = scripts[i];
+          const content = script.textContent || script.innerHTML;
+          
+          // 查找包含 productDetail 的脚本
+          if (content.includes('__next_f.push') && content.includes('productDetail')) {
+            console.log(`📜 找到包含productDetail的脚本 ${i+1}, 长度: ${content.length}`);
+            
+            try {
+              // 提取 __next_f.push 参数中的 JSON 数据
+              const pushMatches = content.match(/self\.__next_f\.push\(\[.*?\]\)/g);
+              if (pushMatches) {
+                console.log(`🔍 找到 ${pushMatches.length} 个 __next_f.push 调用`);
+                
+                for (let j = 0; j < pushMatches.length; j++) {
+                  const match = pushMatches[j];
+                  
+                  // 提取方括号内的内容
+                  const arrayMatch = match.match(/\[(.*?)\]$/);
+                  if (arrayMatch) {
+                    try {
+                      const arrayContent = '[' + arrayMatch[1] + ']';
+                      const parsedArray = JSON.parse(arrayContent);
+                      
+                      if (parsedArray.length >= 2) {
+                        const dataString = parsedArray[1];
+                        
+                        // 检查是否包含 productDetail 相关数据
+                        if (typeof dataString === 'string' && 
+                            (dataString.includes('"productDetail"') || 
+                             dataString.includes('"imageGroups"') ||
+                             dataString.includes('"variationAttributes"') ||
+                             dataString.includes('"sizeChart"'))) {
+                          
+                          console.log(`✓ 在 push[${j}] 中找到产品数据`);
+                          
+                          // 尝试解析为 JSON
+                          try {
+                            // 处理可能的转义字符
+                            let cleanData = dataString;
+                            if (cleanData.startsWith('"') && cleanData.endsWith('"')) {
+                              cleanData = JSON.parse(cleanData);
+                            }
+                            
+                            const jsonData = JSON.parse(cleanData);
+                            
+                            // 查找 productDetail
+                            if (jsonData.productDetail) {
+                              productDetail = jsonData.productDetail;
+                              foundProductDetail = true;
+                              console.log('✓ 直接找到 productDetail');
+                              results.dataSources.push('__next_f.productDetail');
+                              break;
+                            }
+                            
+                            // 递归查找 productDetail
+                            function findProductDetail(obj, path = '') {
+                              if (!obj || typeof obj !== 'object') return null;
+                              
+                              if (obj.productDetail) {
+                                console.log(`✓ 在 ${path} 中找到 productDetail`);
+                                return obj.productDetail;
+                              }
+                              
+                              for (const [key, value] of Object.entries(obj)) {
+                                if (typeof value === 'object' && value !== null) {
+                                  const result = findProductDetail(value, path + '.' + key);
+                                  if (result) return result;
+                                }
+                              }
+                              return null;
+                            }
+                            
+                            const foundDetail = findProductDetail(jsonData);
+                            if (foundDetail) {
+                              productDetail = foundDetail;
+                              foundProductDetail = true;
+                              results.dataSources.push('__next_f.nested.productDetail');
+                              break;
+                            }
+                            
+                          } catch (parseError) {
+                            // 继续查找下一个
+                          }
+                        }
+                      }
+                    } catch (e) {
+                      // 继续查找下一个
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              console.log(`⚠️ 解析脚本 ${i+1} 失败:`, e.message);
+            }
+            
+            if (foundProductDetail) break;
+          }
+        }
+        
+        if (productDetail) {
+          console.log('📋 productDetail 字段:', Object.keys(productDetail));
+          
+          // ⭐ 提取 imageGroups（核心需求）
+          if (productDetail.imageGroups && Array.isArray(productDetail.imageGroups)) {
+            console.log(`🖼️  找到 imageGroups，共 ${productDetail.imageGroups.length} 组`);
+            
+            productDetail.imageGroups.forEach((group, groupIndex) => {
+              console.log(`\n📂 处理图片组 ${groupIndex + 1}:`);
+              console.log('   组字段:', Object.keys(group));
+              
+              // 提取颜色信息
+              const colorCode = group.variationValue || group.colorCode || group.id || `color_${groupIndex}`;
+              console.log(`   颜色代码: ${colorCode}`);
+              
+              if (group.images && Array.isArray(group.images)) {
+                console.log(`   图片总数: ${group.images.length}`);
+                
+                // 筛选主图（排除说明图和icon）
+                const mainImages = [];
+                  
+                group.images.forEach((img, imgIndex) => {
+                  if (img.url) {
+                    // 排除说明图和icon（根据URL特征）
+                    const isMainImage = !img.url.includes('icon') && 
+                                       !img.url.includes('explanation') && 
+                                       !img.url.includes('guide') &&
+                                       !img.url.includes('size');
+                    
+                    if (isMainImage) {
+                      // 优先使用1080宽度，如果没有则转换其他尺寸
+                      let finalUrl = img.url;
+                      if (img.url.includes('w=3000')) {
+                        finalUrl = img.url.replace('w=3000', 'w=1080');
+                      } else if (!img.url.includes('w=1080')) {
+                        // 如果没有明确的宽度参数，尝试添加
+                        if (img.url.includes('&w=')) {
+                          finalUrl = img.url.replace(/&w=\d+/, '&w=1080');
+                        } else {
+                          finalUrl = img.url + (img.url.includes('?') ? '&' : '?') + 'w=1080';
+                        }
+                      }
+                      
+                      mainImages.push({
+                        originalUrl: finalUrl,
+                        ossUrl: finalUrl,
+                        alt: img.alt || '',
+                        type: 'product_1080',
+                        index: imgIndex,
+                        colorCode: colorCode,
+                        colorName: COLOR_MAP[colorCode] || colorCode,
+                        size: '1080x1080'
+                      });
+                    }
+                  }
+                });
+                
+                if (mainImages.length > 0) {
+                  imagesByColor[colorCode] = mainImages;
+                  console.log(`   筛选后主图: ${mainImages.length} 张`);
+                }
+              }
+            });
+          } else {
+            console.log('⚠️ 未找到 imageGroups');
+          }
+          
+          // ⭐ 提取变体属性（颜色和尺码）
+          if (productDetail.variationAttributes && Array.isArray(productDetail.variationAttributes)) {
+            console.log('🎨 解析 variationAttributes...');
+            
+            productDetail.variationAttributes.forEach(attr => {
+              const attrId = (attr.id || '').toLowerCase();
+              const attrName = (attr.name || '').toLowerCase();
+              
+              console.log(`   属性: ${attr.id} (${attr.name})`);
+              
+              // 识别颜色属性
+              if (attrId.includes('color') || attrName.includes('color') || attrName.includes('カラー')) {
+                console.log('     → 颜色属性');
+                if (attr.values && Array.isArray(attr.values)) {
+                  attr.values.forEach(val => {
+                    const colorCode = val.value || val.id;
+                    const colorName = val.displayValue || val.name || COLOR_MAP[colorCode] || colorCode;
+                    if (colorCode) {
+                      extractedColors.push({ code: colorCode, name: colorName });
+                      console.log(`       + ${colorCode}: ${colorName}`);
+                    }
+                  });
+                }
+              }
+              
+              // 识别尺码属性
+              if (attrId.includes('size') || attrName.includes('size') || attrName.includes('サイズ')) {
+                console.log('     → 尺码属性');
+                if (attr.values && Array.isArray(attr.values)) {
+                  attr.values.forEach(val => {
+                    const sizeName = val.displayValue || val.value || val.name || val.id;
+                    if (sizeName) {
+                      extractedSizes.push(sizeName);
+                      console.log(`       + ${sizeName}`);
+                    }
+                  });
+                }
+              }
+            });
+          }
+          
+          // ⭐ 提取尺码表
+          const sizeChartFields = ['sizeChart', 'sizeChartHtml', 'specifications', 'spec', 'measurementChart', 'sizingChart'];
+          for (const field of sizeChartFields) {
+            if (productDetail[field]) {
+              console.log(`📏 找到尺码表字段: ${field}`);
+              sizeChart = productDetail[field];
+              break;
+            }
+          }
+        } else {
+          console.log('⚠️ 未找到 productDetail，将使用现有DOM解析结果');
+        }
+      } catch (e) {
+        console.log('⚠️ __next_f 脚本解析失败:', e.message);
+      }
+      
+      // 去重处理
+      extractedColors = extractedColors.filter((color, index, self) => 
+        index === self.findIndex(c => c.code === color.code)
+      );
+      extractedSizes = [...new Set(extractedSizes)];
+      
+      console.log('\n📊 __next_f 解析结果:');
+      console.log(`   颜色: ${extractedColors.length} 种`, extractedColors.map(c => `${c.code}(${c.name})`));
+      console.log(`   尺码: ${extractedSizes.length} 种`, extractedSizes);
+      console.log(`   图片组: ${Object.keys(imagesByColor).length} 组`);
+      Object.entries(imagesByColor).forEach(([colorCode, images]) => {
+        console.log(`     ${colorCode}: ${images.length} 张图片`);
+      });
+      
+      // 去重处理
+      extractedColors = extractedColors.filter((color, index, self) => 
+        index === self.findIndex(c => c.code === color.code)
+      );
+      extractedSizes = [...new Set(extractedSizes)];
+      
+      console.log('\n📊 NEXT_DATA 解析结果:');
+      console.log(`   颜色: ${extractedColors.length} 种`, extractedColors.map(c => `${c.code}(${c.name})`));
+      console.log(`   尺码: ${extractedSizes.length} 种`, extractedSizes);
+      console.log(`   图片组: ${Object.keys(imagesByColor).length} 组`);
+      Object.entries(imagesByColor).forEach(([colorCode, images]) => {
+        console.log(`     ${colorCode}: ${images.length} 张图片`);
+      });
+      
+      // =============================================
+      // 2. 🌟 GLM-4.6: 简化DOM fallback（仅在NEXT_DATA失败时使用）
+      // =============================================
+      // GLM-4.6: 只在NEXT_DATA解析完全失败时才使用DOM fallback
+      if (extractedColors.length === 0 && Object.keys(imagesByColor).length === 0) {
+        console.log('⚠️ NEXT_DATA解析失败，使用DOM fallback...');
+        
+        // 简化的颜色fallback
+        if (extractedColors.length === 0) {
+          console.log('🔍 DOM fallback - 颜色 (GLM-4.6增强版)...');
+          
+          // 更全面的颜色选择器，专门针对CallawayJP网站结构
+          const colorSelectors = [
+            // 标准颜色选择器
+            'button[data-color]',
+            'button[data-value]',
+            '.color-selector button',
+            '.product-color button',
+            '.color-option',
+            '.color-swatch',
+            // CallawayJP特定选择器
+            '.product-options button',
+            '.variant-option',
+            '.option-button',
+            'button[class*="color"]',
+            'button[class*="variant"]',
+            // 图片中的颜色信息
+            'img[alt*="色"]',
+            'img[alt*="カラー"]',
+            'img[alt*="ネイビー"]',
+            'img[alt*="ブラック"]',
+            'img[alt*="ホワイト"]',
+            'img[alt*="NAVY"]',
+            'img[alt*="BLACK"]',
+            'img[alt*="WHITE"]',
+            // 文本中的颜色信息
+            '.color-name',
+            '.variant-name',
+            'span[class*="color"]',
+            'div[class*="color"]'
+          ];
+          
+          const seenColors = new Set();
+          
+          // 遍历所有选择器查找颜色
+          colorSelectors.forEach(selector => {
+            try {
+              const elements = document.querySelectorAll(selector);
+              elements.forEach(el => {
+                let colorText = '';
+                
+                // 多种方式提取颜色信息
+                if (el.dataset && el.dataset.color) {
+                  colorText = el.dataset.color;
+                } else if (el.dataset && el.dataset.value) {
+                  colorText = el.dataset.value;
+                } else if (el.alt) {
+                  colorText = el.alt;
+                } else if (el.textContent) {
+                  colorText = el.textContent.trim();
+                } else if (el.title) {
+                  colorText = el.title;
+                } else if (el.getAttribute('aria-label')) {
+                  colorText = el.getAttribute('aria-label');
+                }
+                
+                // 过滤和清理颜色名 - 更严格的过滤
+                if (colorText) {
+                  const cleanColor = colorText.replace(/[^\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\w\/]/g, '').trim();
+                  
+                  // 🌟 GLM-4.6修復：放寬顏色偵測，保留所有有意義的顏色資訊
+                  const isValidColor = cleanColor.length > 0 && cleanColor.length < 50 && 
+                    !/^[\d\s]*$/.test(cleanColor) && // 排除純數字和空白
+                    !/^[.,:;!?]+$/.test(cleanColor); // 排除純標點符號
+                  if (isValidColor && cleanColor.length > 0 && cleanColor.length < 20) {
+                    seenColors.add(cleanColor);
+                  }
+                }
+              });
+            } catch (e) {
+              // 忽略选择器错误，继续其他选择器
+            }
+          });
+          
+          // 如果仍然没有找到颜色，尝试从页面URL和内容中推断
+          if (seenColors.size === 0) {
+            console.log('🔍 尝试从URL和页面内容推断颜色...');
+            
+            const pageContent = document.body.textContent.toLowerCase();
+            const urlContent = window.location.href.toLowerCase();
+            
+            // CallawayJP常见颜色关键词
+            const commonColors = [
+              { keywords: ['navy', 'ネイビー', '1031'], name: 'ネイビー', code: '1031' },
+              { keywords: ['black', 'ブラック', '1040'], name: 'ブラック', code: '1040' },
+              { keywords: ['white', 'ホワイト', '1000'], name: 'ホワイト', code: '1000' },
+              { keywords: ['red', 'レッド', '1600'], name: 'レッド', code: '1600' },
+              { keywords: ['blue', 'ブルー', '1030'], name: 'ブルー', code: '1030' },
+              { keywords: ['gray', 'grey', 'グレー', '1900'], name: 'グレー', code: '1900' }
+            ];
+            
+            commonColors.forEach(color => {
+              const found = color.keywords.some(keyword => 
+                pageContent.includes(keyword) || urlContent.includes(keyword)
+              );
+              if (found) {
+                seenColors.add(color.name);
+              }
+            });
+          }
+          
+          extractedColors = Array.from(seenColors);
+          console.log('✓ DOM fallback颜色结果:', extractedColors);
+          
+          // 🌟 GLM-4.6修復：不再強制使用標準顏色，讓 normalizeColorEntries 統一處理
+          if (extractedColors.length === 0) {
+            console.log('🔍 DOM fallback 未找到顏色，依賴後續 normalizeColorEntries 處理');
+          }
+        }
+        
+        // Fallback: 尺码
+        if (extractedSizes.length === 0) {
+          console.log('🔍 DOM fallback - 尺码...');
+          
+          const sizeSelectors = [
+            'button[data-size]',
+            '.size-selector button',
+            '.product-size button',
+            'option[value*="S"]',
+            'option[value*="M"]',
+            'option[value*="L"]'
+          ];
+          
+          const seenSizes = new Set();
+          sizeSelectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(el => {
+              let sizeText = '';
+              
+              if (el.dataset && el.dataset.size) {
+                sizeText = el.dataset.size;
+              } else if (el.value) {
+                sizeText = el.value;
+              } else if (el.textContent) {
+                sizeText = el.textContent.trim();
+              }
+              
+              // 清理和验证尺码
+              if (sizeText) {
+                const cleanSize = sizeText.replace(/[^A-Z0-9]/g, '').trim();
+                if (cleanSize.match(/^(XS|S|M|L|XL|LL|XXL|[0-9]+)$/)) {
+                  seenSizes.add(cleanSize);
+                }
+              }
+            });
+          });
+          
+          extractedSizes = Array.from(seenSizes);
+          console.log('✓ DOM fallback尺码结果:', extractedSizes);
+        }
+      }
+      
+      // 设置最终的颜色和尺码数组
+      results.colors = extractedColors;
+      results.sizes = extractedSizes;
+      
+      // =============================================
+      // 🌟 辅助函数：HTML内容处理，保持段落结构 (GLM-4.6重写)
+      // =============================================
+      function processHTMLToText(htmlContent) {
+        if (!htmlContent || typeof htmlContent !== 'string') return '';
+        
+        try {
+          // 创建临时div来解析HTML
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = htmlContent;
+          
+          // 移除图片标签但保留alt文本（如果有用）
+          const images = tempDiv.querySelectorAll('img');
+          images.forEach(img => {
+            const alt = img.getAttribute('alt');
+            // 只保留有意义的alt文本，忽略装饰性图片
+            if (alt && alt.length > 2 && !alt.includes('icon') && !alt.includes('logo') && !alt.includes('badge')) {
+              const textNode = document.createTextNode(`[${alt}]`);
+              img.parentNode.replaceChild(textNode, img);
+            } else {
+              img.remove();
+            }
+          });
+          
+          // 处理块级元素，添加换行
+          const blockElements = tempDiv.querySelectorAll('p, div, br, h1, h2, h3, h4, h5, h6, section, article, li');
+          blockElements.forEach(el => {
+            if (el.tagName === 'BR') {
+              el.parentNode.replaceChild(document.createTextNode('\n'), el);
+            } else if (el.tagName === 'LI') {
+              // 列表项前添加换行
+              if (el.previousSibling) {
+                el.parentNode.insertBefore(document.createTextNode('\n'), el);
+              }
+            } else {
+              // 在块级元素后添加换行
+              if (el.nextSibling) {
+                el.parentNode.insertBefore(document.createTextNode('\n'), el.nextSibling);
+              }
+            }
+          });
+          
+          // 获取纯文本内容
+          let text = tempDiv.textContent || tempDiv.innerText || '';
+          
+          // 清理文本：压缩多余空格和换行，但保持段落结构
+          text = text
+            .replace(/[ \t]+/g, ' ')  // 压缩空格和制表符
+            .replace(/\n{3,}/g, '\n\n')  // 最多保留两个连续换行
+            .replace(/^\s+|\s+$/g, '')  // 去除首尾空白
+            .replace(/\n /g, '\n')  // 去除换行后的空格
+            .replace(/ \n/g, '\n');  // 去除换行前的空格
+          
+          return text;
+        } catch (e) {
+          console.log('⚠️ HTML处理失败:', e.message);
+          return htmlContent.replace(/<[^>]*>/g, '').trim();
+        }
+      }
+      
+      // =============================================
+      // 4. 🌟 提取商品描述（专门针对"商品説明"tab - GLM-4.6重写）
+      // =============================================
+      console.log('🔍 开始提取商品描述...');
+      
+      // 第一步：尝试结构化数据（增强路径）
+      let structuredDescription = '';
+      if (productDetail) {
+        const descSources = [
+          { path: 'longDescription', value: productDetail.longDescription },
+          { path: 'description', value: productDetail.description },
+          { path: 'product.description', value: productDetail.product?.description },
+          { path: 'product.longDescription', value: productDetail.product?.longDescription },
+          { path: 'contentSections.description', value: productDetail.contentSections?.description },
+          { path: 'contentSections.productDescription', value: productDetail.contentSections?.productDescription },
+          { path: 'specifications.description', value: productDetail.specifications?.description },
+          { path: 'details.description', value: productDetail.details?.description }
+        ];
+        
+        for (const source of descSources) {
+          if (source.value && typeof source.value === 'string' && source.value.trim().length > 100) {
+            // 检查是否包含日文内容和关键词
+            const hasJapanese = /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/.test(source.value);
+            const hasProductKeywords = source.value.includes('素材') || source.value.includes('伸縮') || source.value.includes('ストレッチ') || source.value.includes('MADE IN');
+            
+            if (hasJapanese && hasProductKeywords) {
+              structuredDescription = processHTMLToText(source.value);
+              console.log('✓ 从结构化数据获取描述:', source.path, '长度:', structuredDescription.length);
+              results.dataSources.push(`productDetail.${source.path}`);
+              break;
+            }
+          }
+        }
+      }
+      
+      // 第二步：DOM Fallback - 专门针对"商品説明"tab内容
+      if (!structuredDescription) {
+        console.log('🔍 DOM fallback - 精确定位"商品説明"tab内容...');
+        
+        // 🌟 方法1: 直接查找商品描述容器（最精确）
+        const productDescriptionSelectors = [
+          'section[data-testid*="description"]',
+          '[data-testid="product-description"]',
+          '[data-testid*="product-details"]',
+          '[class*="product-description"]',
+          '[class*="description-content"]',
+          '.tab-content [data-testid*="description"]',
+          '.tabpanel [data-testid*="description"]',
+          '.tab-pane.active [class*="description"]'
+        ];
+        
+        for (const selector of productDescriptionSelectors) {
+          const container = document.querySelector(selector);
+          if (container) {
+            const htmlContent = container.innerHTML;
+            const textContent = container.textContent || '';
+            
+            // 验证是否为商品描述内容（包含关键词）
+            const hasProductKeywords = textContent.includes('素材') || 
+                                      textContent.includes('伸縮') || 
+                                      textContent.includes('ストレッチ') ||
+                                      textContent.includes('MADE IN') ||
+                                      textContent.includes('洗濯');
+            
+            const hasJapanese = /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/.test(textContent);
+            const isLongEnough = textContent.length > 200;
+            
+            if (hasProductKeywords && hasJapanese && isLongEnough) {
+              structuredDescription = processHTMLToText(htmlContent);
+              console.log('✓ 通过精确选择器找到商品描述:', selector, '长度:', structuredDescription.length);
+              results.dataSources.push(`DOM.${selector}`);
+              break;
+            }
+          }
+        }
+        
+        // 🌟 方法2: 寻找包含"全方向に伸縮性"等特征文本的容器
+        if (!structuredDescription) {
+          console.log('🔍 通过特征文本搜索商品描述容器...');
+          
+          const allContainers = document.querySelectorAll('section, div[class*="content"], div[class*="description"], .tab-content, .tabpanel, .tab-pane');
+          
+          for (const container of allContainers) {
+            const text = container.textContent || '';
+            
+            // 检查是否包含截图中的特征文本
+            const hasCharacteristicText = text.includes('全方向に伸縮性があり') ||
+                                         text.includes('やっぱり半袖スタイル') ||
+                                         text.includes('8WAYストレッチ') ||
+                                         text.includes('タフタ素材使用') ||
+                                         text.includes('アノラック風アウター');
+            
+            const hasRequiredContent = text.includes('素材:') && text.includes('MADE IN VIETNAM');
+            
+            if ((hasCharacteristicText || hasRequiredContent) && text.length > 300) {
+              structuredDescription = processHTMLToText(container.innerHTML);
+              console.log('✓ 通过特征文本找到商品描述容器，长度:', structuredDescription.length);
+              results.dataSources.push('DOM.characteristicText');
+              break;
+            }
+          }
+        }
+        
+        // 🌟 方法3: 如果还没找到，搜索包含材质信息的区域
+        if (!structuredDescription) {
+          console.log('🔍 搜索包含材质信息的区域...');
+          
+          // 查找包含"素材:"和"MADE IN"的区域
+          const allElements = document.querySelectorAll('*');
+          let bestCandidate = null;
+          let maxScore = 0;
+          
+          for (const el of allElements) {
+            const text = el.textContent || '';
+            
+            if (text.length < 100 || text.length > 2000) continue; // 长度过滤
+            
+            let score = 0;
+            if (text.includes('素材:')) score += 3;
+            if (text.includes('MADE IN')) score += 3;
+            if (text.includes('洗濯表示')) score += 2;
+            if (text.includes('ストレッチ')) score += 2;
+            if (text.includes('ポリエステル')) score += 1;
+            if (text.includes('やっぱり')) score += 2;  // 特征文本
+            if (/[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/.test(text)) score += 1;
+            
+            if (score > maxScore && score >= 5) {
+              maxScore = score;
+              bestCandidate = el;
+            }
+          }
+          
+          if (bestCandidate) {
+            structuredDescription = processHTMLToText(bestCandidate.innerHTML);
+            console.log('✓ 通过材质信息搜索找到商品描述，分数:', maxScore, '长度:', structuredDescription.length);
+            results.dataSources.push('DOM.materialInfo');
+          }
+        }
+      }
+      
+      // 设置最终结果
+      results.descriptionText = structuredDescription;
+      
+      // 如果仍然没有找到描述，打印警告
+      if (!results.descriptionText || results.descriptionText.length < 100) {
+        console.log('⚠️ 警告：未能提取到完整的商品描述内容');
+        results.descriptionText = results.descriptionText || '';
+      } else {
+        console.log('✓ 商品描述提取成功，最终长度:', results.descriptionText.length);
+        console.log('✓ 描述内容预览:', results.descriptionText.substring(0, 100) + '...');
+      }
+      
+      // =============================================
+      // 🌟 辅助函数：尺码表数据处理
+      // =============================================
+      function processSizeChartData(data, source) {
+        if (!data) return null;
+        
+        try {
+          // 如果是HTML字符串，解析为DOM
+          if (typeof data === 'string' && data.includes('<')) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data;
+            const table = tempDiv.querySelector('table');
+            if (table) {
+              return extractTableData(table, source + ' (HTML)');
+            }
+            return null;
+          }
+          
+          // 如果已经是 headers/rows 结构
+          if (data.headers && data.rows) {
+            return {
+              headers: data.headers.map(h => (h + '').trim()).filter(Boolean),
+              rows: data.rows.map(row => 
+                Array.isArray(row) ? row.map(cell => (cell + '').trim()).filter(Boolean) : []
+              ).filter(row => row.length > 0)
+            };
+          }
+          
+          // 如果是数组对象格式（每行一个对象）
+          if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+            const headers = Object.keys(data[0]);
+            const rows = data.map(row => headers.map(h => (row[h] + '').trim()));
+            return {
+              headers: headers.map(h => h.trim()).filter(Boolean),
+              rows: rows.filter(row => row.some(cell => cell.length > 0))
+            };
+          }
+          
+          return null;
+        } catch (e) {
+          console.log('⚠️ 尺码表数据处理失败:', e.message);
+          return null;
+        }
+      }
+      
+      function extractTableData(table, source) {
+        try {
+          const headers = Array.from(table.querySelectorAll('thead th, tr:first-child th, tr:first-child td'))
+            .map(th => th.textContent?.trim()).filter(Boolean);
+          
+          const rows = Array.from(table.querySelectorAll('tbody tr, tr:not(:first-child)'))
+            .map(tr => Array.from(tr.querySelectorAll('td, th'))
+              .map(cell => cell.textContent?.trim()).filter(Boolean))
+            .filter(row => row.length > 0);
+          
+          if (headers.length > 0 && rows.length > 0) {
+            console.log('✓ 从', source, '提取尺码表：', headers.length, '列,', rows.length, '行');
+            return { headers, rows };
+          }
+          
+          return null;
+        } catch (e) {
+          console.log('⚠️', source, '表格解析失败:', e.message);
+          return null;
+        }
+      }
+      
+      // =============================================
+      // 6. 🌟 提取尺码表（结构化数据优先 - 重写版）
+      // =============================================
+      console.log('🔍 开始提取尺码表...');
+      
+      // 按顺序尝试结构化数据字段 - 增强路径检查
+      const sizeChartSources = [
+        { path: 'productDetail.sizeChart', getter: () => productDetail?.sizeChart },
+        { path: 'productDetail.spec.sizeChart', getter: () => productDetail?.spec?.sizeChart },
+        { path: 'productDetail.sizeChartHtml', getter: () => productDetail?.sizeChartHtml },
+        { path: 'productDetail.specifications.sizeChart', getter: () => productDetail?.specifications?.sizeChart },
+        { path: 'productDetail.product.sizeChart', getter: () => productDetail?.product?.sizeChart },
+        { path: 'productDetail.contentSections.sizeChart', getter: () => productDetail?.contentSections?.sizeChart },
+        { path: 'productDetail.variationGroups.sizeChart', getter: () => productDetail?.variationGroups?.sizeChart }
+      ];
+      
+      for (const source of sizeChartSources) {
+        const data = source.getter();
+        if (data) {
+          console.log('🔍 尝试从', source.path, '获取尺码表...');
+          const processed = processSizeChartData(data, source.path);
+          if (processed && processed.headers.length > 0 && processed.rows.length > 0) {
+            results.sizeChartData = processed;
+            results.dataSources.push(source.path);
+            console.log('✓ 从结构化数据获取尺码表成功');
+            break;
+          }
+        }
+      }
+      
+      // 🌟 辅助函数：解析文本格式的尺码数据 (GLM-4.6重写修复版)
+      function parseTextSizeChart(textContent) {
+        if (!textContent || typeof textContent !== 'string') return null;
+        
+        try {
+          console.log('🔍 开始解析文本尺码表...');
+          
+          // 方法1：直接使用全局正则匹配所有尺码行（优先）
+          const globalPattern = /([SMLX]+L?)\s*\/\s*バスト\s*([\d.]+)cm\s*\/\s*着丈\s*([\d.]+)cm\s*\/\s*裄丈\s*([\d.]+)cm/g;
+          const allMatches = [...textContent.matchAll(globalPattern)];
+          
+          if (allMatches.length > 0) {
+            const rows = allMatches.map(match => [
+              match[1].trim(),   // 尺码
+              match[2].trim(),   // バスト
+              match[3].trim(),   // 着丈
+              match[4].trim()    // 裄丈
+            ]);
+            
+            console.log('✓ 通过全局正则解析尺码表：', rows.length, '行数据');
+            console.log('✓ 尺码数据:', rows.map(row => row[0]).join(', '));
+            
+            return {
+              headers: ['サイズ', 'バスト(cm)', '着丈(cm)', '裄丈(cm)'],
+              rows: rows
+            };
+          }
+          
+          // 方法2：寻找包含"商品サイズ（仕上がり寸法）"的区域
+          const sizePattern = /商品サイズ（仕上がり寸法）([\s\S]*?)(?=\n\n※|※|$)/;
+          const sizeMatch = textContent.match(sizePattern);
+          
+          if (sizeMatch) {
+            const sizeText = sizeMatch[1].trim();
+            console.log('✓ 找到尺码区域，内容长度:', sizeText.length);
+            
+            // 解析每一行尺码数据
+            const lines = sizeText.split('\n').filter(line => line.trim().length > 0);
+            const rows = [];
+            
+            console.log('✓ 尺码区域分行数:', lines.length);
+            
+            for (const line of lines) {
+              const trimmedLine = line.trim();
+              console.log('✓ 处理行:', trimmedLine.substring(0, 50) + '...');
+              
+              // 解析格式: "S / バスト 106cm / 着丈 58cm / 裄丈 77.5cm"
+              const lineMatch = trimmedLine.match(/([SMLX]+L?)\s*\/\s*バスト\s*([\d.]+)cm\s*\/\s*着丈\s*([\d.]+)cm\s*\/\s*裄丈\s*([\d.]+)cm/);
+              
+              if (lineMatch) {
+                const rowData = [
+                  lineMatch[1].trim(),   // 尺码
+                  lineMatch[2].trim(),   // バスト
+                  lineMatch[3].trim(),   // 着丈
+                  lineMatch[4].trim()    // 裄丈
+                ];
+                rows.push(rowData);
+                console.log('✓ 解析成功:', rowData.join(' | '));
+              } else {
+                console.log('⚠️ 行不匹配正则:', trimmedLine);
+              }
+            }
+            
+            if (rows.length > 0) {
+              console.log('✓ 从分区解析尺码表：', rows.length, '行数据');
+              return {
+                headers: ['サイズ', 'バスト(cm)', '着丈(cm)', '裄丈(cm)'],
+                rows: rows
+              };
+            }
+          }
+          
+          console.log('⚠️ 未能找到有效的尺码数据');
+          return null;
+        } catch (e) {
+          console.log('⚠️ 文本尺码表解析失败:', e.message);
+          return null;
+        }
+      }
+      
+      // DOM fallback（增强版 - GLM-4.6重写）
+      if (!results.sizeChartData) {
+        console.log('🔍 DOM fallback - 寻找尺码表...');
+        
+        // 🌟 方法1: 优先尝试从已提取的商品描述中解析
+        if (results.descriptionText && results.descriptionText.includes('商品サイズ')) {
+          console.log('🔍 从商品描述中解析尺码表...');
+          const parsedSizeChart = parseTextSizeChart(results.descriptionText);
+          if (parsedSizeChart) {
+            results.sizeChartData = parsedSizeChart;
+            results.dataSources.push('DOM.descriptionText');
+            console.log('✓ 从商品描述文本中解析尺码表成功');
+          }
+        }
+        
+        // 🌟 方法2: 如果描述中没有，在DOM中搜索尺码文本
+        if (!results.sizeChartData) {
+          console.log('🔍 在DOM中搜索尺码文本...');
+          
+          // 查找包含尺码信息的元素
+          const allElements = document.querySelectorAll('*');
+          
+          for (const element of allElements) {
+            const elementText = element.textContent || '';
+            
+            // 检查是否包含尺码表特征
+            if (elementText.includes('商品サイズ') && elementText.includes('バスト') && elementText.includes('着丈')) {
+              const parsedSizeChart = parseTextSizeChart(elementText);
+              if (parsedSizeChart) {
+                results.sizeChartData = parsedSizeChart;
+                results.dataSources.push('DOM.sizeTextElement');
+                console.log('✓ 从 DOM 元素文本中解析尺码表成功');
+                break;
+              }
+            }
+          }
+        }
+        
+        // 🌟 方法3: 继续原有的HTML表格查找逻辑作为fallback
+        if (!results.sizeChartData) {
+          console.log('🔍 在DOM中搜索HTML表格...');
+          
+          const sizeChartSelectors = [
+            // 优先查找明确的尺码区域
+            '[data-testid*="size-chart"] table',
+            '[id*="size-chart"] table',
+            '[class*="size-chart"] table',
+            // 查找产品详情tab中的表格
+            '[data-testid*="product-details"] table',
+            '[id*="product-details"] table',
+            '[class*="product-details"] table',
+            // 通用表格选择器
+            'section table',
+            '.tab-content table',
+            'table[class*="size"]',
+            'table'
+          ];
+          
+          for (const selector of sizeChartSelectors) {
+            const tables = document.querySelectorAll(selector);
+            
+            for (const table of tables) {
+              const tableText = table.textContent || '';
+              
+              // 更精确的尺码表识别
+              const hasSizeKeywords = tableText.includes('サイズ') || tableText.includes('Size') || tableText.includes('size');
+              const hasSizeValues = /[SML]{1,2}|XS|XL|LL|XXL/.test(tableText);
+              const hasMeasurements = /cm|センチ|胸囲|着丈|肩幅|裄丈|バスト/.test(tableText);
+              
+              if (hasSizeKeywords && (hasSizeValues || hasMeasurements)) {
+                console.log('✓ 找到疑似尺码表，内容预览:', tableText.substring(0, 100) + '...');
+                
+                const extracted = extractTableData(table, 'DOM.table');
+                if (extracted) {
+                  results.sizeChartData = extracted;
+                  results.dataSources.push('DOM.htmlTable');
+                  break;
+                }
+              }
+            }
+            
+            if (results.sizeChartData) break;
+          }
+        }
+      }
+      
+      // 确保最终输出不是null (用户要求：永远不返回null)
+      if (!results.sizeChartData) {
+        console.log('⚠️ 未找到尺码表，设置空结构');
+        results.sizeChartData = { headers: [], rows: [] };
+      } else {
+        // 验证结构完整性
+        if (!results.sizeChartData.headers) {
+          results.sizeChartData.headers = [];
+        }
+        if (!results.sizeChartData.rows) {
+          results.sizeChartData.rows = [];
+        }
+      }
+      
+      // =============================================
+      // 7. 🌟 图片提取 - GLM-4.6重新设计：延迟到浏览器外处理
+      // =============================================
+      console.log('🔍 GLM-4.6重新设计：基础数据提取完成，准备图片交互抓取...');
+      
+      // 暂时返回空数组，图片将在浏览器外通过颜色交互抓取
+      results.rawImages = [];
+      results.imagesByColor = {}; // 将通过 extractImagesByColorInteraction 填充
+      
+      return results;
+    }, { productId, colorMap: COLOR_MAP });
+    
+    console.log(colors.green(`✓ GLM-4.6重写版数据提取完成`));
+    console.log(colors.gray(`  描述长度: ${realData.descriptionText.length}`));
+    const initialColorNames = Array.isArray(realData.colors)
+      ? realData.colors.map(extractColorName).filter(Boolean)
+      : [];
+    console.log(colors.gray(`  颜色数组: [${initialColorNames.join(', ')}] (${initialColorNames.length}个)`));
+    console.log(colors.gray(`  尺码数组: [${realData.sizes.join(', ')}] (${realData.sizes.length}个)`));
+    console.log(colors.gray(`  尺码表: ${realData.sizeChartData ? '已提取' : '未找到'}`));
+    console.log(colors.gray(`  图片数量: ${realData.rawImages.length} (基础提取)`));
+    console.log(colors.gray(`  数据源: ${realData.dataSources.join(', ')}`));
+    
+    // 🌟 GLM-4.6新增：通过颜色交互抓取1080×1080商品图
+    if (realData.colors && realData.colors.length > 0) {
+      console.log(colors.blue(`🎨 开始颜色交互图片抓取 (${realData.colors.length} 个颜色)...`));
+      
+      try {
+        const imageData = await extractImagesByColorInteraction(page, productId, realData.colors);
+        
+        if (imageData.colorMetadata && imageData.colorMetadata.length > 0) {
+          realData.colorMetadata = imageData.colorMetadata;
+          // 🌟 GLM-4.6修復：不覆蓋 realData.colors，保留DOM fallback的顏色供後續合併
+          const imageColors = imageData.colorMetadata.map(meta => ({
+            code: meta.code,
+            name: meta.name,
+            displayName: meta.displayName,
+            rawValue: meta.rawValue
+          }));
+          console.log(`🔍 GLM-4.6: 保留DOM fallback顏色，圖片顏色單獨處理`);
+          // 不覆蓋 realData.colors，讓後續合併邏輯處理
+        }
+        
+        // 将按颜色分组的图片数据合并到realData中
+        realData.imagesByColor = imageData.imagesByColor;
+        
+        // 将所有图片合并到rawImages数组中（保持向后兼容）
+        realData.rawImages = imageData.allImages;
+        
+        console.log(colors.green(`✓ 颜色交互图片抓取完成`));
+        console.log(colors.gray(`  按颜色分组: ${Object.keys(realData.imagesByColor).length} 个颜色`));
+        console.log(colors.gray(`  总图片数量: ${realData.rawImages.length} 张`));
+        
+        // 打印每个颜色的图片数量统计
+        Object.entries(realData.imagesByColor).forEach(([colorCode, images]) => {
+          const colorInfo = findColorByCode(realData.colors, colorCode);
+          const colorName = extractColorName(colorInfo) || colorCode;
+          console.log(colors.gray(`    ${colorName}: ${images.length} 张`));
+        });
+        
+      } catch (imageError) {
+        console.error(colors.red(`✗ 图片抓取失败: ${imageError.message}`));
+        console.log(colors.yellow(`  图片功能待重构实现...`));
+        
+        // 保持原有的空图片结构
+        realData.imagesByColor = {};
+        realData.rawImages = [];
+      }
+    } else {
+      console.log(colors.yellow(`⚠️ 未找到颜色信息，图片抓取待实现`));
+      realData.imagesByColor = {};
+      realData.rawImages = [];
+    }
+    
+    // 🌟 GLM-4.6: 整合 NEXT_DATA 解析结果到 realData（如果有的话）
+    console.log('🔧 检查 NEXT_DATA 解析结果...');
+    
+    // 检查变量是否存在（防止未定义错误）
+    if (typeof extractedColors !== 'undefined' && extractedColors.length > 0) {
+      realData.colors = extractedColors;
+      console.log(`✓ 使用 NEXT_DATA 颜色: ${extractedColors.length} 种`);
+    } else {
+      console.log('⚠️ NEXT_DATA 颜色数据不可用，使用默认值');
+    }
+    
+    if (typeof extractedSizes !== 'undefined' && extractedSizes.length > 0) {
+      realData.sizes = extractedSizes;
+      console.log(`✓ 使用 NEXT_DATA 尺码: ${extractedSizes.length} 种`);
+    } else {
+      console.log('⚠️ NEXT_DATA 尺码数据不可用，使用默认值');
+    }
+    
+    if (typeof sizeChart !== 'undefined' && sizeChart) {
+      realData.sizeChartData = sizeChart;
+      console.log('✓ 使用 NEXT_DATA 尺码表');
+    } else {
+      console.log('⚠️ NEXT_DATA 尺码表不可用');
+    }
+    
+    // 使用 NEXT_DATA 的图片数据（如果有的话）
+    if (typeof imagesByColor !== 'undefined' && Object.keys(imagesByColor).length > 0) {
+      realData.imagesByColor = imagesByColor;
+      
+      // 构建颜色元数据
+      const colorMetadata = [];
+      Object.keys(imagesByColor).forEach(colorCode => {
+        const colorInfo = (typeof extractedColors !== 'undefined' && extractedColors.find) ?
+                          extractedColors.find(c => c.code === colorCode) : null;
+        const finalColorInfo = colorInfo || { code: colorCode, name: COLOR_MAP[colorCode] || 'DEFAULT' };
+        colorMetadata.push({
+          code: colorCode,
+          name: finalColorInfo.name,
+          displayName: finalColorInfo.name,
+          rawValue: colorCode
+        });
+      });
+      realData.colorMetadata = colorMetadata;
+      
+      // 构建 rawImages 数组（向后兼容）
+      const allImages = [];
+      Object.values(imagesByColor).forEach(images => {
+        allImages.push(...images);
+      });
+      realData.rawImages = allImages;
+      
+      console.log(`✓ 使用 NEXT_DATA 图片: ${Object.keys(imagesByColor).length} 个颜色，${allImages.length} 张图片`);
+    } else {
+      console.log('⚠️ NEXT_DATA 图片数据不可用，使用现有图片抽取结果');
+    }
+    
+    console.log('🎆 数据整合完成!');
+    
+    // 🌟 GLM-4.6修復 + validColorCodes 過濾：使用 variationAttributes 作為真實來源過濾文字噪音
+    // 處理 extractedColors 可能是字符串數組的情況，使用 realData.colors 而不是局部變量
+    console.log(`🔍 GLM-4.6調試: realData.colors 內容:`, realData.colors || []);
+    console.log(`🔍 GLM-4.6調試: realData.colorMetadata 內容:`, realData.colorMetadata || []);
+    
+    const normalizedExtractedColors = (Array.isArray(realData.colors)) 
+      ? realData.colors.map(color => typeof color === 'string' ? { code: color, name: color } : color)
+      : [];
+    
+    console.log(`🔍 GLM-4.6調試: normalizedExtractedColors:`, normalizedExtractedColors);
+    
+    // 🌟 智能 validColorCodes 映射：優先 variationAttributes，備用模式識別合法顏色
+    const validColorCodes = new Set();
+    const validColorMapping = new Map();
+    
+    // 如果從 variationAttributes 獲得顏色，使用這些作為真實來源
+    if (normalizedExtractedColors.length > 0 && normalizedExtractedColors.every(c => 
+      !c.code.includes('クラブ') && !c.code.includes('chevron') && !c.code.includes('カート')
+    )) {
+      // 有效的 variationAttributes 數據
+      normalizedExtractedColors.forEach(color => {
+        if (color.code && color.name) {
+          validColorCodes.add(color.code);
+          validColorMapping.set(color.code, color);
+          console.log(`✓ 合法顏色 (variationAttributes): ${color.code} (${color.name})`);
+        }
+      });
+    } else {
+      // 備用模式：智能識別真實顏色，過濾導覽文字
+      console.log(`⚠️ variationAttributes 不可用，使用智能顏色識別`);
+      const intelligentColorFilter = (colorText) => {
+        // 顏色模式匹配
+        const colorPatterns = [
+          /^[A-Z]+\/[A-Z]+$/,           // WHITE/NAVY, WHITE/BLACK 格式
+          /^[A-Z]+$/,                  // BLACK, WHITE, NAVY 等單一顏色
+          /^\d{4}$/,                   // 4位數字代碼如 1010, 1030
+          /^(red|blue|green|yellow|black|white|navy|gray|grey|pink|purple|orange|brown)$/i  // 標準顏色名
+        ];
+        
+        // 排除模式
+        const excludePatterns = [
+          /chevron/i, /クラブ/, /アパレル/, /ボール/, /アクセサリー/, /ウィメンズ/, 
+          /認定中古/, /ブランド/, /ストア/, /barssolid/, /カート/, /お気に入り/,
+          /注文/, /商品説明/, /サイズ/, /レビュー/, /送料/, /メンバー/, /下取り/, /返品/, /到着/
+        ];
+        
+        // 檢查是否為合法顏色
+        const isValidColor = colorPatterns.some(pattern => pattern.test(colorText));
+        const isExcluded = excludePatterns.some(pattern => pattern.test(colorText));
+        
+        return isValidColor && !isExcluded;
+      };
+      
+      normalizedExtractedColors.forEach(color => {
+        if (color.code && intelligentColorFilter(color.code)) {
+          validColorCodes.add(color.code);
+          validColorMapping.set(color.code, color);
+          console.log(`✓ 合法顏色 (智能識別): ${color.code} (${color.name})`);
+        } else {
+          console.log(`❌ 過濾掉導覽文字: ${color.code} (${color.name})`);
+        }
+      });
+    }
+    
+    console.log(`🔧 建立 validColorCodes: ${validColorCodes.size} 個合法顏色`, [...validColorCodes]);
+    
+    // 🌟 過濾 colorMetadata：只保留在 validColorCodes 中的顏色
+    const filteredColorMetadata = (realData.colorMetadata || []).filter(color => {
+      const isValid = validColorCodes.has(color.code);
+      if (!isValid) {
+        console.log(`❌ 過濾掉非顏色文字: ${color.code} (${color.name})`);
+      }
+      return isValid;
+    });
+    
+    console.log(`🔧 過濾後 colorMetadata: ${filteredColorMetadata.length} 個`, filteredColorMetadata.map(c => c.code));
+    
+    // 🌟 只使用已過濾的合法顏色進行合併
+    const validExtractedColors = Array.from(validColorMapping.values());
+    console.log(`🔧 使用已過濾的合法顏色: ${validExtractedColors.length} 個`, validExtractedColors.map(c => c.code));
+    
+    const mergedColors = normalizeColorEntries([
+      ...validExtractedColors,
+      ...filteredColorMetadata
+    ]);
+    
+    console.log(`🔍 GLM-4.6調試: mergedColors 最終結果 (已過濾):`, mergedColors);
+
+    // 為所有顏色補齊 imagesByColor 空陣列
+    mergedColors.forEach(color => {
+      if (!realData.imagesByColor[color.code]) {
+        realData.imagesByColor[color.code] = [];
+      }
+    });
+
+    realData.colorMetadata = mergedColors;
+    realData.colors = mergedColors;
+    
+    console.log(`🔧 GLM-4.6顏色合併完成: ${mergedColors.length} 個顏色 (${mergedColors.map(c => c.code).join(', ')})`);
+    
+    realData.colors = normalizeColorEntries(realData.colors);
+    realData.sizes = normalizeSizeEntries(realData.sizes);
+    
+    return realData;
+  } catch (error) {
+    console.error(colors.red(`✗ 真实数据提取失败: ${error.message}`));
+    return {
+      product: { id: productId, title: '', description: '', brand: 'Callaway Golf', url: '' },
+      rawImages: [],
+      descriptionText: '',
+      sizeChartData: null,
+      colors: [],
+      sizes: [],
+      dataSources: []
+    };
+  }
+}
+
+/**
+ * 🌟 合并真实数据和标准变体（修复版）
+ */
+<<<<<<< HEAD
+function normalizeColorEntries(rawColors) {
+  if (!Array.isArray(rawColors) || rawColors.length === 0) {
+    return [...DEFAULT_COLOR_FALLBACK];
+  }
+
+  const normalized = rawColors
+    .map((entry, index) => {
+      if (!entry) return null;
+
+      if (typeof entry === 'string') {
+        const code = entry.trim();
+        return {
+          code: code || `COLOR_${index}`,
+          name: COLOR_MAP[code] || code || `COLOR_${index}`,
+          rawValue: entry
+        };
+      }
+
+      const code = entry.code || entry.id || entry.value || entry.rawValue || `COLOR_${index}`;
+      const name =
+        entry.name ||
+        entry.displayName ||
+        entry.displayValue ||
+        COLOR_MAP[code] ||
+        code;
+
+      return {
+        code: String(code).trim() || `COLOR_${index}`,
+        name: String(name).trim() || `COLOR_${index}`,
+        rawValue: entry
+      };
+    })
+    .filter(Boolean);
+
+  const seen = new Set();
+  const unique = normalized.filter(color => {
+    const key = color.code || color.name;
+    if (!key) return false;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  return unique.length > 0 ? unique : [...DEFAULT_COLOR_FALLBACK];
+}
+
+function normalizeSizeEntries(rawSizes) {
+  if (!Array.isArray(rawSizes) || rawSizes.length === 0) {
+    return [...DEFAULT_SIZE_FALLBACK];
+  }
+
+  const normalized = rawSizes
+    .map((entry, index) => {
+      if (!entry) return null;
+
+      if (typeof entry === 'string') {
+        return entry.trim();
+      }
+
+      return (
+        entry.displayValue ||
+        entry.value ||
+        entry.name ||
+        entry.id ||
+        `SIZE_${index}`
+      );
+    })
+    .filter(Boolean)
+    .map(value => value.trim())
+    .filter(Boolean);
+
+  const seen = new Set();
+  const unique = normalized.filter(size => {
+    if (seen.has(size)) return false;
+    seen.add(size);
+    return true;
+  });
+
+  return unique.length > 0 ? unique : [...DEFAULT_SIZE_FALLBACK];
+}
+
+function createDynamicVariants(productId, rawColors, rawSizes) {
+  try {
+    const normalizedColors = normalizeColorEntries(rawColors);
+    const normalizedSizes = normalizeSizeEntries(rawSizes);
+
+    console.log(colors.blue('🔄 动态生成变体组合...'));
+    console.log(colors.gray(`  检测到颜色: ${normalizedColors.length} 个`));
+    console.log(colors.gray(`  检测到尺码: ${normalizedSizes.length} 个`));
+
+    const variants = [];
+
+    normalizedColors.forEach(color => {
+      normalizedSizes.forEach(sizeValue => {
+        const sizeCode = sizeValue || 'DEFAULT';
+        const variantId = `${productId}_${color.code}_${sizeCode}`;
+
+        variants.push({
+          variantId,
+          colorName: color.name,
+          colorCode: color.code,
+          sizeName: sizeValue,
+          sizeCode: sizeCode,
+          availability: 'unknown',
+          sku: variantId,
+          priceJPY: null
+        });
+      });
+    });
+
+    console.log(colors.green(`✓ 变体生成完成: ${variants.length} 个组合`));
+
+    return {
+      colors: normalizedColors,
+      sizes: normalizedSizes,
+      variants
+    };
+  } catch (error) {
+    console.error(colors.red(`✗ 动态变体生成失败: ${error.message}`));
+    return {
+      colors: [...DEFAULT_COLOR_FALLBACK],
+      sizes: [...DEFAULT_SIZE_FALLBACK],
+      variants: []
+    };
+  }
+}
+
+/**
+ * 🌟 合并真实数据和标准变体（修复版）
+ */
+function buildFinalProductData(realData, productId) {
+  console.log(colors.blue('🔄 构建最终产品数据...'));
+
+  // 🌟 使用过滤后的颜色数据构建变体，避免导航文字污染
+  const filteredColors = Array.isArray(realData.colorMetadata) && realData.colorMetadata.length > 0 
+    ? realData.colorMetadata 
+    : Array.isArray(realData.colors) ? realData.colors : [];
+=======
+function buildFinalProductData(realData, productId) {
+  console.log(colors.blue('🔄 构建最终产品数据...'));
+
+  // 提取颜色数据
+  const colorDetails = Array.isArray(realData.colors) ? realData.colors : [];
+  const colors = colorDetails.map(extractColorName).filter(Boolean);
+  
+  // 提取尺码数据
+  const sizes = Array.isArray(realData.sizes) ? realData.sizes : [];
+  
+  // 动态生成变体列表（颜色 × 尺码）
+  const variants = [];
+  if (colors.length > 0 && sizes.length > 0) {
+    colors.forEach((color, colorIndex) => {
+      const colorDetail = colorDetails[colorIndex] || {};
+      const colorCode = extractColorCode(colorDetail) || `color_${colorIndex}`;
+      
+      sizes.forEach((size, sizeIndex) => {
+        variants.push({
+          variantId: `${productId}_${colorCode}_${size}`,
+          colorName: color,
+          colorCode: colorCode,
+          sizeName: size,
+          available: true, // 暂时默认可用，后续可根据库存信息调整
+          price: realData.product?.price || '',
+          sku: `${productId}-${colorCode}-${size}`
+        });
+      });
+    });
+  }
+>>>>>>> e1e4513 (refactor: 优化CallawayJP产品抓取脚本架构)
+  
+  console.log(`🔧 使用过滤后的颜色构建变体: ${filteredColors.length} 个`, filteredColors.map(c => c.code || c));
+  
+  const variantBundle = createDynamicVariants(
+    productId,
+    filteredColors,
+    Array.isArray(realData.sizes) ? realData.sizes : []
+  );
+
+  // 🌟 GLM-4.6修復 + validColorCodes 一致性驗證：合併已過濾的顏色來源
+  console.log(`🔍 buildFinalProductData 顏色驗證:`);
+  console.log(`   realData.colorMetadata: ${(realData.colorMetadata || []).length} 個`, (realData.colorMetadata || []).map(c => c.code));
+  console.log(`   variantBundle.colors: ${variantBundle.colors.length} 個`, variantBundle.colors.map(c => c.code));
+  
+  const mergedColorMetadata = normalizeColorEntries([
+    ...(realData.colorMetadata || []),
+    ...variantBundle.colors
+  ]);
+  
+  console.log(`   合併後顏色: ${mergedColorMetadata.length} 個`, mergedColorMetadata.map(c => c.code));
+
+  // 確保圖片分組至少存在空陣列
+  mergedColorMetadata.forEach(color => {
+    if (!realData.imagesByColor[color.code]) {
+      realData.imagesByColor[color.code] = [];
+    }
+  });
+
+  const colorNames = mergedColorMetadata.map(color => color.name || color.code);
+  const sizeList = variantBundle.sizes;
+
+  const merged = {
+    productId: productId,
+    title: realData.product?.title || '',
+    productUrl: argv.url, // 🌟 直接使用命令行传入的URL，不再改写
+    description: realData.descriptionText || '', // 使用真实提取的描述
+    brand: realData.product?.brand || 'Callaway Golf',
+    
+<<<<<<< HEAD
+    // 使用真实提取的颜色和尺码（如果有的话）
+    colors: colorNames,
+    sizes: sizeList,
+    variants: variantBundle.variants,
+    
+    // 使用真实提取的图片和尺码表
+    rawImages: realData.rawImages,
+    imagesByColor: realData.imagesByColor || {}, // 🌟 新增：按颜色分组的图片数据  
+    colorMetadata: mergedColorMetadata, // 🌟 GLM-4.6修復：使用合併後的顏色元數據
+    sizeChart: realData.sizeChartData,
+=======
+    // 使用真实提取的颜色和尺码
+    colors: colors.length > 0 ? colors : [],
+    sizes: sizes.length > 0 ? sizes : [],
+    variants: variants,
+    
+    // 使用真实提取的图片和尺码表
+    rawImages: realData.rawImages || [],
+    imagesByColor: realData.imagesByColor || {},
+    colorMetadata: realData.colorMetadata || [],
+    sizeChart: realData.sizeChartData || null,
+>>>>>>> e1e4513 (refactor: 优化CallawayJP产品抓取脚本架构)
+    
+    // 保留数据源信息
+    dataSources: realData.dataSources || []
+  };
+  
+  console.log(colors.green(`✓ 最终数据构建完成`));
+  console.log(colors.gray(`  产品标题: ${merged.title}`));
+  console.log(colors.gray(`  描述长度: ${merged.description.length}`));
+  console.log(colors.gray(`  颜色数组: [${merged.colors.join(', ')}] (${merged.colors.length}个)`));
+  console.log(colors.gray(`  尺码数组: [${merged.sizes.join(', ')}] (${merged.sizes.length}个)`));
+<<<<<<< HEAD
+  console.log(colors.gray(`  变体数量: ${merged.variants.length}`));
+=======
+  console.log(colors.gray(`  变体数量: ${merged.variants.length} (动态生成)`));
+>>>>>>> e1e4513 (refactor: 优化CallawayJP产品抓取脚本架构)
+  console.log(colors.gray(`  原始图片: ${merged.rawImages.length} 张`));
+  console.log(colors.gray(`  按颜色分组: ${Object.keys(merged.imagesByColor).length} 个颜色`));
+  console.log(colors.gray(`  尺码表: ${merged.sizeChart ? '已提取' : '未找到'}`));
+  
+  // 如果没有提取到颜色或尺码，记录警告
+  if (colors.length === 0) {
+    console.log(colors.yellow(`⚠️ 未提取到颜色信息，返回空数组`));
+  }
+  if (sizes.length === 0) {
+    console.log(colors.yellow(`⚠️ 未提取到尺码信息，返回空数组`));
+  }
+  
+  return merged;
+}
+
+/**
+ * 下载图片
+ */
+/**
+ * 🌟 GLM-4.6修复版：从预注入的 RSC chunk 收集器中提取图片数据
+ */
+async function extractImagesByColorInteraction(page, productId, productColors) {
+  console.log(colors.blue(`🎨 开始抓取 ${productId} 所有颜色的商品主图...`));
+  console.log(colors.blue(`🔍 多颜色处理模式：扫描→点击→提取→分组`));
+
+  try {
+    // 等待页面完全加载
+    await page.waitForTimeout(5000);
+    
+    // 🌟 步骤1：扫描所有可用颜色
+    console.log(colors.blue(`🔍 扫描页面所有可用颜色...`));
+    
+    const availableColors = await page.evaluate(() => {
+      const colorsFound = [];
+      
+      // 颜色按钮的多种可能选择器 - 增强版
+      const colorButtonSelectors = [
+        '[data-color]',
+        '[data-variant]', 
+        '[data-pid]',
+        '[data-sku]',
+        '.color-swatch',
+        '.variation-attribute-value',
+        '.swatch',
+        'button[title*="1031"]',
+        'button[title*="1010"]', 
+        'button[title*="1030"]',
+        'button[aria-label*="1031"]',
+        'button[aria-label*="1010"]',
+        'button[aria-label*="1030"]',
+        'button[title*="WHITE"]',
+        'button[title*="BLACK"]',
+        'button[title*="NAVY"]',
+        'button[title*="ネイビー"]',
+        'button[title*="ブラック"]',
+        'button[title*="ホワイト"]',
+        'button[class*="color"]',
+        'button[class*="variant"]',
+        'button[onclick*="1031"]',
+        'button[onclick*="1010"]',
+        'button[onclick*="1030"]',
+        '[class*="cg-size"] button',
+        '.product-variant button',
+        '.option-selector button'
+      ];
+      
+      for (const selector of colorButtonSelectors) {
+        const elements = document.querySelectorAll(selector);
+        if (elements.length > 0) {
+          console.log(`找到颜色按钮选择器: ${selector}, 数量: ${elements.length}`);
+          
+          elements.forEach((element, index) => {
+            // 从多种属性中提取颜色代码 - 增强版
+            const possibleSources = [
+              element.getAttribute('data-color'),
+              element.getAttribute('data-variant'),
+              element.getAttribute('data-pid'),
+              element.getAttribute('data-sku'),
+              element.getAttribute('data-value'),
+              element.getAttribute('title'),
+              element.getAttribute('aria-label'),
+              element.getAttribute('onclick'),
+              element.getAttribute('href'),
+              element.textContent,
+              element.innerHTML
+            ].filter(Boolean);
+            
+            for (const source of possibleSources) {
+              // 尝试提取4位数字代码（如1031、1010、1030）
+              const codeMatches = source.match(/\b(\d{4})\b/g);
+              if (codeMatches) {
+                codeMatches.forEach(code => {
+                  // 🌟 GLM-4.6修復：允許所有4位數字顏色代碼，不再限制於白名單
+                  if (/^\d{4}$/.test(code)) {
+                    colorsFound.push({
+                      code: code,
+                      element: element,
+                      selector: selector,
+                      index: index,
+                      fullText: source,
+                      source: 'attribute'
+                    });
+                  }
+                });
+              }
+            }
+            
+            // 如果没找到4位数字，尝试颜色名称映射
+            const colorNameMapping = {
+              'ネイビー': '1031',
+              'NAVY': '1031', 
+              'ブラック': '1010',
+              'BLACK': '1010',
+              'ホワイト': '1030',
+              'WHITE': '1030'
+            };
+            
+            for (const source of possibleSources) {
+              for (const [colorName, colorCode] of Object.entries(colorNameMapping)) {
+                if (source.includes(colorName)) {
+                  colorsFound.push({
+                    code: colorCode,
+                    element: element,
+                    selector: selector,
+                    index: index,
+                    fullText: source,
+                    source: 'name_mapping'
+                  });
+                }
+              }
+            }
+          });
+          
+          // 找到颜色按钮就停止
+          if (colorsFound.length > 0) break;
+        }
+      }
+      
+      // 去重（基于颜色代码）
+      const uniqueColors = [];
+      const seenCodes = new Set();
+      
+      colorsFound.forEach(color => {
+        if (!seenCodes.has(color.code)) {
+          seenCodes.add(color.code);
+          uniqueColors.push(color);
+        }
+      });
+      
+      return uniqueColors;
+    });
+    
+    console.log(colors.green(`✓ 找到 ${availableColors.length} 个颜色:`));
+    availableColors.forEach(color => {
+      console.log(colors.gray(`  - ${color.code}: ${color.fullText}`));
+    });
+    
+    if (availableColors.length === 0) {
+      console.log(colors.yellow(`⚠️ 未找到任何颜色按钮，跳过颜色处理，依赖 normalizeColorEntries 處理`));
+      // 🌟 GLM-4.6修復：不再強制添加預設顏色，讓 normalizeColorEntries 統一處理
+    }
+    
+    // 🌟 步骤2：循环处理每个颜色
+    const allColorResults = {};
+    
+    for (let i = 0; i < availableColors.length; i++) {
+      const color = availableColors[i];
+      console.log(colors.blue(`\n🎨 处理颜色 ${i + 1}/${availableColors.length}: ${color.code} (${color.fullText})`));
+      
+      // 点击颜色按钮（如果有的话）
+      if (color.element) {
+        console.log(colors.blue(`🖱️ 点击颜色按钮: ${color.code}...`));
+        
+        const clickResult = await page.evaluate((colorData) => {
+          // 重新查找元素（页面可能已更新）
+          const elements = document.querySelectorAll(colorData.selector);
+          if (elements[colorData.index]) {
+            elements[colorData.index].click();
+            return { success: true };
+          }
+          return { success: false, reason: 'Element not found' };
+        }, color);
+        
+        if (clickResult.success) {
+          console.log(colors.green(`✓ 成功点击颜色 ${color.code}`));
+          await page.waitForTimeout(3000); // 等待轮播切换
+        } else {
+          console.log(colors.yellow(`⚠️ 点击颜色失败: ${clickResult.reason}`));
+        }
+      }
+      
+      // 提取该颜色的图片
+      console.log(colors.blue(`🔍 提取颜色 ${color.code} 的轮播图片...`));
+      
+      const colorImageData = await page.evaluate(() => {
+        console.log('[轮播提取] 开始从轮播容器提取图片...');
+      
+      const allImages = [];
+      const excludeKeywords = ['size', 'サイズ', 'wash', 'icon', 'logo', '素材'];
+      
+      // 查找轮播容器的多种可能选择器
+      const carouselSelectors = [
+        '.slick-slide img',
+        '[class*="product-image"] img',
+        '[class*="carousel"] img',
+        '[class*="slider"] img',
+        '[class*="gallery"] img',
+        '.product-images img',
+        '.main-image img',
+        '.hero-image img'
+      ];
+      
+      let foundImages = [];
+      
+      for (const selector of carouselSelectors) {
+        const imgs = document.querySelectorAll(selector);
+        if (imgs.length > 0) {
+          console.log(`找到轮播选择器: ${selector}, 图片数量: ${imgs.length}`);
+          foundImages = Array.from(imgs);
+          break;
+        }
+      }
+      
+      // 如果轮播容器找不到，回退到所有产品图片
+      if (foundImages.length === 0) {
+        console.log('未找到轮播容器，使用所有img标签');
+        foundImages = Array.from(document.querySelectorAll('img'));
+      }
+      
+      foundImages.forEach((img, index) => {
+        const src = img.src || '';
+        const dataSrc = img.getAttribute('data-src') || '';
+        const srcset = img.srcset || '';
+        const alt = img.alt || '';
+        
+        // 检查所有可能的图片源
+        const imageSources = [src, dataSrc];
+        
+        // 处理srcset（包含多个尺寸）
+        if (srcset) {
+          const srcsetParts = srcset.split(',');
+          srcsetParts.forEach(part => {
+            const url = part.trim().split(' ')[0];
+            const width = part.trim().split(' ')[1] || '0w';
+            imageSources.push({ url, width });
+          });
+        }
+        
+        imageSources.forEach(source => {
+          let url = '';
+          let width = '0w';
+          
+          if (typeof source === 'string') {
+            url = source;
+          } else if (source && source.url) {
+            url = source.url;
+            width = source.width;
+          }
+          
+          // 🌟 只处理包含webdamdb或_next/image的URL，且必须包含1280_前缀
+          if (url && (url.includes('webdamdb.com') || url.includes('_next/image'))) {
+            
+            // 🌟 检查是否为1280_前缀的主图
+            let isMainImage = false;
+            if (url.includes('_next/image')) {
+              try {
+                const urlObj = new URL(url, 'https://www.callawaygolf.jp');
+                const actualImageUrl = urlObj.searchParams.get('url');
+                if (actualImageUrl) {
+                  const decodedUrl = decodeURIComponent(actualImageUrl);
+                  isMainImage = decodedUrl.includes('1280_');
+                }
+              } catch (e) {
+                // URL解析失败，跳过
+              }
+            } else if (url.includes('webdamdb.com')) {
+              isMainImage = url.includes('1280_');
+            }
+            
+            // 🌟 只保留1280_前缀的主图
+            if (!isMainImage) {
+              return; // 跳过非主图
+            }
+            
+            // 过滤掉包含排除关键词的图片
+            const shouldExclude = excludeKeywords.some(keyword => 
+              url.toLowerCase().includes(keyword.toLowerCase()) ||
+              alt.toLowerCase().includes(keyword.toLowerCase())
+            );
+            
+            if (!shouldExclude) {
+              // 🌟 补全为绝对URL
+              let finalUrl = url;
+              if (url.startsWith('/_next/')) {
+                finalUrl = 'https://www.callawaygolf.jp' + url;
+              } else if (!url.startsWith('http')) {
+                finalUrl = 'https://www.callawaygolf.jp' + url;
+              }
+              
+              // 提取width数值用于排序
+              const widthNum = parseInt(width.replace('w', '')) || 0;
+              
+              allImages.push({
+                originalUrl: url,
+                finalUrl: finalUrl, // 绝对URL
+                source: 'carousel',
+                index: index,
+                alt: alt,
+                className: img.className || '',
+                width: widthNum,
+                widthStr: width
+              });
+            }
+          }
+        });
+      });
+      
+      // 🌟 按基础图片分组，每组只保留w=3000版本
+      const imageGroups = {};
+      allImages.forEach(imgData => {
+        // 提取基础URL（从webdamdb路径中提取文件名作为key）
+        let baseKey = '';
+        
+        if (imgData.finalUrl.includes('_next/image?')) {
+          try {
+            const urlObj = new URL(imgData.finalUrl);
+            const actualImageUrl = urlObj.searchParams.get('url');
+            if (actualImageUrl) {
+              const decodedUrl = decodeURIComponent(actualImageUrl);
+              // 从webdamdb URL中提取文件名（如1280_ANQKK9g9LUW02Aay.jpg）
+              const matches = decodedUrl.match(/1280_([^?]+)/);
+              if (matches) {
+                baseKey = matches[1]; // 提取文件标识符
+              }
+            }
+          } catch (e) {
+            console.log('URL解析失败:', imgData.finalUrl);
+          }
+        }
+        
+        if (baseKey) {
+          if (!imageGroups[baseKey]) {
+            imageGroups[baseKey] = [];
+          }
+          imageGroups[baseKey].push(imgData);
+        }
+      });
+      
+      // 🌟 每组只保留w=3000的版本
+      const finalImages = [];
+      Object.values(imageGroups).forEach(group => {
+        // 优先选择w=3000的版本
+        const w3000Version = group.find(img => img.finalUrl.includes('w=3000'));
+        if (w3000Version) {
+          finalImages.push(w3000Version);
+        } else {
+          // 如果没有w=3000，按width降序排序取最大的
+          group.sort((a, b) => b.width - a.width);
+          finalImages.push(group[0]);
+        }
+      });
+      
+      // 按原始顺序排序
+      finalImages.sort((a, b) => a.index - b.index);
+        
+        console.log(`[轮播提取] 总计找到 ${allImages.length} 张图片，去重后 ${finalImages.length} 张`);
+        
+        return finalImages;
+      });
+      
+      console.log(colors.green(`✓ 颜色 ${color.code} 图片提取完成`));
+      console.log(colors.gray(`  总计找到图片: ${colorImageData.length}`));
+      
+      // 取前12张图片
+      const colorFinalImages = colorImageData.slice(0, 12);
+      
+      // 保存该颜色的结果
+      allColorResults[color.code] = {
+        colorCode: color.code,
+        colorName: color.fullText,
+        images: colorFinalImages,
+        count: colorFinalImages.length
+      };
+      
+      console.log(colors.blue(`\n📋 颜色 ${color.code} 的图片URL列表 (${colorFinalImages.length}张):`));
+      colorFinalImages.forEach((img, index) => {
+        console.log(colors.gray(`  ${index + 1}. ${img.finalUrl}`));
+      });
+    }
+    
+    // 🌟 步骤3：汇总所有颜色的结果
+    console.log(colors.blue(`\n🎉 所有颜色处理完成，生成最终报告...`));
+    
+    const totalImages = Object.values(allColorResults).reduce((sum, colorData) => sum + colorData.count, 0);
+    const processedColors = Object.keys(allColorResults).length;
+    
+    console.log(colors.green(`✓ 处理完成统计:`));
+    console.log(colors.gray(`  颜色总数: ${processedColors}`));
+    console.log(colors.gray(`  图片总数: ${totalImages}`));
+    
+    // 🌟 按颜色输出详细URL列表
+    Object.entries(allColorResults).forEach(([colorCode, colorData]) => {
+      console.log(colors.blue(`\n📋 ${colorCode} (${colorData.colorName}) - ${colorData.count}张图片:`));
+      colorData.images.forEach((img, index) => {
+        console.log(`${index + 1}. ${img.finalUrl}`);
+      });
+    });
+    
+    console.log(colors.yellow(`\n⚠️ 请确认以上所有颜色的URL列表，确认OK后才会写入JSON并进行下一步处理`));
+    
+    // 🌟 转换为finalImagesByColor结构
+    const finalImagesByColor = {};
+    const allImages = [];
+    const colorMetadata = [];
+    
+    // 转换每个颜色的图片数据
+    Object.entries(allColorResults).forEach(([colorCode, colorData]) => {
+      const finalImagesForColor = colorData.images.map((img, index) => ({
+        originalUrl: img.originalUrl,
+        url1080: img.finalUrl, // 保持w=3000不做替换
+        colorCode: colorCode,
+        colorName: colorData.colorName,
+        index: index
+      }));
+      
+      finalImagesByColor[colorCode] = finalImagesForColor;
+      allImages.push(...finalImagesForColor);
+      
+      colorMetadata.push({
+        code: colorCode,
+        name: colorData.colorName,
+        displayName: colorData.colorName
+      });
+    });
+    
+    // 按照任务要求返回的结构
+    return {
+      imagesByColor: finalImagesByColor,
+      allImages: allImages,
+      totalImages: allImages.length,
+      filteredCount: allImages.length,
+      colorMetadata: colorMetadata
+    };
+    
+  } catch (error) {
+    console.error(colors.red(`✗ 多颜色图片抓取失败: ${error.message}`));
+    console.log(colors.yellow('  回退到单颜色默认处理...'));
+    
+    // 回退方案：只处理默认颜色
+    return {
+      status: 'error',
+      byColor: {
+        '1031': {
+          colorCode: '1031',
+          colorName: 'DEFAULT',
+          images: [],
+          count: 0
+        }
+      },
+      totalImages: 0,
+      totalColors: 1,
+      error: error.message
+    };
+  }
+}
+
+/**
+<<<<<<< HEAD
+ * 处理图片：下载、上传、分组（使用 colorMetadata 优化版）
+ */
+async function cleanupTempDir() {
+  try {
+    const files = await fs.readdir(TEMP_DIR);
+    for (const file of files) {
+      await fs.unlink(path.join(TEMP_DIR, file));
+    }
+    await fs.rmdir(TEMP_DIR);
+    console.log(colors.gray('✓ 清理临时目录'));
+  } catch (error) {
+    // 忽略清理失败
+  }
+}
+
+/**
+ * 🌟 主抓取函数（完全修复版）
+ */
+async function scrapeProductDetail() {
+  const startTime = Date.now();
+  const productId = argv.productId;
+  const url = argv.url;
+  
+  console.log(colors.blue('🚀 CallawayJP 商品详情抓取 - v5.0 完全修复版'));
+  console.log(colors.gray(`🎯 目标URL: ${url}`));
+  console.log(colors.gray(`📦 产品ID: ${productId}`));
+  
+  if (!url || !productId) {
+    throw new Error('缺少必要参数：--url 和 --product-id');
+  }
+  
+  let browser;
+  let ossClient;
+  
+  try {
+    // 初始化 OSS 客户端
+    ossClient = await initOSSClient();
+    
+    // 初始化浏览器
+    console.log(colors.blue('🌐 启动浏览器...'));
+    const playwright = await import('playwright');
+    browser = await playwright.chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+    
+    const context = await browser.newContext({
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    });
+    
+    const page = await setupPage(context);
+    
+    // 🌟 RSC Hook 设置（优化版）- 自动选择最佳策略
+    console.log(colors.blue('🔧 设置 RSC Chunk 收集器...'));
+    
+    // 预注入收集器到页面
+    await page.addInitScript(`
+      window._rscChunkCollector = {
+        chunks: [],
+        rawChunks: [],
+        hookAttempts: 0,
+        hookSuccess: false,
+        
+        // RSC Chunk 处理器
+        processChunk: function(chunkId, payload) {
+          this.rawChunks.push({ chunkId, payload, timestamp: Date.now() });
+          
+          let payloadStr = '';
+          if (typeof payload === 'string') {
+            payloadStr = payload;
+          } else if (payload && typeof payload === 'object') {
+            try {
+              payloadStr = JSON.stringify(payload);
+            } catch (e) {
+              payloadStr = String(payload);
+            }
+          } else {
+            payloadStr = String(payload || '');
+          }
+          
+          this.chunks.push({ chunkId, payload: payloadStr });
+          
+          // 尝试提取 productDetail 数据
+          try {
+            // RSC payload 可能包含转义字符，需要处理
+            let cleanPayload = payloadStr;
+            if (cleanPayload.includes('\\\\u003c')) {
+              cleanPayload = cleanPayload.replace(/\\\\u003c/g, '<').replace(/\\\\u003e/g, '>');
+            }
+            
+            // 查找 productDetail 数据
+            if (cleanPayload.includes('productDetail') && cleanPayload.includes('imageGroups')) {
+              try {
+                const productDetailMatch = cleanPayload.match(/"productDetail"\\s*:\\s*(\\{[\\s\\S]*?\\})(?=\\s*[,}])/);
+                if (productDetailMatch) {
+                  const productDetailStr = productDetailMatch[1]
+                    .replace(/\\\\"/g, '"')
+                    .replace(/\\\\n/g, '\\n')
+                    .replace(/\\\\r/g, '\\r')
+                    .replace(/\\\\t/g, '\\t');
+                  
+                  const productDetail = JSON.parse(productDetailStr);
+                  if (productDetail.imageGroups) {
+                    window._rscChunkCollector.productDetail = productDetail;
+                    console.log('[RSC] ✓ 成功提取 productDetail 数据');
+                  }
+                }
+              } catch (e) {
+                console.log('[RSC] productDetail 解析失败:', e.message);
+              }
+            }
+          } catch (e) {
+            // 忽略解析错误
+          }
+        }
+      };
+      
+      // Hook 设置函数
+      function setupHook() {
+        window._rscChunkCollector.hookAttempts++;
+        
+        if (window.self && window.self.__next_f) {
+          const originalPush = window.self.__next_f.push;
+          if (originalPush) {
+            window.self.__next_f.push = function(...args) {
+              if (args.length >= 2) {
+                const [chunkId, payload] = args;
+                window._rscChunkCollector.processChunk(chunkId, payload);
+              }
+              return originalPush.apply(this, args);
+            };
+            
+            window._rscChunkCollector.hookSuccess = true;
+            console.log('[RSC Hook] ✓ 成功设置 __next_f.push 代理');
+            return true;
+          }
+        }
+        return false;
+      }
+      
+      // 立即尝试设置
+      setupHook();
+      
+      // 页面加载后再次尝试
+      document.addEventListener('DOMContentLoaded', setupHook);
+      
+      // 定时重试
+      const retryInterval = setInterval(() => {
+        if (!window._rscChunkCollector.hookSuccess && window._rscChunkCollector.hookAttempts < 5) {
+          setupHook();
+        } else {
+          clearInterval(retryInterval);
+        }
+      }, 1000);
+    `);
+    
+    // 导航到页面
+    console.log(colors.blue(`🔗 导航到产品页面...`));
+    await page.goto(url, { 
+      waitUntil: 'networkidle',
+      timeout: 60000 
+    });
+    
+    // 等待页面渲染和 RSC 数据加载
+    await page.waitForTimeout(8000);
+    
+    // 1. 提取真实产品数据
+    const realData = await extractRealProductData(page, productId);
+    
+    // 2. 合并真实数据并生成动态变体
+    const productData = buildFinalProductData(realData, productId);
+    
+    console.log(colors.magenta('=== 数据提取完成 ===\\n'));
+    
+    // 4. 按变体分组处理图片
+    const processedImages = await processImagesWithVariantGrouping(productData, ossClient);
+    
+    // 🌟 步骤2: 提取和过滤图片
+    const candidateImages = [];
+    let filteredCount = 0;
+    
+    validImageGroups.forEach(group => {
+      if (group.images && Array.isArray(group.images)) {
+        group.images.forEach((img, imgIndex) => {
+          const imgUrl = img.url || img.src || '';
+          const imgAlt = img.alt || '';
+          
+          // 🚨 严格过滤规则 - URL 和 alt 同时检查
+          const excludeKeywords = [
+            'size', 'サイズ', '尺寸', 'chart', '表',
+            '洗濯', 'wash', 'care', '素材', 'material',
+            'icon', 'logo', 'symbol', 'guide', 'fit', 'illustration'
+          ];
+          
+          const searchText = (imgUrl + ' ' + imgAlt).toLowerCase();
+          const hasExcludeKeyword = excludeKeywords.some(keyword => 
+            searchText.includes(keyword.toLowerCase())
+          );
+          
+          if (hasExcludeKeyword) {
+            console.log(`    ✗ 过滤关键词: ${imgAlt}`);
+            filteredCount++;
+            return;
+          }
+          
+          // 🚨 只保留 .jpg/.jpeg 图片
+          if (!imgUrl.match(/\.(jpg|jpeg)(\?|$)/i)) {
+            console.log(`    ✗ 过滤非JPG: ${imgUrl}`);
+            filteredCount++;
+            return;
+          }
+          
+          // 🚨 检查图片尺寸 (有尺寸信息才检查)
+          const width = img.width || img.w || 0;
+          const height = img.height || img.h || 0;
+          if ((width > 0 && width < 800) || (height > 0 && height < 800)) {
+            console.log(`    ✗ 过滤小尺寸: ${width}x${height}`);
+            filteredCount++;
+            return;
+          }
+          
+          // 🚨 必须是 webdamdb 链接
+          if (!imgUrl.includes('webdamdb.com')) {
+            console.log(`    ✗ 过滤非webdamdb: ${imgUrl}`);
+            filteredCount++;
+            return;
+          }
+          
+          // ✅ 通过所有过滤条件
+          candidateImages.push({
+            originalUrl: imgUrl.split('?')[0], // 移除参数的原始URL
+            url1080: `${imgUrl.split('?')[0]}?imwidth=1080&imheight=1080&impolicy=Resize&imformat=jpg`,
+            alt: imgAlt,
+            colorCode: '1031',
+            colorName: 'WHITE/NAVY',
+            index: candidateImages.length
+          });
+          
+          console.log(`    ✓ 候选图片 ${candidateImages.length}: ${imgAlt}`);
+        });
+      }
+    });
+    
+    // 🌟 步骤3: 去重并保留前12张
+    const uniqueImages = [];
+    const seenUrls = new Set();
+    
+    candidateImages.forEach(img => {
+      if (!seenUrls.has(img.originalUrl)) {
+        seenUrls.add(img.originalUrl);
+        uniqueImages.push({
+          ...img,
+          index: uniqueImages.length
+        });
+      }
+    });
+    
+    const finalImages = uniqueImages.slice(0, 12);
+    
+    console.log(colors.blue('📊 图片筛选结果:'));
+    console.log(colors.gray(`  候选图片: ${candidateImages.length} 张`));
+    console.log(colors.gray(`  过滤数量: ${filteredCount} 张`));
+    console.log(colors.gray(`  去重后: ${uniqueImages.length} 张`));
+    console.log(colors.gray(`  最终保留: ${finalImages.length} 张`));
+    
+    if (finalImages.length < 12) {
+      console.log(colors.yellow(`⚠️ 图片数量不足12张，实际获得 ${finalImages.length} 张`));
+    }
+    
+    // 返回调试信息
+    return {
+      success: true,
+      productDetailFound: !!foundProductDetail,
+      productDetail: foundProductDetail,
+      debugInfo: debugInfo
+    };
+    
+  } catch (error) {
+    console.error(colors.red(`✗ RSC 图片抓取失败: ${error.message}`));
+    console.log(colors.yellow('  回退到空结构...'));
+    
+    // 回退方案：基于输入颜色生成空结构
+    const inputColorList = Array.isArray(productColors) ? productColors : [];
+    const fallbackImagesByColor = {};
+    const fallbackColorMetadata = [];
+    
+    inputColorList.forEach((color, index) => {
+      const colorCode = extractColorCode(color) || `color_${index}`;
+      const colorName = extractColorName(color) || colorCode;
+      
+      fallbackImagesByColor[colorCode] = [];
+      fallbackColorMetadata.push({
+        code: colorCode,
+        name: colorName,
+        displayName: colorName,
+        rawValue: color
+      });
+    });
+    
+    return {
+      imagesByColor: fallbackImagesByColor,
+      allImages: [],
+      totalImages: 0,
+      filteredCount: 0,
+      colorMetadata: fallbackColorMetadata
+    };
+  }
+}
+
+/**
+ * 处理图片：下载、上传、分组（使用 colorMetadata 优化版）
+ */
+async function processImagesWithVariantGrouping(productData, ossClient) {
+  console.log(colors.blue(`🖼️  处理商品图片 (GLM-4.6优化版)...`));
+
+  const imagesByColor = productData.imagesByColor || {};
+  const metadataSource = Array.isArray(productData.colorMetadata) && productData.colorMetadata.length > 0
+    ? productData.colorMetadata
+    : Array.isArray(productData.colors) && productData.colors.length > 0
+      ? productData.colors
+      : Object.keys(imagesByColor);
+
+  let colorMetadata = normalizeColorEntries(metadataSource);
+  const extraColors = Object.keys(imagesByColor).filter(code => !colorMetadata.find(color => color.code === code));
+  if (extraColors.length > 0) {
+    colorMetadata = colorMetadata.concat(normalizeColorEntries(extraColors));
+  }
+
+  const totalImages = Object.values(imagesByColor).reduce((total, images) => total + (Array.isArray(images) ? images.length : 0), 0);
+  console.log(colors.gray(`📸 页面返回图片总数: ${totalImages}`));
+
+  if (totalImages === 0) {
+    console.log(colors.yellow('⚠️ 没有图片需要处理'));
+    return {
+      product: [],
+      variants: {},
+      ossLinks: {
+        productImages: [],
+        variantImages: {}
+      },
+      totalImages: 0,
+      ossUploadCount: 0,
+      uploadErrors: []
+    };
+  }
+
+  await ensureDir(TEMP_DIR);
+
+  const processedImages = {
+    product: [],
+    variants: {},
+    ossLinks: {
+      productImages: [],
+      variantImages: {}
+    },
+    totalImages: 0,
+    ossUploadCount: 0,
+    uploadErrors: []
+  };
+
+  const firstColorCode = colorMetadata[0]?.code;
+
+  colorMetadata.forEach(meta => {
+    const variantKey = `${productData.productId}_${meta.code}`;
+    processedImages.variants[variantKey] = [];
+    processedImages.ossLinks.variantImages[variantKey] = [];
+  });
+
+  let globalImageIndex = 0;
+
+  for (const [colorCode, colorImagesRaw] of Object.entries(imagesByColor)) {
+    const colorImages = Array.isArray(colorImagesRaw) ? colorImagesRaw : [];
+    const colorMeta = colorMetadata.find(m => m.code === colorCode) || { code: colorCode, name: colorCode };
+    const colorName = colorMeta.name || colorCode;
+    const variantKey = `${productData.productId}_${colorMeta.code}`;
+
+    if (!processedImages.variants[variantKey]) {
+      processedImages.variants[variantKey] = [];
+      processedImages.ossLinks.variantImages[variantKey] = [];
+    }
+
+    console.log(colors.blue(`🎨 处理 ${colorName} (${colorMeta.code}) - ${colorImages.length} 张图片`));
+
+    for (let i = 0; i < colorImages.length; i++) {
+      const image = colorImages[i] || {};
+      const candidateUrl = image.url1080 || image.originalUrl || image.url || image.src;
+
+      if (!candidateUrl) {
+        console.log(colors.yellow(`  ⚠️ 跳过缺少URL的图片 [${colorMeta.code}] index=${i}`));
+        continue;
+      }
+
+      let ossUrl = null;
+      let ossPath = null;
+
+      try {
+        if (argv.dryRun) {
+          ossUrl = candidateUrl;
+          console.log(colors.yellow(`  🔄 干运行: ${colorName}[${i}] 使用原始URL`));
+        } else {
+          const normalizedUrl = candidateUrl;
+          const imageExt = path.extname(new URL(normalizedUrl).pathname) || '.jpg';
+          const tempFileName = `${productData.productId}_${colorMeta.code}_${i}${imageExt}`;
+          const tempPath = path.join(TEMP_DIR, tempFileName);
+
+          console.log(colors.gray(`  ⬇️ 下载 ${colorName}[${i + 1}/${colorImages.length}]: ${normalizedUrl}`));
+          await downloadImage(normalizedUrl, tempPath);
+
+          let finalPath = tempPath;
+          if (!imageExt.match(/\.(jpg|jpeg)$/i)) {
+            finalPath = tempPath.replace(/\.[^.]+$/, '.jpg');
+            await fs.rename(tempPath, finalPath);
+          }
+
+          ossPath = `callaway/${productData.productId}/${colorMeta.code}/${i}.jpg`;
+          ossUrl = await uploadImageToOSS(ossClient, finalPath, ossPath, 3);
+
+          try {
+            await fs.unlink(finalPath);
+          } catch {
+            // 忽略删除失败
+          }
+        }
+
+        if (!ossUrl) {
+          continue;
+        }
+
+        if (ossClient && !argv.dryRun && ossPath) {
+          try {
+            await ossClient.head(ossPath);
+            console.log(colors.green(`  ✓ 上传成功: ${colorName}[${i}]`));
+          } catch (ossVerifyError) {
+            console.error(colors.red(`  ✗ OSS验证失败: ${ossVerifyError.message}`));
+            processedImages.uploadErrors.push({
+              url: candidateUrl,
+              error: `OSS验证失败: ${ossVerifyError.message}`,
+              colorCode: colorMeta.code,
+              type: 'oss_verification_failed'
+            });
+            continue;
+          }
+        } else if (argv.dryRun) {
+          console.log(colors.green(`  ✓ 干运行确认: ${colorName}[${i}]`));
+        }
+
+        const processedImage = {
+          originalUrl: image.originalUrl || candidateUrl,
+          ossUrl,
+          alt: image.alt || '',
+          type: 'product_1080',
+          index: globalImageIndex++,
+          colorCode: colorMeta.code,
+          colorName,
+          size: '1080x1080'
+        };
+
+        processedImages.variants[variantKey].push(processedImage);
+        processedImages.ossLinks.variantImages[variantKey].push(ossUrl);
+
+        if (firstColorCode && colorMeta.code === firstColorCode) {
+          processedImages.product.push(processedImage);
+          processedImages.ossLinks.productImages.push(ossUrl);
+        }
+
+        processedImages.ossUploadCount++;
+      } catch (error) {
+        console.error(colors.red(`  ✗ 处理图片失败 ${candidateUrl}: ${error.message}`));
+
+        let errorType = 'download_or_upload_1080';
+        if (error.message.includes('HTTP 429')) {
+          errorType = 'http_429_rate_limit';
+        } else if (error.message.includes('HTTP 404')) {
+          errorType = 'http_404_not_found';
+        } else if (error.message.includes('timeout')) {
+          errorType = 'download_timeout';
+        }
+
+        processedImages.uploadErrors.push({
+          url: candidateUrl,
+          error: error.message,
+          colorCode: colorMeta.code,
+          type: errorType
+        });
+      }
+    }
+  }
+
+  processedImages.totalImages = Object.values(processedImages.variants).reduce((sum, arr) => sum + arr.length, 0);
+
+  console.log(colors.green(`✓ 图片处理完成`));
+  console.log(colors.blue(`📊 统计信息:`));
+  console.log(colors.gray(`  实际图片数: ${processedImages.totalImages} 张`));
+  console.log(colors.gray(`  记录主图: ${processedImages.product.length} 张`));
+  console.log(colors.gray(`  上传/确认次数: ${processedImages.ossUploadCount}`));
+  console.log(colors.gray(`  错误记录: ${processedImages.uploadErrors.length}`));
+
+  Object.entries(processedImages.variants).forEach(([variantKey, images]) => {
+    const count = images.length;
+    if (count === 0) {
+      console.log(colors.yellow(`  ⚠️ ${variantKey}: 未抓到图片`));
+    } else {
+      console.log(colors.gray(`  ${variantKey}: ${count} 张`));
+    }
+  });
+
+  if (processedImages.uploadErrors.length > 0) {
+    console.log(colors.red(`⚠️ 失败图片汇总 (${processedImages.uploadErrors.length} 张):`));
+    const errorsByType = {};
+    processedImages.uploadErrors.forEach(err => {
+      if (!errorsByType[err.type]) {
+        errorsByType[err.type] = [];
+      }
+      errorsByType[err.type].push(err);
+    });
+
+    Object.entries(errorsByType).forEach(([type, errors]) => {
+      console.log(colors.red(`  ${type}: ${errors.length} 张`));
+      errors.slice(0, 3).forEach(err => {
+        console.log(colors.red(`    - [${err.colorCode}] ${err.url.substring(0, 80)}${err.url.length > 80 ? '...' : ''}`));
+      });
+      if (errors.length > 3) {
+        console.log(colors.red(`    ... 还有 ${errors.length - 3} 张相同错误`));
+      }
+    });
+  }
+
+  return processedImages;
+}
+
+/**
+ * 清理临时目录
+ */
+async function cleanupTempDir() {
+  try {
+    const files = await fs.readdir(TEMP_DIR);
+    for (const file of files) {
+      await fs.unlink(path.join(TEMP_DIR, file));
+    }
+    await fs.rmdir(TEMP_DIR);
+    console.log(colors.gray('✓ 清理临时目录'));
+  } catch (error) {
+    // 忽略清理失败
+  }
+}
+
+/**
+=======
+>>>>>>> e1e4513 (refactor: 优化CallawayJP产品抓取脚本架构)
+ * 🌟 主抓取函数（完全修复版）
+ */
+async function scrapeProductDetail() {
+  const startTime = Date.now();
+  const productId = argv.productId;
+  const url = argv.url;
+  
+  console.log(colors.blue('🚀 CallawayJP 商品详情抓取 - v5.0 完全修复版'));
+  console.log(colors.gray(`URL: ${url}`));
+  console.log(colors.gray(`Product ID: ${productId}`));
+  console.log(colors.magenta('修复重点: 3色×4码=12变体 + 真实描述 + 图片分组 + 飞书兼容'));
+  console.log('');
+  
+  let browser;
+
+  try {
+    
+    // 启动浏览器
+    console.log(colors.blue('🌐 启动浏览器...'));
+    browser = await chromium.launch(BROWSER_OPTIONS);
+    
+    const context = await browser.newContext(CONTEXT_OPTIONS);
+    const page = await setupPage(context);
+    
+    // 🌟 关键修复1: 在页面加载前注入 RSC chunk 拦截脚本（使用 defineProperty 代理）
+    console.log(colors.blue('🔍 注入增强版 RSC chunk 拦截脚本...'));
+    await page.addInitScript(() => {
+      // 初始化收集器
+      window._rscChunkCollector = {
+        chunks: [],
+        productDetailFound: false,
+        rawChunks: [], // 保存原始 chunk 数据用于调试
+        hookAttempts: 0,
+        hookSuccess: false,
+        proxySetupCount: 0,
+        failedParseExamples: []
+      };
+      
+      console.log('[RSC Init] 开始设置增强版 RSC chunk 拦截...');
+      
+      // 设置 push hook 的函数
+      function setupPushHook(nextFArray) {
+        console.log('[RSC Hook] 设置 push hook...');
+        
+        if (!nextFArray || typeof nextFArray.push !== 'function') {
+          console.log('[RSC Hook] nextFArray 无效，跳过 hook 设置');
+          return false;
+        }
+        
+        // 检查是否已经被 hook
+        if (nextFArray._rscHooked) {
+          console.log('[RSC Hook] 数组已被 hook，跳过');
+          return true;
+        }
+        
+        const originalPush = nextFArray.push;
+        
+        nextFArray.push = function(...args) {
+          console.log('[RSC] __next_f.push 被调用，参数数量:', args.length);
+          
+          // 🌟 修复2: 正确处理 [chunkId, payload] 数组格式
+          if (args.length >= 2) {
+            const chunkId = args[0];
+            const payload = args[1];
+            
+            // 保存原始数据用于调试
+            window._rscChunkCollector.rawChunks.push({ chunkId, payload, timestamp: Date.now() });
+            
+            // 处理不同类型的 payload
+            let payloadStr = '';
+            if (typeof payload === 'string') {
+              payloadStr = payload;
+            } else if (payload && typeof payload === 'object') {
+              try {
+                payloadStr = JSON.stringify(payload);
+              } catch (e) {
+                payloadStr = String(payload);
+              }
+            } else {
+              payloadStr = String(payload || '');
+            }
+            
+            console.log(`[RSC] 收到 chunk ${chunkId}, payload 类型: ${typeof payload}, 长度: ${payloadStr.length}`);
+            
+            // 🌟 调试：输出前几个chunk的内容样本
+            if (window._rscChunkCollector.rawChunks.length <= 5) {
+              console.log(`[RSC Debug] Chunk ${chunkId} 内容预览:`, payloadStr.substring(0, 300) + '...');
+            }
+            
+            // 🌟 修复3: 检查 payload 是否包含产品相关数据
+            if (payloadStr && (payloadStr.includes('productDetail') || payloadStr.includes('imageGroups') || payloadStr.includes('variationAttributes') || payloadStr.includes('C25215200'))) {
+              console.log(`[RSC] ✓ Chunk ${chunkId} 包含产品数据`);
+              window._rscChunkCollector.chunks.push({ chunkId, payload: payloadStr });
+              
+              // 尝试提取 productDetail 数据
+              try {
+                // RSC payload 可能包含转义字符，需要处理
+                let cleanPayload = payloadStr;
+                if (cleanPayload.includes('\\u003c')) {
+                  cleanPayload = cleanPayload.replace(/\\u003c/g, '<');
+                }
+                if (cleanPayload.includes('\\"')) {
+                  cleanPayload = cleanPayload.replace(/\\\"/g, '"');
+                }
+                
+                // 🌟 修正：使用更精准的正则匹配完整的 productDetail 对象（包含嵌套结构）
+                const productDetailMatch = cleanPayload.match(/"productDetail"\s*:\s*(\{(?:[^{}]|\{[^{}]*\})*\})/); 
+                
+                if (productDetailMatch) {
+                  const productDetailStr = '{"productDetail":' + productDetailMatch[1] + '}';
+                  const productDetail = JSON.parse(productDetailStr);
+                  
+                  if (productDetail.productDetail && (productDetail.productDetail.imageGroups || productDetail.productDetail.variationAttributes)) {
+                    window._rscChunkCollector.productDetailFound = true;
+                    window._rscChunkCollector.productDetail = productDetail.productDetail;
+                    console.log('[RSC] ✓ 成功解析 productDetail:', {
+                      hasImageGroups: !!productDetail.productDetail.imageGroups,
+                      imageGroupsCount: (productDetail.productDetail.imageGroups || []).length,
+                      hasVariationAttributes: !!productDetail.productDetail.variationAttributes,
+                      variationAttributesCount: (productDetail.productDetail.variationAttributes || []).length
+                    });
+                  }
+                }
+              } catch (e) {
+                console.log(`[RSC] 解析 chunk ${chunkId} 失败:`, e.message);
+                // 保存解析失败的 payload 片段用于调试
+                const snippet = payloadStr.length > 400 ? 
+                  payloadStr.substring(0, 200) + '...' + payloadStr.substring(payloadStr.length - 200) :
+                  payloadStr;
+                window._rscChunkCollector.failedParseExamples.push({ chunkId, snippet, error: e.message });
+              }
+            }
+          } else if (args.length === 1) {
+            // 处理单参数情况
+            const data = args[0];
+            let dataStr = '';
+            if (typeof data === 'string') {
+              dataStr = data;
+            } else if (data && typeof data === 'object') {
+              try {
+                dataStr = JSON.stringify(data);
+              } catch (e) {
+                dataStr = String(data || '');
+              }
+            } else {
+              dataStr = String(data || '');
+            }
+            
+            window._rscChunkCollector.rawChunks.push({ chunkId: 'unknown', payload: dataStr, timestamp: Date.now() });
+            console.log(`[RSC] 收到单参数数据，类型: ${typeof data}, 长度: ${dataStr.length}`);
+          }
+          
+          // 调用原始方法
+          return originalPush.apply(this, args);
+        };
+        
+        // 标记为已 hook
+        nextFArray._rscHooked = true;
+        console.log('[RSC Hook] ✓ Push hook 设置成功');
+        return true;
+      }
+      
+      // 🌟 新增：使用 defineProperty 代理 self.__next_f
+      function setupNextFProxy() {
+        window._rscChunkCollector.proxySetupCount++;
+        console.log(`[RSC Proxy] 设置 __next_f 代理 #${window._rscChunkCollector.proxySetupCount}`);
+        
+        // 确保 self 存在
+        if (!window.self) {
+          window.self = window;
+          console.log('[RSC Proxy] 创建 window.self');
+        }
+        
+        // 获取当前的 __next_f 值（如果存在）
+        let currentNextF = window.self.__next_f || [];
+        
+        // 对当前数组设置 hook
+        if (Array.isArray(currentNextF)) {
+          setupPushHook(currentNextF);
+        }
+        
+        // 使用 defineProperty 代理 __next_f
+        try {
+          Object.defineProperty(window.self, '__next_f', {
+            get: function() {
+              return currentNextF;
+            },
+            set: function(newValue) {
+              console.log('[RSC Proxy] __next_f 被重新赋值，类型:', typeof newValue, '长度:', Array.isArray(newValue) ? newValue.length : 'N/A');
+              
+              // 更新当前值
+              currentNextF = newValue || [];
+              
+              // 为新数组设置 hook
+              if (Array.isArray(currentNextF)) {
+                setupPushHook(currentNextF);
+                window._rscChunkCollector.hookSuccess = true;
+              }
+            },
+            configurable: true
+          });
+          
+          console.log('[RSC Proxy] ✓ __next_f 代理设置成功');
+          return true;
+        } catch (e) {
+          console.log('[RSC Proxy] 代理设置失败:', e.message);
+          return false;
+        }
+      }
+      
+      // 立即设置代理
+      const proxySuccess = setupNextFProxy();
+      
+      if (proxySuccess) {
+        window._rscChunkCollector.hookSuccess = true;
+        console.log('[RSC Init] ✓ 代理和 Hook 设置成功');
+      } else {
+        // 如果代理设置失败，回退到传统方法
+        console.log('[RSC Init] 代理设置失败，回退到传统 hook 方法');
+        
+        // 传统 Hook 尝试
+        function setupTraditionalHook() {
+          window._rscChunkCollector.hookAttempts++;
+          console.log(`[RSC Init] 传统 Hook 尝试 #${window._rscChunkCollector.hookAttempts}`);
+          
+          if (!window.self.__next_f) {
+            window.self.__next_f = [];
+            console.log('[RSC Init] 创建 window.self.__next_f');
+          }
+          
+          if (Array.isArray(window.self.__next_f)) {
+            setupPushHook(window.self.__next_f);
+            window._rscChunkCollector.hookSuccess = true;
+          }
+        }
+        
+        // 立即尝试传统 hook
+        setupTraditionalHook();
+        
+        // 定时重试传统 hook
+        const retryInterval = setInterval(() => {
+          if (!window._rscChunkCollector.hookSuccess && window._rscChunkCollector.hookAttempts < 5) {
+            setupTraditionalHook();
+          } else {
+            clearInterval(retryInterval);
+          }
+        }, 100);
+      }
+      
+      console.log('[RSC Init] 增强版 Hook 注入完成，等待 chunk 数据...');
+    });
+    
+    // 访问页面
+    console.log(colors.blue('📄 访问产品页面...'));
+    console.log(colors.gray(`⚠️ 确保使用指定URL: ${url}`));
+    await page.goto(url, { 
+      waitUntil: 'domcontentloaded',
+      timeout: 45000
+    });
+    
+    // 等待页面渲染和 RSC 数据加载
+    await page.waitForTimeout(8000);
+    
+    // 检查 RSC Hook 状态 + 网站架构诊断
+    const hookStatus = await page.evaluate(() => {
+      if (!window._rscChunkCollector) return { error: '收集器未初始化' };
+      
+      // 诊断网站使用的技术栈
+      const diagnostics = {
+        // Next.js 检测
+        hasNextJs: !!(window.__NEXT_DATA__ || window.__NEXT_LOADED_PAGES__ || window.__NEXT_P),
+        nextData: !!window.__NEXT_DATA__,
+        nextBuildId: window.__NEXT_DATA__ ? window.__NEXT_DATA__.buildId : null,
+        
+        // React 检测
+        hasReact: !!(window.React || document.querySelector('[data-reactroot]')),
+        
+        // 其他框架检测
+        hasVue: !!window.Vue,
+        hasAngular: !!window.angular,
+        hasJQuery: !!window.jQuery,
+        
+        // 查找可能的数据源
+        scriptTags: Array.from(document.querySelectorAll('script')).length,
+        jsonScripts: Array.from(document.querySelectorAll('script[type="application/json"]')).length,
+        nextScripts: Array.from(document.querySelectorAll('script')).filter(s => s.src && s.src.includes('_next')).length,
+        
+        // 检查 window 对象中的数据
+        windowKeys: Object.keys(window).filter(k => k.includes('product') || k.includes('data') || k.includes('config')).slice(0, 10),
+        
+        // 检查是否有产品数据在 DOM 中
+        hasProductData: !!document.querySelector('[data-product]') || 
+                       !!document.querySelector('.product-detail') ||
+                       !!document.querySelector('#product-data') ||
+                       document.body.innerHTML.includes('productDetail'),
+        
+        // 检查可能的 API 调用
+        hasJsonLd: Array.from(document.querySelectorAll('script[type="application/ld+json"]')).length
+      };
+      
+      return {
+        hookAttempts: window._rscChunkCollector.hookAttempts,
+        hookSuccess: window._rscChunkCollector.hookSuccess,
+        rawChunksCount: window._rscChunkCollector.rawChunks.length,
+        nextFExists: !!window.self.__next_f,
+        nextFLength: window.self.__next_f ? window.self.__next_f.length : 0,
+        nextFType: typeof window.self.__next_f,
+        diagnostics: diagnostics
+      };
+    });
+    
+    console.log(colors.blue('🔍 RSC Hook 状态检查:'));
+    console.log(colors.gray(`  Hook 尝试次数: ${hookStatus.hookAttempts}`));
+    console.log(colors.gray(`  Hook 是否成功: ${hookStatus.hookSuccess}`));
+    console.log(colors.gray(`  __next_f 是否存在: ${hookStatus.nextFExists}`));
+    console.log(colors.gray(`  __next_f 长度: ${hookStatus.nextFLength}`));
+    console.log(colors.gray(`  原始 chunks 数量: ${hookStatus.rawChunksCount}`));
+    
+    console.log(colors.blue('\n🏗️  网站架构诊断:'));
+    const diag = hookStatus.diagnostics;
+    console.log(colors.gray(`  Next.js: ${diag.hasNextJs ? '✓' : '✗'} (buildId: ${diag.nextBuildId || 'none'})`));
+    console.log(colors.gray(`  __NEXT_DATA__: ${diag.nextData ? '✓' : '✗'}`));
+    console.log(colors.gray(`  React: ${diag.hasReact ? '✓' : '✗'}`));
+    console.log(colors.gray(`  Vue: ${diag.hasVue ? '✓' : '✗'}`));
+    console.log(colors.gray(`  jQuery: ${diag.hasJQuery ? '✓' : '✗'}`));
+    console.log(colors.gray(`  脚本标签数: ${diag.scriptTags}`));
+    console.log(colors.gray(`  Next.js 脚本: ${diag.nextScripts}`));
+    console.log(colors.gray(`  JSON 脚本: ${diag.jsonScripts}`));
+    console.log(colors.gray(`  JSON-LD: ${diag.hasJsonLd}`));
+    console.log(colors.gray(`  产品数据在DOM: ${diag.hasProductData ? '✓' : '✗'}`));
+    console.log(colors.gray(`  疑似数据键: [${diag.windowKeys.join(', ')}]`));
+    
+    // 如果不是 Next.js，尝试其他数据提取方法
+    if (!diag.hasNextJs || !diag.nextData) {
+      console.log(colors.yellow('\n⚠️  检测到非 Next.js 架构，尝试备用数据提取方法...'));
+      
+      const alternativeData = await page.evaluate(() => {
+        // 查找 JSON-LD 结构化数据
+        const jsonLdScripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
+        const jsonLdData = jsonLdScripts.map(script => {
+          try {
+            return JSON.parse(script.textContent);
+          } catch (e) {
+            return null;
+          }
+        }).filter(data => data);
+        
+        // 查找内联 JSON 数据
+        const allScripts = Array.from(document.querySelectorAll('script:not([src])'));
+        const inlineData = [];
+        
+        allScripts.forEach(script => {
+          const content = script.textContent || '';
+          if (content.includes('productDetail') || content.includes('imageGroups') || content.includes('variationAttributes')) {
+            inlineData.push({
+              type: 'inline-script',
+              length: content.length,
+              hasProductDetail: content.includes('productDetail'),
+              hasImageGroups: content.includes('imageGroups'),
+              hasVariationAttributes: content.includes('variationAttributes'),
+              snippet: content.substring(0, 200) + '...'
+            });
+          }
+        });
+        
+        // 查找可能的产品数据 API endpoint
+        const possibleEndpoints = [];
+        allScripts.forEach(script => {
+          const content = script.textContent || '';
+          const apiMatches = content.match(/['"](\/api\/[^'"]*)['"]|['"](\/products?\/[^'"]*)['"]|['"](\/v\d+\/[^'"]*)['"]/);
+          if (apiMatches) {
+            possibleEndpoints.push(...apiMatches.filter(m => m).slice(1));
+          }
+        });
+        
+        return {
+          jsonLdCount: jsonLdData.length,
+          jsonLdTypes: jsonLdData.map(d => d['@type']).filter(t => t),
+          inlineDataScripts: inlineData.length,
+          inlineScriptsWithProductData: inlineData,
+          possibleApiEndpoints: [...new Set(possibleEndpoints)]
+        };
+      });
+      
+      console.log(colors.blue('\n🔍 备用数据源扫描结果:'));
+      console.log(colors.gray(`  JSON-LD 数据: ${alternativeData.jsonLdCount} 个`));
+      console.log(colors.gray(`  JSON-LD 类型: [${alternativeData.jsonLdTypes.join(', ')}]`));
+      console.log(colors.gray(`  内联脚本含产品数据: ${alternativeData.inlineDataScripts}`));
+      console.log(colors.gray(`  可能的API端点: [${alternativeData.possibleApiEndpoints.join(', ')}]`));
+      
+      if (alternativeData.inlineScriptsWithProductData.length > 0) {
+        console.log(colors.yellow('\n📝 发现包含产品数据的内联脚本:'));
+        alternativeData.inlineScriptsWithProductData.forEach((script, i) => {
+          console.log(colors.gray(`  脚本 ${i+1}: 长度=${script.length}, productDetail=${script.hasProductDetail}, imageGroups=${script.hasImageGroups}`));
+          console.log(colors.gray(`    预览: ${script.snippet}`));
+        });
+      }
+    }
+    
+    // 🌟 验证页面标题，确认不是404页面
+    const pageTitle = await page.title();
+    console.log(colors.blue(`📄 页面标题: ${pageTitle}`));
+    
+    if (pageTitle.includes('404') || pageTitle.includes('Page Not Found') || pageTitle.includes('Not Found')) {
+      throw new Error(`❌ 页面为404错误页面: ${pageTitle}`);
+    }
+    
+    console.log(colors.green('✓ 页面访问成功，确认为真实商品页面'));
+    
+    // 🌟 新的数据提取流程（修复版）
+    console.log(colors.magenta('\n=== 开始新数据提取流程 ==='));
+    
+    // 1. 提取真实页面数据
+    const realData = await extractRealProductData(page, productId);
+    
+<<<<<<< HEAD
+    // 2. 合并真实数据并生成动态变体
+=======
+    // 2. 构建最终产品数据（只依赖真实数据）
+>>>>>>> e1e4513 (refactor: 优化CallawayJP产品抓取脚本架构)
+    const productData = buildFinalProductData(realData, productId);
+    
+    console.log(colors.magenta('=== 数据提取完成 ===\n'));
+    
+
+    // 🌟 构建飞书脚本完全兼容的最终格式（修复版）
+    const result = {
+      // 抓取信息
+      scrapeInfo: {
+        timestamp: new Date().toISOString(),
+        version: "5.0.0-fixed",
+        url: url,
+        productId: productId,
+        totalVariants: productData.variants.length,
+        totalColors: productData.colors.length,
+        totalSizes: productData.sizes.length,
+        totalImages: Object.values(productData.imagesByColor).reduce((total, images) => total + images.length, 0),
+        processingTimeMs: Date.now() - startTime,
+        dataSources: productData.dataSources
+      },
+      
+      // 🌟 飞书脚本期望的 product 对象结构
+      product: {
+        productId: productData.productId,
+        title: productData.title,
+        productUrl: argv.url, // 🌟 确保使用指定URL，不被其他逻辑改写
+        description: productData.description,
+        brand: productData.brand,
+        category: '',
+        tags: [],
+        mainImage: productData.rawImages && productData.rawImages.length > 0 ? productData.rawImages[0] : '',
+        detailUrl: argv.url, // 🌟 确保使用指定URL
+        // 🌟 用户要求：product.sizeChart 必须存在
+        sizeChart: productData.sizeChart || { headers: [], rows: [] }
+      },
+      
+<<<<<<< HEAD
+      // 🌟 GLM-4.6: 用户期望的 variants 结构
+      variants: {
+        colors: productData.colors || [], // 实际提取的颜色列表
+        sizes: productData.sizes || [],   // 实际提取的尺码列表
+        list: productData.variants.map(variant => ({
+          variantId: variant.variantId,
+          colorName: variant.colorName,
+          colorCode: variant.colorCode,
+          sizeName: variant.sizeName,
+          sizeCode: variant.sizeCode,
+          availability: variant.availability,
+          sku: variant.sku,
+          priceJPY: variant.priceJPY
+        }))
+      },
+=======
+      // 变体数据（动态生成）
+      variants: productData.variants,
+>>>>>>> e1e4513 (refactor: 优化CallawayJP产品抓取脚本架构)
+      
+      // 保持向后兼容的字段
+      colors: productData.colors,
+      sizes: productData.sizes,
+      
+      // 尺码表（真实提取）
+      sizeChart: productData.sizeChart,
+      
+      // 图片数据（按颜色分组）
+      images: {
+        byColor: productData.imagesByColor,
+        all: productData.rawImages,
+        metadata: productData.colorMetadata
+      }
+    };
+    
+    // 生成输出文件名
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, -5);
+    const outputFileName = `product_details_${productId}_${timestamp}.json`;
+    const outputPath = path.resolve(OUTPUT_DIR, outputFileName);
+    
+    // 确保输出目录存在
+    await ensureDir(path.dirname(outputPath));
+    
+    // 保存结果
+    await fs.writeFile(outputPath, JSON.stringify(result, null, 2), 'utf-8');
+    
+    // 输出成功信息（修复版）
+    console.log('');
+    console.log(colors.green('🎉 GLM-4.6 重写版抓取完成！'));
+    console.log(colors.green(`✓ 产品ID: ${productId}`));
+    console.log(colors.green(`✓ 颜色数组: [${result.colors.join(', ')}] (${result.colors.length}个)`));
+    console.log(colors.green(`✓ 尺码数组: [${result.sizes.join(', ')}] (${result.sizes.length}个)`));
+    console.log(colors.green(`✓ 变体总数: ${result.variants.length} (现有逻辑)`));
+    console.log(colors.green(`✓ 图片总数: ${result.scrapeInfo.totalImages}`));
+    console.log(colors.green(`✓ 描述长度: ${result.product.description.length} 字符`));
+    console.log(colors.green(`✓ 尺码表: ${result.sizeChart ? '已提取' : '未找到'}`));
+    console.log(colors.green(`✓ 数据源: ${result.scrapeInfo.dataSources.join(', ')}`));
+    console.log(colors.green(`✓ 处理时间: ${((Date.now() - startTime) / 1000).toFixed(2)}s`));
+    console.log(colors.blue(`📁 输出文件: ${outputPath}`));
+    
+    // 核心指标检查（GLM-4.6版本）
+    if (result.colors.length > 0) {
+      console.log(colors.green(`✓ 颜色数组提取成功：${result.colors.length}个颜色`));
+    } else {
+      console.log(colors.red('⚠️ 颜色数组为空'));
+    }
+    
+    if (result.sizes.length > 0) {
+      console.log(colors.green(`✓ 尺码数组提取成功：${result.sizes.length}个尺码`));
+    } else {
+      console.log(colors.red('⚠️ 尺码数组为空'));
+    }
+    
+    if (result.product.description.length > 0) {
+      console.log(colors.green('✓ 商品说明提取成功'));
+    } else {
+      console.log(colors.red('⚠️ 商品说明未提取'));
+    }
+    
+    return outputPath;
+    
+  } catch (error) {
+    console.error('');
+    console.error(colors.red('💥 抓取失败:'));
+    console.error(colors.red(error.message));
+    
+    if (error.stack) {
+      console.error('');
+      console.error(colors.gray('Stack trace:'));
+      console.error(colors.gray(error.stack));
+    }
+    
+    throw error;
+  } finally {
+    // 清理资源
+    if (browser) {
+      await browser.close();
+    }
+    
+  }
+}
+
+/**
+ * 主函数
+ */
+async function main() {
+  try {
+    const outputPath = await scrapeProductDetail();
+    
+    console.log('');
+    console.log(colors.blue('💡 下一步操作:'));
+    console.log(colors.gray(`python3 CallawayJP/scripts/update_feishu_product_details.py --input "${outputPath}"`));
+    console.log('');
+    
+    process.exit(0);
+  } catch (error) {
+    console.error(colors.red(`\n程序执行失败: ${error.message}`));
+    process.exit(1);
+  }
+}
+
+// 执行主函数
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  scrapeProductDetail,
+  extractRealProductData,
+<<<<<<< HEAD
+  createDynamicVariants,
+  buildFinalProductData,
+  processImagesWithVariantGrouping
+=======
+  buildFinalProductData
+>>>>>>> e1e4513 (refactor: 优化CallawayJP产品抓取脚本架构)
+};

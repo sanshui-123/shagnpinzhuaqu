@@ -1,0 +1,58 @@
+{
+  "mergedAt": "2025-11-05T10:09:37.512463",
+  "totalUniqueProducts": 3,
+  "categories": [
+    "womens_all"
+  ],
+  "categoryStats": {
+    "womens_all": {
+      "expected": 191,
+      "actual": 191,
+      "unique_products": 3
+    }
+  },
+  "products": [
+    {
+      "productId": "C25215200",
+      "variantId": "C25215200_1031_L",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215200_.html?pid=C25215200_1031_L",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-11-05T10:09:37.512129",
+      "productName": "2WAYハーフジップフーディーブルゾン (WOMENS)",
+      "currentPrice": "",
+      "priceText": "￥16,500  (税込)",
+      "promotionText": "",
+      "tags": "",
+      "mainImage": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_ANQKK9g9LUW02Aay.jpg%3F1760528976&w=3000&q=75&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW"
+    },
+    {
+      "productId": "C25215201",
+      "variantId": "C25215201_1030_L",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215201_.html?pid=C25215201_1030_L",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-11-05T10:09:37.512148",
+      "productName": "スターストレッチフルジップブルゾン (WOMENS)",
+      "currentPrice": "",
+      "priceText": "￥14,850  (税込)",
+      "promotionText": "",
+      "tags": "",
+      "mainImage": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6JEfjEa7H0W01k4L.jpg%3F1756817477&w=3000&q=75&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW"
+    },
+    {
+      "productId": "C25215202",
+      "variantId": "C25215202_1010_L",
+      "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215202_.html?pid=C25215202_1010_L",
+      "category": "womens_all",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-11-05T10:09:37.512151",
+      "productName": "スターストレッチ袖取り外し中綿ブルゾン (WOMENS)",
+      "currentPrice": "",
+      "priceText": "￥26,400  (税込)",
+      "promotionText": "",
+      "tags": "",
+      "mainImage": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_cd5zxIq6YT21kvP1.jpg%3F1760703184&w=3000&q=75&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW"
+    }
+  ]
+}

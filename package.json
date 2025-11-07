@@ -1,0 +1,39 @@
+{
+  "name": "callaway-jp-scraper",
+  "version": "1.0.0",
+  "description": "Callaway Japan 商品抓取系统",
+  "main": "index.js",
+  "scripts": {
+    "install-deps": "npm install",
+    "scrape:category": "node scripts/scrape_category.js",
+    "scrape:detail": "node scripts/scrape_product_detail.js",
+    "merge:dedup": "python3 scripts/merge_dedup.py",
+    "sync:feishu": "python3 scripts/sync_feishu_products.py",
+    "cli": "./cli_with_env.sh",
+    "pipeline": "./run_pipeline.sh",
+    "test:streaming": "python3 test_streaming.py",
+    "start:pipeline": "./run_pipeline.sh mens_all",
+    "start:womens": "./run_pipeline.sh womens_all"
+  },
+  "dependencies": {
+    "playwright": "^1.54.1",
+    "yargs": "^18.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "python": ">=3.8.0"
+  },
+  "keywords": [
+    "callaway",
+    "scraper",
+    "ecommerce",
+    "feishu",
+    "playwright"
+  ],
+  "author": "Callaway Scraper Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/example/callaway-jp-scraper.git"
+  }
+}

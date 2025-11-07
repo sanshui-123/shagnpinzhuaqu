@@ -1,0 +1,136 @@
+[2025/10/25 19:21:18] [INFO] 开始读取 raw_links_mens_bottoms.json...
+[2025/10/25 19:21:18] [INFO] 成功读取 24 条链接数据
+[2025/10/25 19:21:18] [INFO] 启动浏览器...
+[2025/10/25 19:21:18] [INFO] 
+[1/24] 正在验证: C25226181_1021_S
+[2025/10/25 19:21:18] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226181_.html?pid=C25226181_1021_S
+[2025/10/25 19:21:23] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:21:23] [INFO] 等待 11450ms...
+[2025/10/25 19:21:34] [INFO] 
+[2/24] 正在验证: C25226180_1010_S
+[2025/10/25 19:21:34] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226180_.html?pid=C25226180_1010_S
+[2025/10/25 19:21:38] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:21:38] [INFO] 等待 11500ms...
+[2025/10/25 19:21:50] [INFO] 
+[3/24] 正在验证: C25226109_1010_S
+[2025/10/25 19:21:50] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226109_.html?pid=C25226109_1010_S
+[2025/10/25 19:21:52] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:21:52] [INFO] 等待 11764ms...
+[2025/10/25 19:22:04] [INFO] 
+[4/24] 正在验证: C25226102_1020_S
+[2025/10/25 19:22:04] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226102_.html?pid=C25226102_1020_S
+[2025/10/25 19:22:10] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:22:10] [INFO] 等待 10477ms...
+[2025/10/25 19:22:20] [INFO] 
+[5/24] 正在验证: C25226110_1010_S
+[2025/10/25 19:22:20] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226110_.html?pid=C25226110_1010_S
+[2025/10/25 19:22:25] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:22:25] [INFO] 等待 10960ms...
+[2025/10/25 19:22:36] [INFO] 已处理 5 个URL，额外等待 20 秒...
+[2025/10/25 19:22:56] [INFO] 
+[6/24] 正在验证: C25226107_1180_S
+[2025/10/25 19:22:56] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226107_.html?pid=C25226107_1180_S
+[2025/10/25 19:23:00] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:23:00] [INFO] 等待 9596ms...
+[2025/10/25 19:23:09] [INFO] 
+[7/24] 正在验证: C25226105_1040_S
+[2025/10/25 19:23:09] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226105_.html?pid=C25226105_1040_S
+[2025/10/25 19:23:14] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:23:14] [INFO] 等待 11205ms...
+[2025/10/25 19:23:25] [INFO] 
+[8/24] 正在验证: C25226108_1010_S
+[2025/10/25 19:23:25] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226108_.html?pid=C25226108_1010_S
+[2025/10/25 19:23:29] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:23:29] [INFO] 等待 11807ms...
+[2025/10/25 19:23:41] [INFO] 
+[9/24] 正在验证: C25226106_1020_S
+[2025/10/25 19:23:41] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226106_.html?pid=C25226106_1020_S
+[2025/10/25 19:23:45] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:23:45] [INFO] 等待 11565ms...
+[2025/10/25 19:23:57] [INFO] 
+[10/24] 正在验证: C25226104_1010_S
+[2025/10/25 19:23:57] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226104_.html?pid=C25226104_1010_S
+[2025/10/25 19:24:00] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:24:00] [INFO] 等待 9920ms...
+[2025/10/25 19:24:10] [INFO] 已处理 10 个URL，额外等待 20 秒...
+[2025/10/25 19:24:30] [INFO] 
+[11/24] 正在验证: C25226101_1010_S
+[2025/10/25 19:24:30] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226101_.html?pid=C25226101_1010_S
+[2025/10/25 19:24:35] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:24:35] [INFO] 等待 8911ms...
+[2025/10/25 19:24:44] [INFO] 
+[12/24] 正在验证: C25226112_1040_S
+[2025/10/25 19:24:44] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226112_.html?pid=C25226112_1040_S
+[2025/10/25 19:24:48] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:24:48] [INFO] 等待 8126ms...
+[2025/10/25 19:24:56] [INFO] 
+[13/24] 正在验证: C25226111_1021_S
+[2025/10/25 19:24:56] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226111_.html?pid=C25226111_1021_S
+[2025/10/25 19:24:58] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:24:58] [INFO] 等待 8828ms...
+[2025/10/25 19:25:07] [INFO] 
+[14/24] 正在验证: C25226103_1040_S
+[2025/10/25 19:25:07] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226103_.html?pid=C25226103_1040_S
+[2025/10/25 19:25:10] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:25:10] [INFO] 等待 11869ms...
+[2025/10/25 19:25:22] [INFO] 
+[15/24] 正在验证: C25226100_1010_S
+[2025/10/25 19:25:22] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226100_.html?pid=C25226100_1010_S
+[2025/10/25 19:25:26] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:25:26] [INFO] 等待 9176ms...
+[2025/10/25 19:25:35] [INFO] 已处理 15 个URL，额外等待 20 秒...
+[2025/10/25 19:25:55] [INFO] 
+[16/24] 正在验证: H25226101_1010_S
+[2025/10/25 19:25:55] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/H25226101_.html?pid=H25226101_1010_S
+[2025/10/25 19:25:58] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:25:58] [INFO] 等待 11118ms...
+[2025/10/25 19:26:09] [INFO] 
+[17/24] 正在验证: H25226100_1022_S
+[2025/10/25 19:26:09] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/H25226100_.html?pid=H25226100_1022_S
+[2025/10/25 19:26:12] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:26:12] [INFO] 等待 8853ms...
+[2025/10/25 19:26:21] [INFO] 
+[18/24] 正在验证: H25226102_1040_S
+[2025/10/25 19:26:21] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/H25226102_.html?pid=H25226102_1040_S
+[2025/10/25 19:26:24] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:26:24] [INFO] 等待 10421ms...
+[2025/10/25 19:26:34] [INFO] 
+[19/24] 正在验证: R25226100_1120_S
+[2025/10/25 19:26:34] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/R25226100_.html?pid=R25226100_1120_S
+[2025/10/25 19:26:38] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:26:38] [INFO] 等待 9498ms...
+[2025/10/25 19:26:47] [INFO] 
+[20/24] 正在验证: R25226101_1010_S
+[2025/10/25 19:26:47] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/R25226101_.html?pid=R25226101_1010_S
+[2025/10/25 19:26:50] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:26:50] [INFO] 等待 10922ms...
+[2025/10/25 19:27:01] [INFO] 已处理 20 个URL，额外等待 20 秒...
+[2025/10/25 19:27:21] [INFO] 
+[21/24] 正在验证: H25226103_1010_S
+[2025/10/25 19:27:21] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/H25226103_.html?pid=H25226103_1010_S
+[2025/10/25 19:27:24] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:27:24] [INFO] 等待 11417ms...
+[2025/10/25 19:27:35] [INFO] 
+[22/24] 正在验证: C25226113_1010_S
+[2025/10/25 19:27:35] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/C25226113_.html?pid=C25226113_1010_S
+[2025/10/25 19:27:40] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:27:40] [INFO] 等待 9440ms...
+[2025/10/25 19:27:49] [INFO] 
+[23/24] 正在验证: R25926100_1010_S
+[2025/10/25 19:27:49] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/R25926100_.html?pid=R25926100_1010_S
+[2025/10/25 19:27:52] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:27:52] [INFO] 等待 8232ms...
+[2025/10/25 19:28:00] [INFO] 
+[24/24] 正在验证: H25226110_1010_S
+[2025/10/25 19:28:00] [INFO] URL: https://www.callawaygolf.jp/mens/bottoms/pants/H25226110_.html?pid=H25226110_1010_S
+[2025/10/25 19:28:04] [SUCCESS] ✓ 成功访问 (HTTP 200)
+[2025/10/25 19:28:04] [INFO] 等待 8832ms...
+[2025/10/25 19:28:13] [INFO] 
+========== 验证完成 ==========
+[2025/10/25 19:28:13] [INFO] 总URL数: 24
+[2025/10/25 19:28:13] [INFO] 成功数: 24
+[2025/10/25 19:28:13] [INFO] 失败数: 0
+[2025/10/25 19:28:13] [INFO] 429重试成功数: 0
+[2025/10/25 19:28:13] [INFO] 成功率: 100.00%
+[2025/10/25 19:28:13] [INFO] 
+结果已保存到: /Users/sanshui/Desktop/cursor/CallawayJP/results/mens_bottoms_url_verification.json

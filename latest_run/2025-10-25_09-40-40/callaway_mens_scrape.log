@@ -1,0 +1,10 @@
+2025-10-25 09:40:40,998 - INFO - === 开始Callaway男装抓取流程 ===
+2025-10-25 09:40:41,199 - INFO - 开始加载页面: https://www.callawaygolf.jp/apparel/mens
+2025-10-25 09:41:11,203 - ERROR - 页面加载失败: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.callawaygolf.jp/apparel/mens", waiting until "networkidle"
+
+2025-10-25 09:41:11,204 - ERROR - 抓取流程失败: Page.goto: Timeout 30000ms exceeded.
+Call log:
+  - navigating to "https://www.callawaygolf.jp/apparel/mens", waiting until "networkidle"
+

@@ -1,0 +1,11 @@
+{
+  "syncedAt": "2025-11-05T13:00:35.753219",
+  "inputFile": "CallawayJP/results/all_products_dedup_top3.json",
+  "totalLocal": 3,
+  "existingInFeishu": 230,
+  "newProductsFound": 3,
+  "successCount": 3,
+  "failedBatches": [],
+  "totalBatches": 1,
+  "batchSize": 30
+}

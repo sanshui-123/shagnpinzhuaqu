@@ -1,0 +1,68 @@
+{
+  "mergedAt": "2025-11-05T15:25:00.000Z",
+  "totalUniqueProducts": 3,
+  "categories": ["mens_detailed"],
+  "categoryStats": {
+    "mens_detailed": {
+      "expected": 3,
+      "actual": 3,
+      "unique_products": 3
+    }
+  },
+  "products": [
+    {
+      "productId": "C25215100",
+      "variantId": "C25215100_1180_L",
+      "detailUrl": "https://www.callawaygolf.jp/mens/tops/outer/C25215100_.html?pid=C25215100_1180_L",
+      "category": "mens_detailed",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-11-05T15:25:00.000Z",
+      "productName": "スターストレッチフルジップブルゾン (MENS)",
+      "currentPrice": "42900",
+      "priceText": "￥42,900 (税込)",
+      "promotionText": "高品質ストレッチ素材使用",
+      "tags": "outer,stretch,zip,mens,winter",
+      "mainImage": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_kvZNnHd1ECy41kdj.jpg%3F1753182031&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "additionalImages": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_AwsI31jeyV91Yvev.jpg%3F1753182011&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW,https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_wIM9F9UdJZD41wfI.jpg%3F1753182081&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "sizes": "S,M,L,LL",
+      "colors": "默认色",
+      "totalImages": "28"
+    },
+    {
+      "productId": "C25215106",
+      "variantId": "C25215106_1120_L",
+      "detailUrl": "https://www.callawaygolf.jp/mens/tops/outer/C25215106_.html?pid=C25215106_1120_L",
+      "category": "mens_detailed",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-11-05T15:25:00.000Z",
+      "productName": "スターストレッチ中綿ブルゾン ※4Lサイズあり (MENS)",
+      "currentPrice": "46200",
+      "priceText": "￥46,200 (税込)",
+      "promotionText": "中綿入り保温性抜群、4Lサイズ対応",
+      "tags": "outer,stretch,padded,mens,winter,4L",
+      "mainImage": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_cRPkyZmDon43oqWS.jpg%3F1758202559&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "additionalImages": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_Ae6p2RuQu1Y41Yf7.jpg%3F1758202501&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW,https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_wkxHkQElNW01Ye8L.jpg%3F1758202305&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "sizes": "S,M,L,LL",
+      "colors": "默认色",
+      "totalImages": "28"
+    },
+    {
+      "productId": "C25215107",
+      "variantId": "C25215107_1030_L",
+      "detailUrl": "https://www.callawaygolf.jp/mens/tops/outer/C25215107_.html?pid=C25215107_1030_L",
+      "category": "mens_detailed",
+      "brandName": "callawaygolf",
+      "addedAt": "2025-11-05T15:25:00.000Z",
+      "productName": "スターストレッチ2WAY中綿ブルゾン (MENS)",
+      "currentPrice": "48400",
+      "priceText": "￥48,400 (税込)",
+      "promotionText": "2WAY機能搭載、多様なシーンに対応",
+      "tags": "outer,stretch,2way,padded,mens,winter,versatile",
+      "mainImage": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_Mhknyh47yUN01XV7.jpg%3F1758202534&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "additionalImages": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_IhAxlNpDJs81o32T.jpg%3F1760525520&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW,https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_kpDvdfreSkc15AFM.jpg%3F1758202489&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "sizes": "S,M,L,LL",
+      "colors": "默认色", 
+      "totalImages": "30"
+    }
+  ]
+}
