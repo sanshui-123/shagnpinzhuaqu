@@ -131,11 +131,170 @@ async function extractProductData(page) {
                 }
             }
 
-            // 3. DOM回退策略 - 提取基础信息
-            if (!result.productDetail) {
-                console.log('⚠️ 未找到 productDetail，使用 DOM 回退策略');
+            // 3. DOM数据提取策略 - 获取真实的颜色、图片、尺码
+            console.log('🔍 开始DOM数据提取...');
+            
+            // 提取颜色选择器数据
+            const colorElements = document.querySelectorAll('[data-color], [data-colorcode], .color-selector button, .variant-color');
+            const extractedColors = [];
+            const extractedImageGroups = [];
+            
+            // 尝试多种颜色选择器模式
+            const colorSelectors = [
+                '[data-color]',
+                '[data-colorcode]', 
+                '.color-selector button',
+                '.variant-color',
+                'button[class*="color"]',
+                '[class*="swatch"]'
+            ];
+            
+            console.log('🎨 搜索颜色选择器...');
+            
+            for (const selector of colorSelectors) {
+                const elements = document.querySelectorAll(selector);
+                console.log(`发现 ${elements.length} 个 ${selector} 元素`);
                 
-                // 提取基础产品信息
+                elements.forEach((element, index) => {
+                    const colorCode = element.getAttribute('data-color') || 
+                                    element.getAttribute('data-colorcode') ||
+                                    element.getAttribute('data-value') ||
+                                    element.getAttribute('value') || 
+                                    element.textContent?.trim();
+                                    
+                    const colorName = element.getAttribute('title') ||
+                                    element.getAttribute('aria-label') ||
+                                    element.textContent?.trim() ||
+                                    colorCode;
+                    
+                    if (colorCode && colorName && !extractedColors.some(c => c.code === colorCode)) {
+                        extractedColors.push({
+                            code: colorCode,
+                            name: colorName,
+                            selector: selector
+                        });
+                        console.log(`✓ 找到颜色: ${colorName} (${colorCode})`);
+                    }
+                });
+                
+                if (extractedColors.length > 0) break; // 找到颜色就停止
+            }
+            
+            // 提取尺码选择器数据
+            const extractedSizes = [];
+            const sizeSelectors = [
+                '[data-size]',
+                '.size-selector button',
+                '.variant-size',
+                'button[class*="size"]',
+                'select[name*="size"] option',
+                '[class*="size-option"]'
+            ];
+            
+            console.log('📏 搜索尺码选择器...');
+            
+            for (const selector of sizeSelectors) {
+                const elements = document.querySelectorAll(selector);
+                console.log(`发现 ${elements.length} 个 ${selector} 元素`);
+                
+                elements.forEach(element => {
+                    const sizeValue = element.getAttribute('data-size') ||
+                                    element.getAttribute('data-value') ||
+                                    element.getAttribute('value') ||
+                                    element.textContent?.trim();
+                    
+                    if (sizeValue && !extractedSizes.includes(sizeValue)) {
+                        extractedSizes.push(sizeValue);
+                        console.log(`✓ 找到尺码: ${sizeValue}`);
+                    }
+                });
+                
+                if (extractedSizes.length > 0) break; // 找到尺码就停止
+            }
+            
+            // 提取所有图片
+            const allImages = [];
+            const imageSelectors = [
+                'img[src*="callawaygolf"]',
+                'img[src*="webdamdb"]',
+                '.product-images img',
+                '.gallery img',
+                '[class*="image"] img'
+            ];
+            
+            console.log('🖼️ 搜索产品图片...');
+            
+            // 图片URL过滤函数 - 只保留1280尺寸商品图
+            function isValidProductImage(imgSrc) {
+                if (!imgSrc) return false;
+                
+                // 必须以指定格式开头
+                const validPrefix = 'https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_';
+                if (!imgSrc.startsWith(validPrefix)) {
+                    return false;
+                }
+                
+                // 排除追踪链接和缩略图
+                const blockedPatterns = [
+                    't.co/',
+                    'analytics.twitter.com',
+                    'bat.bing.com',
+                    '100th_sm_',
+                    '220th_sm_',
+                    'logo',
+                    'icon',
+                    'favicon'
+                ];
+                
+                for (const pattern of blockedPatterns) {
+                    if (imgSrc.includes(pattern)) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
+            
+            for (const selector of imageSelectors) {
+                const images = document.querySelectorAll(selector);
+                console.log(`发现 ${images.length} 个 ${selector} 图片`);
+                
+                images.forEach(img => {
+                    if (isValidProductImage(img.src) && !allImages.includes(img.src)) {
+                        allImages.push(img.src);
+                    }
+                });
+            }
+            
+            console.log(`✓ 总共提取到 ${allImages.length} 张过滤后的商品图`);
+            
+            // 构建imageGroups
+            if (extractedColors.length > 0) {
+                extractedColors.forEach(color => {
+                    result.imageGroups.push({
+                        colorCode: color.code,
+                        colorName: color.name,
+                        images: allImages // 为每个颜色分配所有图片
+                    });
+                });
+            } else {
+                // 没有颜色时创建默认组
+                result.imageGroups.push({
+                    colorCode: 'DEFAULT',
+                    colorName: 'DEFAULT',
+                    images: allImages
+                });
+            }
+            
+            // 构建variationAttributes
+            if (extractedSizes.length > 0) {
+                result.variationAttributes = {
+                    size: extractedSizes.map(size => ({ value: size, name: size }))
+                };
+            }
+            
+            // 如果还没有productDetail，创建基础信息
+            if (!result.productDetail) {
                 const title = document.querySelector('h1')?.textContent?.trim() || 
                              document.querySelector('[class*="title"]')?.textContent?.trim() || 
                              document.querySelector('[class*="name"]')?.textContent?.trim() || '';
@@ -143,12 +302,7 @@ async function extractProductData(page) {
                 const description = document.querySelector('[class*="description"]')?.textContent?.trim() || 
                                    document.querySelector('[class*="detail"]')?.textContent?.trim() || '';
                 
-                // 查找主图
-                const mainImageElement = document.querySelector('img[class*="main"]') || 
-                                        document.querySelector('img[class*="product"]') ||
-                                        document.querySelector('.product-image img') ||
-                                        document.querySelector('img[src*="callawaygolf"]');
-                const mainImage = mainImageElement ? mainImageElement.src : '';
+                const mainImage = allImages.length > 0 ? allImages[0] : '';
 
                 result.productDetail = {
                     name: title,
@@ -158,8 +312,11 @@ async function extractProductData(page) {
                     brand: 'Callaway Golf',
                     mainImage: mainImage
                 };
-                result.dataSources.push('dom_enhanced');
             }
+            
+            result.dataSources.push('dom_enhanced');
+            
+            console.log(`✅ DOM提取完成: ${extractedColors.length}颜色, ${extractedSizes.length}尺码, ${allImages.length}图片`);
 
             // 4. 提取图片信息
             if (result.productDetail && result.productDetail.imageGroups) {
@@ -209,21 +366,105 @@ function buildFinalProductData(extractedData, productId, url) {
     const variants = [];
     const images = { product: [], variants: {} };
     
-    if (extractedData.imageGroups && Array.isArray(extractedData.imageGroups)) {
+    // 优先使用多颜色抓取的数据
+    if (extractedData.multiColorInfo && extractedData.multiColorInfo.colors.length > 0) {
+        console.log(`✓ 使用多颜色抓取的${extractedData.multiColorInfo.colors.length}种颜色`);
+        
+        // 使用多颜色抓取的结果
+        colors.push(...extractedData.multiColorInfo.colors);
+        
+        // 处理imageGroups数据
+        if (extractedData.imageGroups && Array.isArray(extractedData.imageGroups)) {
+            extractedData.imageGroups.forEach(group => {
+                const colorCode = group.colorCode || group.code;
+                
+                if (group.images && Array.isArray(group.images)) {
+                    images.variants[colorCode] = group.images;
+                    images.product.push(...group.images);
+                }
+                
+                console.log(`✓ 颜色 ${group.colorName} (${colorCode}): ${group.images?.length || 0}张图片`);
+            });
+        }
+        
+        // 去重product图片
+        images.product = [...new Set(images.product)];
+        
+    } else if (extractedData.imageGroups && Array.isArray(extractedData.imageGroups) && extractedData.imageGroups.length > 0) {
+        console.log(`✓ 使用DOM提取的${extractedData.imageGroups.length}个颜色组`);
+        
         extractedData.imageGroups.forEach(group => {
             const colorCode = group.colorCode || group.code || 'DEFAULT';
             const colorName = group.colorName || group.name || 'DEFAULT';
             
-            colors.push({
-                code: colorCode,
-                name: colorName
-            });
-            
-            if (group.images && Array.isArray(group.images)) {
-                images.variants[colorCode] = group.images;
-                images.product.push(...group.images);
+            // 只添加非DEFAULT的真实颜色
+            if (colorCode !== 'DEFAULT' || colors.length === 0) {
+                colors.push({
+                    code: colorCode,
+                    name: colorName
+                });
+                
+                if (group.images && Array.isArray(group.images)) {
+                    images.variants[colorCode] = group.images;
+                    images.product.push(...group.images);
+                }
+                
+                console.log(`✓ 添加颜色: ${colorName} (${colorCode}), ${group.images?.length || 0}张图片`);
             }
         });
+    }
+    
+    // 如果DOM提取失败，尝试从URL和页面内容推断
+    if (colors.length === 0 || colors.every(c => c.code === 'DEFAULT')) {
+        console.log('🔍 DOM提取颜色失败，尝试从URL和页面内容推断...');
+        
+        const pageContent = (productDetail.longDescription || productDetail.description || '').toLowerCase();
+        const urlContent = url.toLowerCase();
+        
+        // CallawayJP常见颜色关键词
+        const commonColors = [
+            { keywords: ['navy', 'ネイビー', '1031'], name: 'ネイビー', code: '1031' },
+            { keywords: ['black', 'ブラック', '1040'], name: 'ブラック', code: '1040' },
+            { keywords: ['white', 'ホワイト', '1000'], name: 'ホワイト', code: '1000' },
+            { keywords: ['red', 'レッド', '1600'], name: 'レッド', code: '1600' },
+            { keywords: ['blue', 'ブルー', '1030'], name: 'ブルー', code: '1030' },
+            { keywords: ['gray', 'grey', 'グレー', '1900'], name: 'グレー', code: '1900' }
+        ];
+        
+        const inferredColors = [];
+        commonColors.forEach(color => {
+            const found = color.keywords.some(keyword => 
+                pageContent.includes(keyword) || urlContent.includes(keyword)
+            );
+            if (found) {
+                inferredColors.push({
+                    code: color.code,
+                    name: color.name
+                });
+            }
+        });
+        
+        if (inferredColors.length > 0) {
+            console.log('✓ 推断出颜色:', inferredColors.map(c => c.name));
+            colors.length = 0; // 清空原有的DEFAULT颜色
+            colors.push(...inferredColors);
+            
+            // 更新images.variants以使用推断出的颜色
+            if (images.product.length > 0) {
+                images.variants = {};
+                inferredColors.forEach(color => {
+                    images.variants[color.code] = images.product;
+                });
+            }
+        } else {
+            console.log('❌ 推断颜色也失败，使用DEFAULT');
+            // 确保至少有一个DEFAULT颜色
+            if (colors.length === 0) {
+                colors.push({ code: 'DEFAULT', name: 'DEFAULT' });
+            }
+        }
+    } else {
+        console.log(`✅ 成功提取到 ${colors.length} 种真实颜色: ${colors.map(c => c.name).join(', ')}`);
     }
     
     // 提取尺码信息
@@ -317,7 +558,20 @@ async function main() {
         console.log('🌐 启动浏览器...');
         browser = await chromium.launch({
             headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+                '--disable-extensions',
+                '--disable-plugins',
+                '--no-first-run',
+                '--no-default-browser-check'
+            ]
         });
         
         const context = await browser.newContext({
@@ -359,8 +613,21 @@ async function main() {
             }
         }
         
+        // 首先进行多颜色抓取
+        const multiColorData = await extractMultiColorData(page);
+        
         // 提取产品数据
         const extractedData = await extractProductData(page);
+        
+        // 将多颜色数据合并到extractedData中
+        if (multiColorData.colors.length > 0) {
+            console.log(`🎨 使用多颜色抓取结果: ${multiColorData.colors.length}种颜色`);
+            extractedData.imageGroups = multiColorData.imageGroups;
+            extractedData.multiColorInfo = {
+                colors: multiColorData.colors,
+                totalImages: multiColorData.allImages.size
+            };
+        }
         
         // 构建最终数据
         const finalData = buildFinalProductData(extractedData, options.productId, options.url);
@@ -402,8 +669,251 @@ if (require.main === module) {
     main().catch(console.error);
 }
 
+// 多颜色抓取函数
+async function extractMultiColorData(page) {
+    console.log('🎨 开始多颜色抓取...');
+    
+    const multiColorData = {
+        colors: [],
+        imageGroups: [],
+        allImages: new Set() // 用于去重
+    };
+    
+    try {
+        // 定位颜色按钮容器
+        console.log('🔍 定位颜色按钮容器...');
+        
+        // 尝试多种可能的颜色按钮选择器
+        const colorButtonSelectors = [
+            '.d_flex.items_center.gap_2\\.5.flex_row.flex-wrap_wrap button',
+            '[class*="d_flex"][class*="items_center"][class*="gap_2.5"] button',
+            '[class*="color"] button',
+            'button[aria-label*="色"]',
+            'button[title*="色"]',
+            '.variant-selector button',
+            '.color-selector button'
+        ];
+        
+        let colorButtons = [];
+        
+        for (const selector of colorButtonSelectors) {
+            try {
+                const buttons = await page.$$(selector);
+                if (buttons.length > 0) {
+                    console.log(`✓ 找到 ${buttons.length} 个颜色按钮 (${selector})`);
+                    colorButtons = buttons;
+                    break;
+                }
+            } catch (error) {
+                console.log(`尝试选择器失败: ${selector}`);
+            }
+        }
+        
+        if (colorButtons.length === 0) {
+            console.log('⚠️ 未找到颜色按钮，尝试通过文本查找...');
+            
+            // 通过文本内容查找可能的颜色按钮
+            const allButtons = await page.$$('button');
+            for (const button of allButtons) {
+                try {
+                    const text = await button.textContent();
+                    const ariaLabel = await button.getAttribute('aria-label');
+                    const title = await button.getAttribute('title');
+                    
+                    const content = `${text} ${ariaLabel || ''} ${title || ''}`.toLowerCase();
+                    
+                    // 检查是否包含颜色相关的日文词汇
+                    if (content.includes('ネイビー') || content.includes('ブラック') || 
+                        content.includes('ホワイト') || content.includes('ブルー') ||
+                        content.includes('レッド') || content.includes('グレー') ||
+                        content.includes('navy') || content.includes('black') ||
+                        content.includes('white') || content.includes('blue')) {
+                        colorButtons.push(button);
+                    }
+                } catch (e) {
+                    // 跳过无法读取的按钮
+                }
+            }
+            
+            console.log(`✓ 通过文本找到 ${colorButtons.length} 个可能的颜色按钮`);
+        }
+        
+        if (colorButtons.length === 0) {
+            console.log('❌ 未找到任何颜色按钮，使用单颜色模式');
+            return multiColorData;
+        }
+        
+        // 逐个点击颜色按钮并抓取数据
+        for (let i = 0; i < colorButtons.length; i++) {
+            const button = colorButtons[i];
+            
+            try {
+                // 获取按钮信息
+                const buttonText = await button.textContent();
+                const ariaLabel = await button.getAttribute('aria-label');
+                const title = await button.getAttribute('title');
+                const dataValue = await button.getAttribute('data-value');
+                const dataColor = await button.getAttribute('data-color');
+                
+                console.log(`🔘 点击颜色按钮 ${i + 1}/${colorButtons.length}: ${buttonText || ariaLabel || title || '未知'}`);
+                
+                // 点击按钮
+                await button.click();
+                
+                // 等待页面更新 - 图片切换完成
+                console.log('⏳ 等待页面更新...');
+                await page.waitForTimeout(2000); // 等待2秒让图片加载
+                
+                // 尝试等待图片容器更新
+                try {
+                    await page.waitForFunction(() => {
+                        const images = document.querySelectorAll('img[src*="callawaygolf"], img[src*="webdamdb"]');
+                        return images.length > 0;
+                    }, { timeout: 5000 });
+                } catch (e) {
+                    console.log('图片加载等待超时，继续执行...');
+                }
+                
+                // 提取当前颜色信息
+                const currentColorData = await page.evaluate((buttonInfo) => {
+                    // 从按钮信息中提取颜色名称和代码
+                    let colorName = buttonInfo.text || buttonInfo.ariaLabel || buttonInfo.title || 'Unknown';
+                    let colorCode = buttonInfo.dataValue || buttonInfo.dataColor;
+                    
+                    // 如果没有明确的颜色代码，尝试生成一个
+                    if (!colorCode) {
+                        const colorMap = {
+                            'ネイビー': '1031', 'navy': '1031',
+                            'ブラック': '1040', 'black': '1040',
+                            'ホワイト': '1000', 'white': '1000',
+                            'ブルー': '1030', 'blue': '1030',
+                            'レッド': '1600', 'red': '1600',
+                            'グレー': '1900', 'gray': '1900', 'grey': '1900'
+                        };
+                        
+                        const lowerName = colorName.toLowerCase();
+                        for (const [key, value] of Object.entries(colorMap)) {
+                            if (lowerName.includes(key.toLowerCase())) {
+                                colorCode = value;
+                                break;
+                            }
+                        }
+                        
+                        if (!colorCode) {
+                            colorCode = `AUTO_${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+                        }
+                    }
+                    
+                    // 抓取当前显示的图片
+                    const currentImages = [];
+                    const imageSelectors = [
+                        'img[src*="callawaygolf"]',
+                        'img[src*="webdamdb"]',
+                        '.product-images img',
+                        '.gallery img',
+                        '[class*="image"] img'
+                    ];
+                    
+                    // 图片URL过滤函数 - 只保留1280尺寸商品图
+                    function isValidProductImage(imgSrc) {
+                        if (!imgSrc) return false;
+                        
+                        // 必须以指定格式开头
+                        const validPrefix = 'https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_';
+                        if (!imgSrc.startsWith(validPrefix)) {
+                            return false;
+                        }
+                        
+                        // 排除追踪链接和缩略图
+                        const blockedPatterns = [
+                            't.co/',
+                            'analytics.twitter.com',
+                            'bat.bing.com',
+                            '100th_sm_',
+                            '220th_sm_',
+                            'logo',
+                            'icon',
+                            'favicon'
+                        ];
+                        
+                        for (const pattern of blockedPatterns) {
+                            if (imgSrc.includes(pattern)) {
+                                return false;
+                            }
+                        }
+                        
+                        return true;
+                    }
+                    
+                    for (const selector of imageSelectors) {
+                        const images = document.querySelectorAll(selector);
+                        images.forEach(img => {
+                            if (isValidProductImage(img.src) && !currentImages.includes(img.src)) {
+                                currentImages.push(img.src);
+                            }
+                        });
+                    }
+                    
+                    console.log(`过滤后图片数量: ${currentImages.length}`);
+                    
+                    return {
+                        colorName,
+                        colorCode,
+                        images: currentImages
+                    };
+                }, {
+                    text: buttonText,
+                    ariaLabel,
+                    title,
+                    dataValue,
+                    dataColor
+                });
+                
+                console.log(`✓ 提取颜色: ${currentColorData.colorName} (${currentColorData.colorCode}), ${currentColorData.images.length}张图片`);
+                
+                // 实施图片保留策略：第一个颜色保留全部图片，其余颜色只保留前6张
+                let finalImages = currentColorData.images;
+                if (i === 0) {
+                    // 第一个颜色：保留全部图片
+                    console.log(`   📌 第一个颜色，保留全部 ${finalImages.length} 张图片`);
+                } else {
+                    // 其余颜色：只保留前6张
+                    finalImages = currentColorData.images.slice(0, 6);
+                    console.log(`   ✂️  非第一颜色，裁剪为前 6 张图片 (原${currentColorData.images.length}张 → ${finalImages.length}张)`);
+                }
+                
+                // 添加到结果中
+                multiColorData.colors.push({
+                    code: currentColorData.colorCode,
+                    name: currentColorData.colorName
+                });
+                
+                multiColorData.imageGroups.push({
+                    colorCode: currentColorData.colorCode,
+                    colorName: currentColorData.colorName,
+                    images: finalImages
+                });
+                
+                // 将图片添加到总集合中
+                finalImages.forEach(img => multiColorData.allImages.add(img));
+                
+            } catch (error) {
+                console.log(`❌ 处理颜色按钮 ${i + 1} 时出错: ${error.message}`);
+            }
+        }
+        
+        console.log(`✅ 多颜色抓取完成: ${multiColorData.colors.length}种颜色, 总计${multiColorData.allImages.size}张图片`);
+        
+    } catch (error) {
+        console.log(`❌ 多颜色抓取失败: ${error.message}`);
+    }
+    
+    return multiColorData;
+}
+
 module.exports = {
     extractProductData,
     buildFinalProductData,
+    extractMultiColorData,
     main
 };

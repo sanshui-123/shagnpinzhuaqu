@@ -134,7 +134,7 @@ def convert_size_to_cn(size: str, gender: str) -> str:
 
 
 def build_size_multiline(sizes: List[str], gender: str) -> str:
-    """构建尺码多行字符串，输出中国尺码的完整描述"""
+    """构建尺码多行字符串，输出带中文说明格式(S (小号))"""
     if not sizes:
         return ""
     lines = []
@@ -142,41 +142,35 @@ def build_size_multiline(sizes: List[str], gender: str) -> str:
         clean = str(size).strip()
         if not clean:
             continue
+        
         upper = clean.upper()
+        converted = ""
         
-        # 特殊尺码
+        # 特殊尺码映射（保持完整说明）
         if clean in SPECIAL_SIZE_MAPPING:
-            lines.append(SPECIAL_SIZE_MAPPING[clean])
-            continue
-        if upper in SPECIAL_SIZE_MAPPING:
-            lines.append(SPECIAL_SIZE_MAPPING[upper])
-            continue
+            converted = SPECIAL_SIZE_MAPPING[clean]
+        elif upper in SPECIAL_SIZE_MAPPING:
+            converted = SPECIAL_SIZE_MAPPING[upper]
+        # 女装数字尺码（保持完整说明）
+        elif gender == '女' and clean in JAPAN_SIZE_MAPPING['women']:
+            converted = JAPAN_SIZE_MAPPING['women'][clean]
+        # 通用尺码（保持完整说明）
+        elif upper in JAPAN_SIZE_MAPPING['unisex']:
+            converted = JAPAN_SIZE_MAPPING['unisex'][upper]
+        # 鞋码
+        elif clean in JAPAN_SIZE_MAPPING['shoes']:
+            converted = JAPAN_SIZE_MAPPING['shoes'][clean]
+        # 美国尺码转换（需要查找完整说明）
+        else:
+            base = SIZE_US_TO_CN.get(upper)
+            if base and base in JAPAN_SIZE_MAPPING['unisex']:
+                converted = JAPAN_SIZE_MAPPING['unisex'][base]
+            elif base:
+                converted = f"{base} (美码转换)"
+            else:
+                converted = clean
         
-        # 女装数字尺码
-        if gender == '女' and clean in JAPAN_SIZE_MAPPING['women']:
-            lines.append(JAPAN_SIZE_MAPPING['women'][clean])
-            continue
-        
-        # 通用尺码
-        if upper in JAPAN_SIZE_MAPPING['unisex']:
-            lines.append(JAPAN_SIZE_MAPPING['unisex'][upper])
-            continue
-        
-        # 鞋码 - 保持数字格式
-        if clean in JAPAN_SIZE_MAPPING['shoes']:
-            lines.append(JAPAN_SIZE_MAPPING['shoes'][clean])
-            continue
-        
-        # 美国尺码转换
-        base = SIZE_US_TO_CN.get(upper)
-        if base:
-            if base in JAPAN_SIZE_MAPPING['unisex']:
-                lines.append(JAPAN_SIZE_MAPPING['unisex'][base])
-                continue
-            lines.append(f"{base} (中号)")  # 为没有映射的美国尺码添加中文描述
-            continue
-        
-        # 无法识别的尺码，保持原样
-        lines.append(clean)
+        if converted and converted not in lines:
+            lines.append(converted)
     
     return "\n".join(lines)
