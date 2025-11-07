@@ -266,7 +266,14 @@ def translate_description(product: Dict) -> str:
     if not product:
         return ""
     
-    description = product.get('description', '')
+    # 尝试从多个字段获取描述信息
+    description = (product.get('description', '') or 
+                  product.get('promotionText', '') or 
+                  product.get('promotion_text', '') or
+                  product.get('productDescription', '') or
+                  product.get('product_description', '') or
+                  product.get('tags', ''))
+    
     if not description:
         return ""
     

@@ -64,16 +64,48 @@ def count_total_images(product_data):
     count = 0
     
     if isinstance(product_data, dict):
-        # 处理字典格式
+        # 首先检查直接的totalImages字段
+        total_images_str = product_data.get('totalImages')
+        if total_images_str:
+            try:
+                return int(total_images_str)
+            except (ValueError, TypeError):
+                pass
+        
+        # 备用方案：计算实际图片数量
+        seen_urls = set()
+        
+        def _count_unique(url):
+            nonlocal count
+            if url and url not in seen_urls:
+                seen_urls.add(url)
+                count += 1
+        
+        # 主图
+        main_image = product_data.get('mainImage') or product_data.get('main_image')
+        _count_unique(main_image)
+        
+        # 额外图片
+        additional_images = product_data.get('additionalImages', '')
+        if additional_images:
+            # additionalImages可能是逗号分隔的URL字符串
+            for url in additional_images.split(','):
+                _count_unique(url.strip())
+        
+        # 处理旧格式的images字段
         if 'images' in product_data:
             images = product_data['images']
             if isinstance(images, dict):
                 if images.get('mainImage'):
-                    count += 1
+                    _count_unique(images.get('mainImage'))
                 gallery = images.get('galleryImages') or []
-                count += len(gallery)
-                count += len(images.get('product', []))
-                count += len(images.get('all', []))
+                for img in gallery:
+                    _count_unique(img)
+                for img in images.get('product', []):
+                    _count_unique(img)
+                for img in images.get('all', []):
+                    _count_unique(img)
+                    
     elif hasattr(product_data, 'images'):
         # 处理dataclass格式
         images = product_data.images
