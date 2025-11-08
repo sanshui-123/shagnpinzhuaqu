@@ -134,7 +134,7 @@ function translateColorName(englishColor) {
     return colorName;
 }
 
-// 生成多行中英文颜色对照文本
+// 生成多行中文颜色文本
 function generateColorsCnText(colors) {
     if (!colors || colors.length === 0) {
         return '';
@@ -146,11 +146,11 @@ function generateColorsCnText(colors) {
         const englishName = color.name || '';
         const chineseName = translateColorName(englishName);
 
-        // 格式：English,Chinese
-        if (englishName && chineseName) {
-            colorLines.push(`${englishName},${chineseName}`);
+        // 只输出中文颜色名称
+        if (chineseName) {
+            colorLines.push(chineseName);
         } else if (englishName) {
-            colorLines.push(englishName); // 如果翻译失败，只保留英文
+            colorLines.push(englishName); // 如果翻译失败，保留原名称
         }
     });
 
