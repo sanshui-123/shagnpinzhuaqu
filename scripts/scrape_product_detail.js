@@ -446,8 +446,65 @@ async function extractProductData(page) {
                              document.querySelector('[class*="title"]')?.textContent?.trim() || 
                              document.querySelector('[class*="name"]')?.textContent?.trim() || '';
                 
-                const description = document.querySelector('[class*="description"]')?.textContent?.trim() || 
-                                   document.querySelector('[class*="detail"]')?.textContent?.trim() || '';
+                // 增强的描述抓取 - 使用多种策略寻找产品描述
+                let description = '';
+
+                // 策略1: 查找常见的描述选择器
+                const descriptionSelectors = [
+                    '[class*="description"]',
+                    '[class*="detail"]',
+                    '[class*="product"]',
+                    '[class*="info"]',
+                    '[class*="spec"]',
+                    '[id*="description"]',
+                    '[id*="detail"]',
+                    'meta[name="description"]',
+                    'meta[property="og:description"]'
+                ];
+
+                for (const selector of descriptionSelectors) {
+                    const element = document.querySelector(selector);
+                    if (element) {
+                        const text = element.getAttribute('content') || element.textContent;
+                        if (text && text.length > 50) { // 确保内容足够丰富
+                            description = text.trim();
+                            console.log(`✓ 找到描述内容 (${selector}): ${description.substring(0, 100)}...`);
+                            break;
+                        }
+                    }
+                }
+
+                // 策略2: 如果没找到，查找包含特定关键词的段落
+                if (!description) {
+                    const textElements = Array.from(document.querySelectorAll('p, div, span, section, article'));
+                    for (const element of textElements) {
+                        const text = element.textContent.trim();
+                        if (text && text.length > 100 && (
+                            text.includes('素材') ||
+                            text.includes('MADE IN') ||
+                            text.includes('バスト') ||
+                            text.includes('着丈') ||
+                            text.includes('ポリエステル') ||
+                            text.includes('ストレッチ') ||
+                            text.includes('デタッチャブル')
+                        )) {
+                            description = text;
+                            console.log(`✓ 通过关键词找到描述内容: ${description.substring(0, 100)}...`);
+                            break;
+                        }
+                    }
+                }
+
+                // 策略3: 查找页面标题之外的较长文本
+                if (!description) {
+                    const allText = document.body.textContent || '';
+                    const title = document.querySelector('h1')?.textContent?.trim() || '';
+                    const cleanText = allText.replace(title, '').replace(/\s+/g, ' ').trim();
+                    if (cleanText.length > 200) {
+                        description = cleanText.substring(0, 1000); // 取前1000字符
+                        console.log(`✓ 使用页面文本作为描述: ${description.substring(0, 100)}...`);
+                    }
+                }
                 
                 const mainImage = allImages.length > 0 ? allImages[0] : '';
 
