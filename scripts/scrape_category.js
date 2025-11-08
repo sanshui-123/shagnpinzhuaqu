@@ -72,13 +72,7 @@ function extractProductInfo(rawProduct, category) {
     }
   }
   
-  // 库存和可用性
-  if (rawProduct.stock_status || rawProduct.availability || rawProduct.in_stock !== undefined) {
-    product.stockStatus = rawProduct.stock_status || rawProduct.availability;
-    product.inStock = rawProduct.in_stock;
-    product.stockQuantity = rawProduct.stock_quantity || rawProduct.qty;
-  }
-  
+    
   // 商品标签和分类
   if (rawProduct.tags || rawProduct.labels || rawProduct.badges) {
     product.tags = rawProduct.tags || rawProduct.labels || rawProduct.badges;
@@ -378,13 +372,7 @@ async function fallbackScrollMethod(page, productMap, uniqueProductIds, expected
             }
           }
           
-          // 简化的状态检测
-          if (cardText.includes('在庫切れ') || cardText.includes('sold out')) {
-            productData.stockStatus = 'out_of_stock';
-          } else if (cardText.includes('在庫あり') || cardText.includes('in stock')) {
-            productData.stockStatus = 'in_stock';
-          }
-          
+            
           // NEW/SALE标签检测
           const tags = [];
           if (cardText.includes('NEW') || cardText.includes('新商品')) tags.push('NEW');
