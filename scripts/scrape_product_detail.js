@@ -10,6 +10,153 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+// 颜色翻译对照表
+const COLOR_NAME_TRANSLATION = {
+    // 基础颜色
+    'White': '白色',
+    'Black': '黑色',
+    'Red': '红色',
+    'Blue': '蓝色',
+    'Green': '绿色',
+    'Yellow': '黄色',
+    'Pink': '粉色',
+    'Purple': '紫色',
+    'Orange': '橙色',
+    'Brown': '棕色',
+    'Gray': '灰色',
+    'Grey': '灰色',
+
+    // CallawayJP 特有颜色
+    'Navy': '藏青色',
+    'Royal': '宝蓝色',
+    'Sky Blue': '天蓝色',
+    'Light Blue': '浅蓝色',
+    'Dark Blue': '深蓝色',
+    'Turquoise': '绿松石色',
+    'Teal': '青色',
+
+    // 红色系
+    'Burgundy': '酒红色',
+    'Maroon': '栗色',
+    'Coral': '珊瑚色',
+    'Rose': '玫瑰色',
+    'Fuchsia': '紫红色',
+    'Magenta': '洋红色',
+
+    // 绿色系
+    'Olive': '橄榄色',
+    'Khaki': '卡其色',
+    'Lime': '青柠色',
+    'Mint': '薄荷色',
+    'Forest': '森林绿',
+    'Emerald': '翡翠绿',
+
+    // 灰色系
+    'Charcoal': '炭灰色',
+    'Silver': '银色',
+    'Slate': '石板灰',
+    'Heather': '麻灰色',
+
+    // 棕色系
+    'Tan': '棕褐色',
+    'Beige': '米色',
+    'Cream': '奶油色',
+    'Ivory': '象牙色',
+    'Ecrus': '米白色',
+    'Camel': '驼色',
+
+    // 紫色系
+    'Lavender': '薰衣草紫',
+    'Violet': '紫罗兰',
+    'Plum': '梅子色',
+
+    // 黄色系
+    'Gold': '金色',
+    'Mustard': '芥末黄',
+    'Lemon': '柠檬黄',
+
+    // 粉色系
+    'Peach': '桃色',
+    'Salmon': '鲑鱼粉',
+
+    // 橙色系
+    'Burnt Orange': '焦橙色',
+
+    // 日文颜色（如果需要保留日文）
+    'ホワイト': '白色',
+    'ブラック': '黑色',
+    'レッド': '红色',
+    'ブルー': '蓝色',
+    'ネイビー': '藏青色',
+    'グレー': '灰色',
+    'グリーン': '绿色',
+    'イエロー': '黄色',
+    'ピンク': '粉色',
+    'パープル': '紫色',
+    'オレンジ': '橙色',
+    'ブラウン': '棕色',
+    'ベージュ': '米色',
+    'アイボリー': '象牙色',
+    'カーキ': '卡其色',
+    'オリーブ': '橄榄色',
+    'ターコイズ': '绿松石色',
+    'コーラル': '珊瑚色',
+    'ローズ': '玫瑰色',
+    'ラベンダー': '薰衣草紫',
+    'ワイン': '酒红色',
+    'モカ': '摩卡色',
+    'チャコール': '炭灰色',
+    'シルバー': '银色',
+    'ゴールド': '金色'
+};
+
+// 颜色翻译函数
+function translateColorName(englishColor) {
+    if (!englishColor) return '';
+
+    // 去除前后空格
+    const colorName = englishColor.trim();
+
+    // 直接查找翻译表
+    if (COLOR_NAME_TRANSLATION[colorName]) {
+        return COLOR_NAME_TRANSLATION[colorName];
+    }
+
+    // 尝试部分匹配（处理复合颜色名称）
+    const lowerColorName = colorName.toLowerCase();
+    for (const [english, chinese] of Object.entries(COLOR_NAME_TRANSLATION)) {
+        if (lowerColorName.includes(english.toLowerCase())) {
+            return chinese;
+        }
+    }
+
+    // 如果没找到翻译，返回原名称
+    return colorName;
+}
+
+// 生成多行中英文颜色对照文本
+function generateColorsCnText(colors) {
+    if (!colors || colors.length === 0) {
+        return '';
+    }
+
+    const colorLines = [];
+
+    colors.forEach(color => {
+        const englishName = color.name || '';
+        const chineseName = translateColorName(englishName);
+
+        // 格式：English,Chinese
+        if (englishName && chineseName) {
+            colorLines.push(`${englishName},${chineseName}`);
+        } else if (englishName) {
+            colorLines.push(englishName); // 如果翻译失败，只保留英文
+        }
+    });
+
+    return colorLines.join('\n');
+}
+
 // 参数解析
 function parseArgs() {
     const args = process.argv.slice(2);
@@ -502,6 +649,10 @@ function buildFinalProductData(extractedData, productId, url) {
         sizeChart = extractedData.sizeChart;
     }
     
+    // 生成颜色翻译文本
+    const colorsCnText = generateColorsCnText(colors);
+    console.log(`✅ 生成颜色翻译文本: ${colors.length}种颜色`);
+
     // 构建最终数据结构
     const finalData = {
         scrapeInfo: {
@@ -533,6 +684,7 @@ function buildFinalProductData(extractedData, productId, url) {
         sizes: sizes,
         sizeChart: sizeChart,
         images: images,
+        colors_cn_text: colorsCnText, // 新增：多行中英文颜色对照文本
         ossLinks: {
             productImages: [],
             variantImages: {}
@@ -683,63 +835,250 @@ async function extractMultiColorData(page) {
         // 定位颜色按钮容器
         console.log('🔍 定位颜色按钮容器...');
         
-        // 尝试多种可能的颜色按钮选择器
+        // 使用优化的颜色按钮检测逻辑
+        console.log('🔍 使用优化的颜色按钮检测逻辑...');
+
+        // 扩展的CSS选择器列表
         const colorButtonSelectors = [
+            // 原有选择器
             '.d_flex.items_center.gap_2\\.5.flex_row.flex-wrap_wrap button',
             '[class*="d_flex"][class*="items_center"][class*="gap_2.5"] button',
             '[class*="color"] button',
             'button[aria-label*="色"]',
             'button[title*="色"]',
             '.variant-selector button',
-            '.color-selector button'
+            '.color-selector button',
+
+            // 新增选择器模式
+            '[class*="swatch"] button',
+            '[class*="variant"] button',
+            '[class*="option"] button',
+            '[class*="shade"] button',
+            '[class*="tone"] button',
+            '[class*="hue"] button',
+            '[class*="palette"] button',
+            '[class*="picker"] button',
+            '[class*="selection"] button',
+            '[class*="choice"] button',
+
+            // 日文相关
+            '[class*="カラー"] button',
+            '[class*="カラ-"] button',
+            '[class*="色"] button',
+            'button[aria-label*="カラー"]',
+            'button[aria-label*="カラ-"]',
+            'button[title*="カラー"]',
+            'button[title*="カラ-"]',
+
+            // 英文相关
+            '[class*="Color"] button',
+            '[class*="colour"] button',
+            'button[aria-label*="Color"]',
+            'button[aria-label*="colour"]',
+            'button[title*="Color"]',
+            'button[title*="colour"]',
+
+            // 通用模式
+            '.product-options button',
+            '.product-variants button',
+            '.product-colors button',
+            '.swatches button',
+            '.color-options button',
+            '.variant-options button',
+            '[data-variant] button',
+            '[data-color] button',
+            '[data-option*="color"] button',
+            '[data-option*="Color"] button',
+
+            // 结构模式
+            '.flex button[role="option"]',
+            '.grid button[role="option"]',
+            '[class*="flex"] button[aria-selected]',
+            '[class*="grid"] button[aria-selected]',
+            'button[data-value]',
+            'button[value]',
+            'input[type="radio"][class*="color"]',
+            'input[type="radio"][class*="Color"]',
+
+            // 图片模式
+            'button img[alt*="色"]',
+            'button img[alt*="カラー"]',
+            'button img[alt*="Color"]',
+            'button[style*="background"]',
+            'button[style*="border-color"]',
+            'button[class*="bg-"]'
         ];
-        
+
         let colorButtons = [];
-        
+        let detectionMethod = '';
+
+        // 1. CSS选择器检测
+        console.log('🔍 开始CSS选择器检测...');
         for (const selector of colorButtonSelectors) {
             try {
                 const buttons = await page.$$(selector);
                 if (buttons.length > 0) {
-                    console.log(`✓ 找到 ${buttons.length} 个颜色按钮 (${selector})`);
+                    console.log(`✓ 选择器 "${selector}" 找到 ${buttons.length} 个元素`);
                     colorButtons = buttons;
+                    detectionMethod = `CSS选择器: ${selector}`;
                     break;
                 }
             } catch (error) {
-                console.log(`尝试选择器失败: ${selector}`);
+                console.log(`⚠️ 选择器 "${selector}" 执行失败:`, error.message);
             }
         }
-        
+
+        // 2. 文本内容检测
         if (colorButtons.length === 0) {
-            console.log('⚠️ 未找到颜色按钮，尝试通过文本查找...');
-            
-            // 通过文本内容查找可能的颜色按钮
-            const allButtons = await page.$$('button');
-            for (const button of allButtons) {
+            console.log('🔍 开始文本内容检测...');
+
+            // 扩展的颜色关键词
+            const colorKeywords = [
+                // 中文
+                '色', '颜色', '色彩', '色调', '配色', '上色',
+                // 日文
+                'カラー', 'カラ-', '色', '色彩', '配色',
+                // 英文
+                'color', 'colour', 'shade', 'tone', 'hue', 'tint',
+                'variant', 'option', 'selection', 'choice', 'swatch',
+                'palette', 'picker', 'finish', 'style'
+            ];
+
+            const allButtons = await page.$$('button, [role="button"], input[type="button"], input[type="submit"]');
+
+            for (const btn of allButtons) {
                 try {
-                    const text = await button.textContent();
-                    const ariaLabel = await button.getAttribute('aria-label');
-                    const title = await button.getAttribute('title');
-                    
-                    const content = `${text} ${ariaLabel || ''} ${title || ''}`.toLowerCase();
-                    
-                    // 检查是否包含颜色相关的日文词汇
-                    if (content.includes('ネイビー') || content.includes('ブラック') || 
-                        content.includes('ホワイト') || content.includes('ブルー') ||
-                        content.includes('レッド') || content.includes('グレー') ||
-                        content.includes('navy') || content.includes('black') ||
-                        content.includes('white') || content.includes('blue')) {
-                        colorButtons.push(button);
+                    const text = (await btn.textContent() || '').toLowerCase();
+                    const ariaLabel = (await btn.getAttribute('aria-label') || '').toLowerCase();
+                    const title = (await btn.getAttribute('title') || '').toLowerCase();
+                    const className = (btn.getAttribute('class') || '').toLowerCase();
+
+                    const allText = [text, ariaLabel, title, className].join(' ');
+
+                    if (colorKeywords.some(keyword =>
+                        allText.includes(keyword.toLowerCase()) ||
+                        allText.includes(keyword)
+                    )) {
+                        colorButtons.push(btn);
+                        console.log(`✓ 通过文本检测找到按钮:`, text || ariaLabel || title);
                     }
                 } catch (e) {
                     // 跳过无法读取的按钮
+                    console.log(`⚠️ 按钮检测失败:`, e.message);
                 }
             }
-            
-            console.log(`✓ 通过文本找到 ${colorButtons.length} 个可能的颜色按钮`);
+
+            if (colorButtons.length > 0) {
+                detectionMethod = '文本内容检测';
+            }
         }
-        
+
+        // 3. 智能结构检测
         if (colorButtons.length === 0) {
-            console.log('❌ 未找到任何颜色按钮，使用单颜色模式');
+            console.log('🔍 开始智能结构检测...');
+
+            // 扩展的颜色关键词
+            const colorKeywords = [
+                // 中文
+                '色', '颜色', '色彩', '色调', '配色', '上色',
+                // 日文
+                'カラー', 'カラ-', '色', '色彩', '配色',
+                // 英文
+                'color', 'colour', 'shade', 'tone', 'hue', 'tint',
+                'variant', 'option', 'selection', 'choice', 'swatch',
+                'palette', 'picker', 'finish', 'style'
+            ];
+
+            // 查找包含多个按钮的容器
+            const containers = await page.$$('div, section, article, nav');
+
+            for (const container of containers) {
+                const buttons = await container.$$('button, [role="button"]');
+
+                if (buttons.length >= 2 && buttons.length <= 20) {
+                    // 检查容器是否包含颜色相关属性
+                    const containerClass = (await container.getAttribute('class') || '').toLowerCase();
+                    const containerId = (await container.getAttribute('id') || '').toLowerCase();
+                    const containerAria = (await container.getAttribute('aria-label') || '').toLowerCase();
+
+                    const containerText = [containerClass, containerId, containerAria].join(' ');
+
+                    if (colorKeywords.some(keyword =>
+                        containerText.includes(keyword.toLowerCase())
+                    )) {
+                        colorButtons = buttons;
+                        detectionMethod = `智能结构检测: 容器 ${container.tagName}.${containerClass}`;
+                        console.log(`✓ 通过结构检测找到容器:`, containerClass);
+                        break;
+                    }
+
+                    // 检查按钮是否具有相似的特征（如都是颜色选择器）
+                    const buttonFeatures = await Promise.all(buttons.map(async btn => {
+                        const style = await btn.getAttribute('style') || '';
+                        const hasStyle = style !== '';
+                        const hasBg = style.includes('background') || style.includes('backgroundColor');
+                        const hasImg = await btn.$('img');
+                        const hasValue = btn.hasAttribute('value') || btn.hasAttribute('data-value');
+                        return { hasStyle, hasBg, hasImg, hasValue };
+                    }));
+
+                    // 如果大部分按钮都有样式或图片特征，可能是颜色选择器
+                    const withFeatures = buttonFeatures.filter(f =>
+                        f.hasStyle || f.hasBg || f.hasImg || f.hasValue
+                    ).length;
+
+                    if (withFeatures >= buttons.length * 0.6) {
+                        colorButtons = buttons;
+                        detectionMethod = `智能结构检测: 特征匹配`;
+                        console.log(`✓ 通过特征匹配找到 ${buttons.length} 个按钮`);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 4. 最后尝试：查找所有可能的按钮并过滤
+        if (colorButtons.length === 0) {
+            console.log('🔍 尝试查找所有可能的按钮...');
+            const allPossibleButtons = await page.$$('button, [role="button"], input[type="radio"], input[type="checkbox"]');
+
+            // 过滤出可能是颜色选择的按钮
+            for (const btn of allPossibleButtons) {
+                try {
+                    const style = await btn.getAttribute('style') || '';
+                    const hasColorStyle = style.includes('background') || style.includes('backgroundColor') ||
+                                           style.includes('borderColor') || style.includes('borderTopColor');
+                    const className = (await btn.getAttribute('class') || '').toLowerCase();
+                    const hasColorClass = /color|swatch|variant|option|shade|tone|hue|palette|picker/i.test(className);
+                    const hasColorData = btn.hasAttribute('data-color') || btn.hasAttribute('data-variant') ||
+                                        btn.hasAttribute('data-option') || btn.hasAttribute('data-value');
+                    const hasColorImg = await btn.$('img[alt*="色"], img[alt*="カラー"], img[alt*="Color"]');
+
+                    if (hasColorStyle || hasColorClass || hasColorData || hasColorImg) {
+                        colorButtons.push(btn);
+                    }
+                } catch (e) {
+                    console.log(`⚠️ 按钮过滤失败:`, e.message);
+                }
+            }
+
+            if (colorButtons.length > 0) {
+                detectionMethod = '全局按钮过滤';
+            }
+        }
+
+        // 输出调试信息
+        console.log(`🎯 检测方法: ${detectionMethod}`);
+        console.log(`🎯 找到 ${colorButtons.length} 个颜色按钮`);
+
+        // 如果仍然没有找到颜色按钮，使用默认颜色继续执行（不回退到单颜色模式）
+        if (colorButtons.length === 0) {
+            console.log('⚠️ 未找到颜色按钮，使用默认颜色继续执行...');
+            // 添加默认颜色
+            multiColorData.colors.push({
+                code: 'DEFAULT',
+                name: 'DEFAULT'
+            });
             return multiColorData;
         }
         
