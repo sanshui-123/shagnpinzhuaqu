@@ -1,0 +1,133 @@
+{
+  "scrapeInfo": {
+    "timestamp": "2025-11-11T14:45:29.151Z",
+    "version": "1.0.0",
+    "url": "https://www.callawaygolf.jp/mens/tops/knit/C25218102_.html?pid=C25218102_1120_L",
+    "productId": "C25218102",
+    "totalVariants": 0,
+    "totalColors": 3,
+    "totalSizes": 4,
+    "totalImages": 22,
+    "processingTimeMs": 3,
+    "dataSources": [
+      "dom_enhanced"
+    ]
+  },
+  "debugElementsInfo": null,
+  "debugDescriptionInfo": {
+    "strategy": "dom_fallback",
+    "length": 141,
+    "preview": "ポリエステルの清涼感と、肌馴染みの良い綿を混紡したセーターです。CLWYの大きなロゴ使いと配色感をジャカードで表現しています。無地部分とのコントラストが際立つ、大人っぽいデザインです。　素材: ポリエステル 63% 綿 36% ポリウレタン 1%MADE IN CHINA洗濯表示:",
+    "source": "DOM抓取策略"
+  },
+  "product": {
+    "productId": "C25218102",
+    "title": "ロゴジャカードクルーネックニット (MENS)",
+    "productUrl": "https://www.callawaygolf.jp/mens/tops/knit/C25218102_.html?pid=C25218102_1120_L",
+    "description": "ポリエステルの清涼感と、肌馴染みの良い綿を混紡したセーターです。CLWYの大きなロゴ使いと配色感をジャカードで表現しています。無地部分とのコントラストが際立つ、大人っぽいデザインです。　素材: ポリエステル 63% 綿 36% ポリウレタン 1%MADE IN CHINA洗濯表示:",
+    "brand": "Callaway Golf",
+    "category": "",
+    "tags": [],
+    "mainImage": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_ghKX7WzqlkK73UJ2.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+    "detailUrl": "https://www.callawaygolf.jp/mens/tops/knit/C25218102_.html?pid=C25218102_1120_L",
+    "sizeChart": {
+      "headers": [],
+      "rows": []
+    },
+    "sizeSectionHtml": "商品サイズ（仕上がり寸法）<br>M / バスト 104cm / 着丈 62.5cm / 肩幅 44cm / 袖丈 61.5cm<br><br>L / バスト 110cm / 着丈 64.5cm / 肩幅 46cm / 袖丈 63cm<br><br>LL / バスト 116cm / 着丈 66.5cm / 肩幅 48cm / 袖丈 64.5cm<br><br>3L / バスト 122cm / 着丈 68.5cm / 肩幅 50cm / 袖丈 66cm<br><br>※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)<br>商品生地の特性によって、1-2cm前後の誤差が生じます。<br>商品タグに記載されているサイズはヌード寸法になります。<br>ヌード寸法は、サイズチャートをご確認ください。<br>",
+    "sizeSectionText": "商品サイズ（仕上がり寸法）\nM / バスト 104cm / 着丈 62.5cm / 肩幅 44cm / 袖丈 61.5cm\nL / バスト 110cm / 着丈 64.5cm / 肩幅 46cm / 袖丈 63cm\nLL / バスト 116cm / 着丈 66.5cm / 肩幅 48cm / 袖丈 64.5cm\n3L / バスト 122cm / 着丈 68.5cm / 肩幅 50cm / 袖丈 66cm\n※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)\n商品生地の特性によって、1-2cm前後の誤差が生じます。\n商品タグに記載されているサイズはヌード寸法になります。\nヌード寸法は、サイズチャートをご確認ください。",
+    "currentPrice": "￥15,400",
+    "originalPrice": null,
+    "priceText": "￥15,400"
+  },
+  "variants": [],
+  "colors": [
+    {
+      "code": "1031",
+      "name": "NAVY"
+    },
+    {
+      "code": "1900",
+      "name": "GRAY"
+    },
+    {
+      "code": "1000",
+      "name": "WHITE"
+    }
+  ],
+  "sizes": [
+    "M",
+    "L",
+    "LL",
+    "3L"
+  ],
+  "sizeChart": {
+    "headers": [],
+    "rows": []
+  },
+  "sizeSection": {
+    "text": "商品サイズ（仕上がり寸法）\nM / バスト 104cm / 着丈 62.5cm / 肩幅 44cm / 袖丈 61.5cm\nL / バスト 110cm / 着丈 64.5cm / 肩幅 46cm / 袖丈 63cm\nLL / バスト 116cm / 着丈 66.5cm / 肩幅 48cm / 袖丈 64.5cm\n3L / バスト 122cm / 着丈 68.5cm / 肩幅 50cm / 袖丈 66cm\n※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)\n商品生地の特性によって、1-2cm前後の誤差が生じます。\n商品タグに記載されているサイズはヌード寸法になります。\nヌード寸法は、サイズチャートをご確認ください。",
+    "html": "商品サイズ（仕上がり寸法）<br>M / バスト 104cm / 着丈 62.5cm / 肩幅 44cm / 袖丈 61.5cm<br><br>L / バスト 110cm / 着丈 64.5cm / 肩幅 46cm / 袖丈 63cm<br><br>LL / バスト 116cm / 着丈 66.5cm / 肩幅 48cm / 袖丈 64.5cm<br><br>3L / バスト 122cm / 着丈 68.5cm / 肩幅 50cm / 袖丈 66cm<br><br>※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)<br>商品生地の特性によって、1-2cm前後の誤差が生じます。<br>商品タグに記載されているサイズはヌード寸法になります。<br>ヌード寸法は、サイズチャートをご確認ください。<br>"
+  },
+  "images": {
+    "product": [
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_oCYUnttMuXF51Myg.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_MA6jD74E1ZX01InI.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_UH8bCHh477l41ADt.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_Qe5aDvfBQI41kz7D.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_2jOs06MC4f41fSh3.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_AxmQfMD89UW11Y0N.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_swWKGFQpdI91E07a.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_MviTB1HtQw12kOwP.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_63XxUsUUbKF02MEM.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gmf66KF6AW631UYZ.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sQK5BhDb1d31YsVA.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_ENxIgACGfW31AesG.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_Qm3eWllHEKp31kDF.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_c3Y3ywZOT5Q66Iuf.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_MQbCgzw0zyn51k83.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_s03hDiqAEcu51w1B.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_ghKX7WzqlkK73UJ2.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_w2EE7s8XKzs23QZ5.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_wtyMfYMGPP237UQe.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_wjwLoj33WP47wbDk.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6NV5wXQGzEb41cs2.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sVGS8ADDm8Y65oJu.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
+    ],
+    "variants": {
+      "1000": [
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_ghKX7WzqlkK73UJ2.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_w2EE7s8XKzs23QZ5.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_wtyMfYMGPP237UQe.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_wjwLoj33WP47wbDk.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6NV5wXQGzEb41cs2.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sVGS8ADDm8Y65oJu.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
+      ],
+      "1031": [
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_oCYUnttMuXF51Myg.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_MA6jD74E1ZX01InI.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_UH8bCHh477l41ADt.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_Qe5aDvfBQI41kz7D.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_2jOs06MC4f41fSh3.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_AxmQfMD89UW11Y0N.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_swWKGFQpdI91E07a.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_MviTB1HtQw12kOwP.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_63XxUsUUbKF02MEM.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gmf66KF6AW631UYZ.jpg%3F1753803017&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
+      ],
+      "1900": [
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sQK5BhDb1d31YsVA.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_ENxIgACGfW31AesG.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_Qm3eWllHEKp31kDF.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_c3Y3ywZOT5Q66Iuf.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_MQbCgzw0zyn51k83.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_s03hDiqAEcu51w1B.jpg%3F1753803018&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
+      ]
+    }
+  },
+  "colors_cn_text": "藏青色\n灰色\n白色",
+  "ossLinks": {
+    "productImages": [],
+    "variantImages": {}
+  }
+}
