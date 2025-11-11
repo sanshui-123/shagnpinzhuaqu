@@ -225,6 +225,36 @@ async function extractProductData(page) {
             dataSources: []
         };
 
+        // 全局调试：检查页面上所有可能包含描述的元素
+        console.log('🔍 全局搜索：检查页面上的描述元素...');
+        const allElements = document.querySelectorAll('*');
+        let foundElements = [];
+
+        for (let element of allElements) {
+            const text = element.textContent || '';
+            if (text.includes('今シーズンの') || text.includes('スターストレッチ') || text.includes('千鳥')) {
+                foundElements.push({
+                    tag: element.tagName.toLowerCase(),
+                    className: element.className || '',
+                    id: element.id || '',
+                    textLength: text.length,
+                    preview: text.substring(0, 200)
+                });
+            }
+        }
+
+        if (foundElements.length > 0) {
+            result.debugElementsInfo = foundElements;
+            console.log(`🎉 找到 ${foundElements.length} 个包含描述内容的元素`);
+            foundElements.forEach((elem, index) => {
+                console.log(`  元素 ${index + 1}: ${elem.tag}.${elem.className || 'no-class'} [${elem.id || 'no-id'}]`);
+                console.log(`    文本长度: ${elem.textLength} 字符`);
+                console.log(`    预览: ${elem.preview}...`);
+            });
+        } else {
+            console.log('⚠️ 未找到包含描述内容的元素');
+        }
+
         try {
             // 1. 优先尝试 __NEXT_DATA__
             if (window.__NEXT_DATA__ && window.__NEXT_DATA__.props && window.__NEXT_DATA__.props.pageProps) {
@@ -233,6 +263,31 @@ async function extractProductData(page) {
                 if (pageProps.productDetail) {
                     result.productDetail = pageProps.productDetail;
                     result.dataSources.push('next_data');
+
+                    // 检查描述内容和来源
+                    const desc = pageProps.productDetail.description || pageProps.productDetail.longDescription || '';
+                    if (desc) {
+                        console.log('🎉 在 __NEXT_DATA__ 中找到描述内容!');
+                        console.log(`  数据来源: __NEXT_DATA__.props.pageProps.productDetail`);
+                        console.log(`  描述长度: ${desc.length} 字符`);
+                        console.log(`  描述预览: ${desc.substring(0, 200)}...`);
+
+                        // 添加到result中，以便在Node.js环境中查看
+                        result.debugDescriptionInfo = {
+                            strategy: '__NEXT_DATA__',
+                            length: desc.length,
+                            preview: desc.substring(0, 300),
+                            source: '__NEXT_DATA__.props.pageProps.productDetail',
+                            description: desc.substring(0, 500) // 保存更多内容用于分析
+                        };
+                    } else {
+                        console.log('⚠️ __NEXT_DATA__ 中没有找到描述内容');
+                        result.debugDescriptionInfo = {
+                            strategy: '__NEXT_DATA__',
+                            found: false,
+                            message: '__NEXT_DATA__ 中没有找到描述内容'
+                        };
+                    }
                 }
             }
 
@@ -468,16 +523,30 @@ async function extractProductData(page) {
                         const text = element.getAttribute('content') || element.textContent;
                         if (text && text.length > 50) { // 确保内容足够丰富
                             description = text.trim();
-                            console.log(`✓ 找到描述内容 (${selector}): ${description.substring(0, 100)}...`);
+                            console.log(`✓ 策略1成功 - 找到描述内容`);
+                            console.log(`  选择器: ${selector}`);
+                            console.log(`  元素标签: ${element.tagName.toLowerCase()}`);
+                            console.log(`  元素类名: ${element.className || '无'}`);
+                            console.log(`  元素ID: ${element.id || '无'}`);
+                            console.log(`  文本长度: ${text.length} 字符`);
+                            console.log(`  内容预览: ${description.substring(0, 200)}...`);
                             break;
+                        } else {
+                            console.log(`✗ 策略1 - 元素内容太短 (${selector}): ${text?.substring(0, 50) || '无内容'}`);
                         }
+                    } else {
+                        console.log(`✗ 策略1 - 未找到元素: ${selector}`);
                     }
                 }
 
                 // 策略2: 如果没找到，查找包含特定关键词的段落
                 if (!description) {
+                    console.log('🔍 策略2开始 - 搜索包含关键词的元素...');
                     const textElements = Array.from(document.querySelectorAll('p, div, span, section, article'));
-                    for (const element of textElements) {
+                    console.log(`  找到 ${textElements.length} 个文本元素`);
+
+                    for (let i = 0; i < textElements.length; i++) {
+                        const element = textElements[i];
                         const text = element.textContent.trim();
                         if (text && text.length > 100 && (
                             text.includes('素材') ||
@@ -489,21 +558,56 @@ async function extractProductData(page) {
                             text.includes('デタッチャブル')
                         )) {
                             description = text;
-                            console.log(`✓ 通过关键词找到描述内容: ${description.substring(0, 100)}...`);
+                            console.log(`✓ 策略2成功 - 通过关键词找到描述内容`);
+                            console.log(`  元素索引: ${i}`);
+                            console.log(`  元素标签: ${element.tagName.toLowerCase()}`);
+                            console.log(`  元素类名: ${element.className || '无'}`);
+                            console.log(`  文本长度: ${text.length} 字符`);
+                            console.log(`  包含关键词: ${[...text.matchAll(/(素材|MADE IN|バスト|着丈|ポリエステル|ストレッチ|デタッチャブル)/g)].map(m => m[0]).join(', ')}`);
+                            console.log(`  内容预览: ${description.substring(0, 200)}...`);
                             break;
                         }
+                    }
+
+                    if (!description) {
+                        console.log('✗ 策略2失败 - 未找到包含关键词的合适元素');
                     }
                 }
 
                 // 策略3: 查找页面标题之外的较长文本
                 if (!description) {
+                    console.log('🔍 策略3开始 - 提取页面长文本...');
                     const allText = document.body.textContent || '';
                     const title = document.querySelector('h1')?.textContent?.trim() || '';
                     const cleanText = allText.replace(title, '').replace(/\s+/g, ' ').trim();
+                    console.log(`  页面总文本长度: ${allText.length} 字符`);
+                    console.log(`  清理后文本长度: ${cleanText.length} 字符`);
+
                     if (cleanText.length > 200) {
                         description = cleanText.substring(0, 1000); // 取前1000字符
-                        console.log(`✓ 使用页面文本作为描述: ${description.substring(0, 100)}...`);
+                        console.log(`✓ 策略3成功 - 使用页面文本作为描述`);
+                        console.log(`  文本长度: ${description.length} 字符`);
+                        console.log(`  内容预览: ${description.substring(0, 200)}...`);
+                    } else {
+                        console.log('✗ 策略3失败 - 页面文本太短');
                     }
+                }
+
+                // 最终状态输出
+                if (description) {
+                    console.log(`🎉 描述抓取最终成功!`);
+                    console.log(`  最终描述长度: ${description.length} 字符`);
+                    console.log(`  最终描述内容: ${description.substring(0, 300)}...`);
+
+                    // 添加到result中，以便在Node.js环境中查看
+                    result.debugDescriptionInfo = {
+                        strategy: 'dom_fallback',
+                        length: description.length,
+                        preview: description.substring(0, 300),
+                        source: 'DOM抓取策略'
+                    };
+                } else {
+                    console.log(`❌ 所有策略均失败 - 未找到描述内容`);
                 }
                 
                 const mainImage = allImages.length > 0 ? allImages[0] : '';
@@ -549,6 +653,64 @@ async function extractProductData(page) {
                 result.sizeChart = result.productDetail.sizeChart;
             }
 
+            const sizeSection = document.querySelector('#size .product-html');
+            if (sizeSection) {
+                const sizeSectionHtml = sizeSection.innerHTML.trim();
+                const sizeSectionText = sizeSection.innerText
+                    .replace(/\u00a0/g, ' ')
+                    .replace(/\r\n/g, '\n')
+                    .replace(/\r/g, '\n')
+                    .replace(/\t/g, ' ')
+                    .replace(/\s+\n/g, '\n')
+                    .replace(/\n{2,}/g, '\n')
+                    .trim();
+
+                if (sizeSectionText.length > 0) {
+                    result.sizeSectionHtml = sizeSectionHtml;
+                    result.sizeSectionText = sizeSectionText;
+                    console.log(`✓ DOM找到尺码表文本，长度: ${sizeSectionText.length}`);
+                }
+            }
+
+            // 7. 提取价格信息（在多颜色抓取之后，DOM已经被点击过）
+            try {
+                // 尝试多种价格选择器，覆盖 monica 翻译层
+                const priceSelectors = [
+                    '[data-testid="price"]',
+                    '.product-price',
+                    '.price-value',
+                    '.current-price',
+                    '.sale-price',
+                    '[class*="price"]'
+                ];
+
+                for (const selector of priceSelectors) {
+                    const priceElement = document.querySelector(selector);
+                    if (priceElement) {
+                        const priceText = priceElement.textContent.trim();
+                        if (priceText && priceText.length > 0) {
+                            // 如果有productDetail，确保priceText和price都被设置
+                            if (result.productDetail) {
+                                result.productDetail.priceText = priceText;
+                                result.productDetail.price = priceText;
+                            }
+                            console.log(`✓ 找到价格文本: ${priceText}`);
+                            break;
+                        }
+                    }
+                }
+
+                // 如果通过DOM没有找到价格，尝试从productDetail获取
+                if (!result.productDetail.priceText && result.productDetail.priceJPY !== undefined) {
+                    const priceText = result.productDetail.priceJPY ? `${result.productDetail.priceJPY}円` : '';
+                    result.productDetail.priceText = priceText;
+                    result.productDetail.price = priceText;
+                    console.log(`✓ 从variant获取价格: ${priceText}`);
+                }
+            } catch (priceError) {
+                console.log('⚠️ 价格提取失败:', priceError.message);
+            }
+
         } catch (error) {
             console.log('❌ 数据提取过程中发生错误:', error.message);
             result.dataSources.push('error_fallback');
@@ -559,7 +721,7 @@ async function extractProductData(page) {
 }
 
 // 构建最终产品数据
-function buildFinalProductData(extractedData, productId, url) {
+function buildFinalProductData(extractedData, productId, url, priceInfo = {}) {
     console.log('🔄 构建最终产品数据...');
     
     const startTime = Date.now();
@@ -705,10 +867,26 @@ function buildFinalProductData(extractedData, productId, url) {
     if (extractedData.sizeChart) {
         sizeChart = extractedData.sizeChart;
     }
+
+    const sizeSectionHtml = extractedData.sizeSectionHtml || '';
+    const sizeSectionText = extractedData.sizeSectionText || '';
     
     // 生成颜色翻译文本
     const colorsCnText = generateColorsCnText(colors);
     console.log(`✅ 生成颜色翻译文本: ${colors.length}种颜色`);
+
+    // 检查是否有调试信息
+    console.log('🔍 检查extractedData中的调试信息...');
+    if (extractedData.debugElementsInfo) {
+        console.log(`✅ 找到debugElementsInfo: ${extractedData.debugElementsInfo.length} 个元素`);
+    }
+    if (extractedData.debugDescriptionInfo) {
+        console.log(`✅ 找到debugDescriptionInfo: 策略=${extractedData.debugDescriptionInfo.strategy}`);
+    }
+    if (extractedData.productDetail && extractedData.productDetail.description) {
+        console.log(`✅ 找到产品描述: 长度=${extractedData.productDetail.description.length} 字符`);
+        console.log(`  描述预览: ${extractedData.productDetail.description.substring(0, 200)}...`);
+    }
 
     // 构建最终数据结构
     const finalData = {
@@ -724,6 +902,11 @@ function buildFinalProductData(extractedData, productId, url) {
             processingTimeMs: Date.now() - startTime,
             dataSources: extractedData.dataSources || []
         },
+
+        // 保留调试信息（用于分析描述元素位置）
+        debugElementsInfo: extractedData.debugElementsInfo || null,
+        debugDescriptionInfo: extractedData.debugDescriptionInfo || null,
+
         product: {
             productId: productId,
             title: productDetail.name || productDetail.title || '',
@@ -734,12 +917,22 @@ function buildFinalProductData(extractedData, productId, url) {
             tags: [],
             mainImage: productDetail.mainImage || (images.product.length > 0 ? images.product[0] : ''),
             detailUrl: url,
-            sizeChart: sizeChart
+            sizeChart: sizeChart,
+            sizeSectionHtml: sizeSectionHtml,
+            sizeSectionText: sizeSectionText,
+            // 添加价格信息
+            currentPrice: priceInfo.currentPrice || null,
+            originalPrice: priceInfo.originalPrice || null,
+            priceText: priceInfo.priceText || ''
         },
         variants: variants,
         colors: colors,
         sizes: sizes,
         sizeChart: sizeChart,
+        sizeSection: {
+            text: sizeSectionText,
+            html: sizeSectionHtml
+        },
         images: images,
         colors_cn_text: colorsCnText, // 新增：多行中英文颜色对照文本
         ossLinks: {
@@ -796,15 +989,24 @@ async function main() {
         let pageLoaded = false;
         let attempts = 0;
         const maxAttempts = 3;
-        
+
         while (!pageLoaded && attempts < maxAttempts) {
             attempts++;
             try {
                 console.log(`🔄 尝试加载页面 (第${attempts}/${maxAttempts}次)...`);
-                await page.goto(options.url, { 
+                await page.goto(options.url, {
                     waitUntil: 'domcontentloaded',  // 改为domcontentloaded策略
                     timeout: 120000  // 调整超时时间到120秒
                 });
+
+                // 测试：检查页面是否正确加载并包含我们期望的内容
+                const hasExpectedContent = await page.evaluate(() => {
+                    const bodyText = document.body.textContent || '';
+                    return bodyText.includes('今シーズンの') || bodyText.includes('Callaway') || bodyText.includes('Golf');
+                });
+
+                console.log(`📄 页面内容检查: ${hasExpectedContent ? '✅ 找到期望内容' : '⚠️ 未找到期望内容'}`);
+                pageLoaded = true;
                 
                 // 等待页面完全加载
                 await page.waitForTimeout(5000);
@@ -825,9 +1027,9 @@ async function main() {
         // 首先进行多颜色抓取
         const multiColorData = await extractMultiColorData(page);
         
-        // 提取产品数据
+        // 提取产品数据（包含价格信息）
         const extractedData = await extractProductData(page);
-        
+
         // 将多颜色数据合并到extractedData中
         if (multiColorData.colors.length > 0) {
             console.log(`🎨 使用多颜色抓取结果: ${multiColorData.colors.length}种颜色`);
@@ -837,9 +1039,18 @@ async function main() {
                 totalImages: multiColorData.allImages.size
             };
         }
-        
+
+        // 提取价格信息（使用extractedData中已提取的价格）
+        const priceInfo = {
+            currentPrice: extractedData.currentPrice || null,
+            originalPrice: extractedData.originalPrice || null,
+            priceText: extractedData.priceText || ''
+        };
+
+        console.log(`💰 价格信息: ${priceInfo.priceText || '未找到'}`);
+
         // 构建最终数据
-        const finalData = buildFinalProductData(extractedData, options.productId, options.url);
+        const finalData = buildFinalProductData(extractedData, options.productId, options.url, priceInfo);
         
         // 确保输出目录存在
         if (!fs.existsSync(options.outputDir)) {
@@ -1267,16 +1478,9 @@ async function extractMultiColorData(page) {
                 
                 console.log(`✓ 提取颜色: ${currentColorData.colorName} (${currentColorData.colorCode}), ${currentColorData.images.length}张图片`);
                 
-                // 实施图片保留策略：第一个颜色保留全部图片，其余颜色只保留前6张
+                // 修复：保留所有图片，不再限制数量
                 let finalImages = currentColorData.images;
-                if (i === 0) {
-                    // 第一个颜色：保留全部图片
-                    console.log(`   📌 第一个颜色，保留全部 ${finalImages.length} 张图片`);
-                } else {
-                    // 其余颜色：只保留前6张
-                    finalImages = currentColorData.images.slice(0, 6);
-                    console.log(`   ✂️  非第一颜色，裁剪为前 6 张图片 (原${currentColorData.images.length}张 → ${finalImages.length}张)`);
-                }
+                console.log(`   📌 保留全部 ${finalImages.length} 张图片`);
                 
                 // 添加到结果中
                 multiColorData.colors.push({
