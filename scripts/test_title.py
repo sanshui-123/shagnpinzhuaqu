@@ -26,7 +26,7 @@ if 'ZHIPU_API_KEY' not in os.environ:
 # 设置环境变量
 import os
 os.environ['ZHIPU_API_KEY'] = '19a8bc1b7cfe4a888c179badd7b96e1d.9S05UjRMgHnCkbCW'
-os.environ['ZHIPU_TITLE_MODEL'] = 'glm-4.5-air'
+os.environ['ZHIPU_TITLE_MODEL'] = 'glm-4.6'
 os.environ['GLM_MIN_INTERVAL'] = '0.8'
 os.environ['GLM_MAX_TOKENS'] = '400'
 
@@ -110,6 +110,9 @@ def main():
     # 生成标题
     print("正在生成标题...")
     try:
+        # 启用详细日志
+        import logging
+        logging.basicConfig(level=logging.DEBUG)
         title = generate_cn_title(product)
 
         print("\n=== 生成结果 ===")

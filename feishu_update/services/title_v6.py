@@ -237,7 +237,7 @@ def call_glm_api(
     prompt: str,
     model: str = TITLE_MODEL,
     temperature: float = 0.3,
-    max_tokens: int = 500
+    max_tokens: int = 800  # 提高到800，避免长标题被截断
 ) -> str:
     """
     调用GLM API（带限流和重试）
@@ -253,7 +253,7 @@ def call_glm_api(
 
     url = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
     headers = {
-        "Authorization": f"{api_key}",
+        "Authorization": f"Bearer {api_key}",  # 添加Bearer前缀
         "Content-Type": "application/json"
     }
 
@@ -281,9 +281,31 @@ def call_glm_api(
             if response.status_code == 200:
                 data = response.json()
                 if 'choices' in data and data['choices']:
-                    content = data['choices'][0]['message']['content']
-                    print(f"[GLM Debug] content: {content[:200]}...")
-                    return content.strip()
+                    choice = data['choices'][0]
+                    message = choice.get('message', {})
+                    content = message.get('content', '')
+
+                    # 如果content为空，尝试读取reasoning_content
+                    if not content:
+                        reasoning = message.get('reasoning_content', '')
+                        if reasoning:
+                            # 处理reasoning_content的不同格式
+                            if isinstance(reasoning, str):
+                                # 直接返回reasoning内容
+                                content = reasoning.strip()
+                                print(f"[GLM Debug] 使用reasoning_content: {content[:200]}...")
+                            else:
+                                # 如果reasoning是其他格式，转换为字符串
+                                content = str(reasoning).strip()
+                                print(f"[GLM Debug] reasoning转换为字符串: {content[:200]}...")
+
+                    if content:
+                        return content.strip()
+                    else:
+                        # 如果都为空，打印详细信息
+                        print(f"[GLM Debug] finish_reason: {choice.get('finish_reason')}")
+                        print(f"[GLM Debug] 完整响应data: {data}")
+                        return ""
                 else:
                     print(f"GLM API错误: 响应格式异常 - {data}")
                     return ""
@@ -316,48 +338,48 @@ def build_smart_prompt(
     is_accessory: bool
 ) -> str:
     """
-    构建简洁Prompt - 优化版本，控制在350字以内
+    构建超级简化Prompt - 避免触发GLM推理模式
     """
     name = product.get('productName', '')
     gender_word = '男士' if gender == '男' else '女士'
-    name_lower = name.lower()
 
-    # 根据类别使用不同的模板
+    # 超级简化版本 - 直接给出模板
     if is_accessory:
-        # 配件类专用极短模板，带类型标注
-        # 检测配件类型
-        accessory_type = "配件"
-        if 'marker' in name_lower or 'マーカー' in name_lower:
-            accessory_type = "记分标记夹"
-        elif 'head' in name_lower and ('cover' in name_lower or 'カバー' in name):
-            accessory_type = "球杆头套"
-        elif 'belt' in name_lower or 'ベルト' in name_lower or '腰带' in name_lower:
-            accessory_type = "腰带"
+        # 配件类 - 根据分类推断结尾词
+        if '皮带' in name or 'ベルト' in name:
+            ending = '腰带'
+        elif '帽子' in name or 'キャップ' in name:
+            ending = '帽子'
+        elif '手套' in name or 'グローブ' in name:
+            ending = '手套'
+        else:
+            ending = '腰带'  # 默认
 
-        return f"""将日文商品名改写成中文标题。
-
-这是高尔夫{accessory_type}，禁止输出外套/上衣词汇。
-要求：25-30字，格式：{season}{brand_chinese}高尔夫{gender_word}+功能词+结尾词。
-结尾必须是：帽子,手套,袜子,球包,球杆头套,毛巾,腰带,皮带,伞,防晒用品,清洁用品之一。
-禁止：服饰,精品,限定,训练,球场,外套,上衣,夹克。
-
-名称：{name}
-标题："""
+        prompt = f"{season}{brand_chinese}高尔夫{gender_word}轻便{ending}"
     else:
-        # 服装类简洁模板
-        return f"""将日文商品名改写成中文标题。
+        # 服装类 - 根据名称推断功能词
+        if '中綿' in name or '中棉' in name:
+            feature = '两用棉服'
+        elif 'フルジップ' in name or '全拉链' in name:
+            feature = '弹力全拉链'
+        elif '防寒' in name or '保暖' in name:
+            feature = '保暖'
+        else:
+            feature = '舒适'
 
-要求：26-30字，格式：{season}{brand_chinese}高尔夫{gender_word}+功能词+结尾词。
-结尾必须是：外套,夹克,上衣,POLO衫,T恤,裤,短裤,雨衣之一。
-若有"中綿"或"中棉"必须写成"棉服"。
-禁止：服饰,精品,限定,训练,球场。
+        # 根据category确定结尾
+        if category == '外套':
+            ending = '夹克'
+        elif category == '上衣':
+            ending = '上衣'
+        elif category == '下装':
+            ending = '长裤'
+        else:
+            ending = '夹克'  # 默认
 
-例如：
-✓ 25秋冬卡拉威高尔夫男士保暖舒适外套
-✗ 25秋冬卡拉威高尔夫男士精品服饰
+        prompt = f"{season}{brand_chinese}高尔夫{gender_word}{feature}{ending}"
 
-名称：{name}
-标题："""
+    return prompt
 
 
 # ============================================================================
@@ -582,88 +604,7 @@ def validate_title_quality(
 
 
 # ============================================================================
-# 五、回退方案（方案C兜底）
-# ============================================================================
-
-def generate_fallback_title(
-    brand_chinese: str,
-    season: str,
-    gender: str,
-    category: str,
-    is_accessory: bool,
-    product_name: str = ''
-) -> str:
-    """
-    回退方案：使用模板生成标题
-
-    当GLM失败时使用，确保总能生成合规标题
-    """
-    gender_word = '男士' if gender == '男' else '女士'
-
-    # 根据大分类选择功能词
-    function_words_map = {
-        CATEGORY_OUTERWEAR: ['防风', '保暖', '舒适'],
-        CATEGORY_TOP: ['速干', '透气', '舒适'],
-        CATEGORY_BOTTOM: ['弹力', '舒适', '速干'],
-        CATEGORY_SHOES: ['防滑', '舒适', '轻量'],
-        CATEGORY_ACCESSORY: ['舒适', '弹力', '防滑'],
-        CATEGORY_RAINWEAR: ['防水', '防风', '轻量']
-    }
-
-    function_words = function_words_map.get(category, ['舒适', '透气'])
-
-    # 智能选择配件结尾词
-    if is_accessory and product_name:
-        name_lower = product_name.lower()
-        # 使用原始名称进行日文字符匹配
-        name_original = product_name
-        if any(kw in name_lower for kw in ['ベルト', 'belt', '腰带', '皮带']):
-            ending = '腰带'
-        elif 'ヘッドカバー' in name_original or 'headcover' in name_lower or 'head cover' in name_lower:
-            ending = '球杆头套'  # 明确使用球杆头套
-        elif any(kw in name_lower for kw in ['marker', 'マーカー', 'クリップ', 'clip', 'ball marker']):
-            ending = '标记夹'
-        elif any(kw in name_lower for kw in ['キャップ', 'cap', 'ハット', 'hat', '帽']):
-            ending = '帽子'
-        elif any(kw in name_lower for kw in ['グローブ', 'glove', '手套']):
-            ending = '手套'
-        elif any(kw in name_lower for kw in ['ソックス', 'socks', '袜']):
-            ending = '袜子'
-        elif any(kw in name_lower for kw in ['靴', 'shoes', 'シューズ']):
-            ending = '球鞋'
-        else:
-            ending = '帽子'  # 配件默认选择帽子（更常见的配件）
-    elif is_accessory:
-        ending = '帽子'  # 没有产品名时的默认值
-    else:
-        default_endings = {
-            CATEGORY_OUTERWEAR: '外套',
-            CATEGORY_TOP: '上衣',
-            CATEGORY_BOTTOM: '长裤',
-            CATEGORY_SHOES: '球鞋',
-            CATEGORY_RAINWEAR: '雨衣'
-        }
-        ending = default_endings.get(category, '外套')
-
-    # 构建标题
-    title = f"{season}{brand_chinese}高尔夫{gender_word}{''.join(function_words[:2])}{ending}"
-
-    # 确保长度合规
-    max_len = ACCESSORY_MAX_LEN if is_accessory else APPAREL_MAX_LEN
-    if len(title) > max_len:
-        # 优先缩短功能词
-        excess = len(title) - max_len
-        if len(function_words[0]) >= excess:
-            title = title.replace(function_words[0], '')
-        else:
-            # 截断
-            title = title[:max_len]
-
-    return title
-
-
-# ============================================================================
-# 六、主流程（方案C完整流程）
+# 五、主流程（方案C完整流程）
 # ============================================================================
 
 def generate_cn_title(product: Dict) -> str:
@@ -706,35 +647,32 @@ def generate_cn_title(product: Dict) -> str:
     )
 
     # ========================================================================
-    # 步骤3：调用GLM生成
+    # 步骤3：调用GLM生成（最多重试一次）
     # ========================================================================
-    raw_title = call_glm_api(prompt)
-
-    # ========================================================================
-    # 步骤4：强制执行硬性规则
-    # ========================================================================
-    if raw_title:
-        title = enforce_hard_rules(raw_title, category, is_accessory)
+    last_error = None
+    for attempt in range(2):
+        raw_title = call_glm_api(prompt)
 
         # ====================================================================
-        # 步骤5：质量检查
+        # 步骤4：强制执行硬性规则
         # ====================================================================
-        if validate_title_quality(title, brand_chinese, category, is_accessory):
-            return title
+        if raw_title:
+            title = enforce_hard_rules(raw_title, category, is_accessory)
+
+            # =================================================================
+            # 步骤5：质量检查
+            # =================================================================
+            if validate_title_quality(title, brand_chinese, category, is_accessory):
+                return title
+            last_error = f"生成结果未通过质量检查（第 {attempt + 1} 次尝试）"
+        else:
+            last_error = f"GLM 返回空结果（第 {attempt + 1} 次尝试）"
 
     # ========================================================================
-    # 步骤6：回退方案
+    # 步骤6：失败即抛错
     # ========================================================================
-    print("GLM生成失败或质量检查未通过，使用回退方案")
-    fallback_title = generate_fallback_title(
-        brand_chinese,
-        season,
-        gender,
-        category,
-        is_accessory,
-        product.get('productName', '')
-    )
-    return fallback_title
+    print("❌ GLM生成失败或质量检查未通过，停止处理")
+    raise TitleGenerationError(last_error or "GLM API生成标题失败或质量不合格")
 
 
 # ============================================================================
