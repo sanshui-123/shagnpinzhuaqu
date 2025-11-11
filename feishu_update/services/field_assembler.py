@@ -42,6 +42,7 @@ class FieldAssembler:
         """构建单个产品的字段"""
         fields: Dict[str, any] = {}
 
+        
         # 标题（支持预生成缓存）
         gender = determine_gender(product)
         clothing_type = determine_clothing_type(product)
@@ -63,7 +64,7 @@ class FieldAssembler:
 
         # 价格
         # 首先确保主数据中有价格信息
-        if product.get('priceText') is None:
+        if not product.get('priceText'):  # 检查None或空字符串
             # 尝试从 _detail_data 中获取价格信息
             if '_detail_data' in product:
                 detail_data = product.get('_detail_data', {})
