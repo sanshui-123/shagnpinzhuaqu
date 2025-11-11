@@ -1579,10 +1579,18 @@ async function extractMultiColorData(page) {
                 });
                 
                 console.log(`✓ 提取颜色: ${currentColorData.colorName} (${currentColorData.colorCode}), ${currentColorData.images.length}张图片`);
-                
-                // 修复：保留所有图片，不再限制数量
-                let finalImages = currentColorData.images;
-                console.log(`   📌 保留全部 ${finalImages.length} 张图片`);
+
+                // 图片抓取规则：第一个颜色保留所有图片，其他颜色只保留前6张
+                let finalImages;
+                if (i === 0) {
+                    // 第一个颜色：保留所有图片
+                    finalImages = currentColorData.images;
+                    console.log(`   📌 第一个颜色保留全部 ${finalImages.length} 张图片`);
+                } else {
+                    // 其他颜色：只保留前6张
+                    finalImages = currentColorData.images.slice(0, 6);
+                    console.log(`   📌 其他颜色保留前6张图片（共${finalImages.length}张）`);
+                }
                 
                 // 添加到结果中
                 multiColorData.colors.push({

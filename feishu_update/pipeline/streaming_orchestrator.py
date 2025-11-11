@@ -19,6 +19,7 @@ from ..models.progress import ProgressEvent
 from ..services.field_assembler import FieldAssembler
 from ..services.title_generator import TitleGenerator
 from ..services.translator import Translator
+from ..services.detail_fetcher import DetailFetcher
 from ..clients.interfaces import GLMClientInterface, FeishuClientInterface
 from ..loaders.factory import LoaderFactory
 
@@ -52,6 +53,7 @@ class StreamingUpdateOrchestrator:
             title_generator=self.title_generator,
             translator=self.translator,
         )
+        self.detail_fetcher = DetailFetcher()
         self.progress_callback = progress_callback
         self.progress_save_interval = progress_save_interval
         self.single_timeout = single_timeout
@@ -234,7 +236,7 @@ class StreamingUpdateOrchestrator:
         force_update: bool,
         dry_run: bool
     ) -> bool:
-        """处理单个产品：生成标题 → 组装字段 → 立即同步"""
+        """处理单个产品：生成标题 → 抓取详情（如需要） → 组装字段 → 立即同步"""
 
         try:
             # 1. 生成标题（带超时控制）
@@ -263,10 +265,25 @@ class StreamingUpdateOrchestrator:
             else:
                 product_dict = product
 
-            # 3. 提取详情数据
+            # 3. 检查是否需要抓取详情
+            if self.detail_fetcher.needs_detail_fetch(product_dict):
+                print(f"  📄 产品 {product_id} 需要补充详情数据...")
+                detail_data = self.detail_fetcher.fetch_product_detail(
+                    product_dict.get('detailUrl', ''),
+                    product_id
+                )
+                if detail_data:
+                    # 合并详情数据到产品字典
+                    enhanced_dict = self.detail_fetcher.merge_detail_into_product(product_dict, detail_data)
+                    product_dict = enhanced_dict
+                    print(f"  ✅ 详情抓取成功")
+                else:
+                    print(f"  ⚠️ 详情抓取失败，使用基础数据")
+
+            # 4. 提取详情数据
             detail_data = product_dict.get('_detail_data')
 
-            # 4. 组装字段
+            # 5. 组装字段
             fields = self.field_assembler.build_update_fields(
                 product=product_dict,
                 pre_generated_title=title,

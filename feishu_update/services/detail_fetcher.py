@@ -6,24 +6,27 @@ import json
 import subprocess
 import tempfile
 import os
+import time
 from typing import Dict, Optional, List
 from pathlib import Path
 
 
 class DetailFetcher:
     """产品详情抓取器
-    
+
     负责调用Node.js脚本抓取产品详情数据，并解析返回结果。
     """
 
     def __init__(self, project_root: Optional[str] = None) -> None:
         """初始化抓取器
-        
+
         Args:
             project_root: 项目根目录路径，默认自动查找
         """
         self.project_root = project_root or self._find_project_root()
         self.scrape_script = os.path.join(self.project_root, 'scripts', 'scrape_product_detail.js')
+        self.last_fetch_time = 0
+        self.fetch_interval = float(os.getenv('DETAIL_FETCH_INTERVAL', '2.0'))  # 默认2秒间隔
         
     def _find_project_root(self) -> str:
         """自动查找项目根目录"""
@@ -38,35 +41,48 @@ class DetailFetcher:
     
     def needs_detail_fetch(self, product: Dict) -> bool:
         """检查产品是否需要抓取详情
-        
+
         检查是否缺少颜色、尺码、图片等关键信息。
-        
+
         Args:
             product: 产品数据字典
-            
+
         Returns:
             bool: 如果需要抓取详情则返回True
         """
+        # 首先检查是否已经有详情数据
+        if product.get('_detail_data') or product.get('extra', {}).get('_detail_data'):
+            return False
+
         # 检查是否缺少关键字段
         colors = product.get('colors', [])
         sizes = product.get('sizes', [])
         images = product.get('imagesMetadata', [])
-        
+
         # 如果颜色、尺码、图片任一为空，则需要抓取
         return not colors or not sizes or not images
     
     def fetch_product_detail(self, product_url: str, product_id: str = None) -> Optional[Dict]:
         """抓取单个产品的详情数据
-        
+
         Args:
             product_url: 产品详情页URL
             product_id: 产品ID（可选，从URL自动提取）
-            
+
         Returns:
             Dict: 抓取的详情数据，如果失败则返回None
         """
+        # 限速：确保请求间隔
+        current_time = time.time()
+        time_since_last = current_time - self.last_fetch_time
+        if time_since_last < self.fetch_interval:
+            sleep_time = self.fetch_interval - time_since_last
+            print(f"⏳ 限速中，等待 {sleep_time:.1f} 秒...")
+            time.sleep(sleep_time)
+
         try:
             print(f"🔍 正在抓取产品详情: {product_id or 'unknown'}")
+            self.last_fetch_time = time.time()
             
             # 创建临时输出目录
             with tempfile.TemporaryDirectory() as temp_dir:
@@ -119,28 +135,31 @@ class DetailFetcher:
     
     def merge_detail_into_product(self, product: Dict, detail_data: Dict) -> Dict:
         """将详情数据合并到产品数据中
-        
+
         Args:
             product: 原始产品数据
             detail_data: 抓取的详情数据
-            
+
         Returns:
             Dict: 合并后的产品数据
         """
         # 创建产品副本，避免修改原数据
         enhanced_product = product.copy()
-        
+
+        # 关键：将完整的详情数据存储到 _detail_data 字段
+        enhanced_product['_detail_data'] = detail_data
+
         # 合并颜色信息
         if detail_data.get('colors'):
             enhanced_product['colors'] = [
                 color.get('name', color.get('code', 'Unknown'))
                 for color in detail_data['colors']
             ]
-        
+
         # 合并尺码信息
         if detail_data.get('sizes'):
             enhanced_product['sizes'] = detail_data['sizes']
-        
+
         # 合并图片信息
         if detail_data.get('images', {}).get('product'):
             # 构建图片元数据格式

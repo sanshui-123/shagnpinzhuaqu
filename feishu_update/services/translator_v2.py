@@ -91,9 +91,9 @@ def build_enhanced_translation_prompt(description: str) -> str:
 采用塔夫塔面料，具有全方向弹力和适度挺括感。融入运动风格设计的茄克式外套。为应对温差变化，袖子采用可拆卸设计，可在短袖⇔长袖之间切换。下摆配有抽绳，可调节版型。
 
 【产品亮点】
-✓ 半袖风格 - 本季必备的半袖款式
-✓ 8向弹力 - 全方向伸缩面料
-✓ 2WAY设计 - 可拆卸袖子
+半袖风格 - 本季必备的半袖款式
+8向弹力 - 全方向伸缩面料
+2WAY设计 - 可拆卸袖子
 
 【材质信息】
 面料：100%聚酯纤维
@@ -251,11 +251,6 @@ def validate_translation_format(translated: str) -> bool:
         if section not in translated:
             print(f"验证失败：缺少必需部分 {section}")
             return False
-
-    # 检查是否包含亮点列表（✓ 符号）
-    if '✓' not in translated:
-        print("验证失败：缺少产品亮点列表（✓ 符号）")
-        return False
 
     # 检查是否包含中文（确保是中文翻译）
     import re
