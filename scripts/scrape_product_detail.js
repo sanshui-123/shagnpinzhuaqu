@@ -674,9 +674,14 @@ async function extractProductData(page) {
 
             // 7. 提取价格信息（在多颜色抓取之后，DOM已经被点击过）
             try {
-                // 尝试多种价格选择器，覆盖 monica 翻译层
+                console.log('🔍 开始提取价格信息...');
+
+                // 扩展的价格选择器列表
                 const priceSelectors = [
                     '[data-testid="price"]',
+                    '.price_wrapper span',           // 页面默认价格
+                    '.monica-translate-translate',   // 翻译层里的价格
+                    '.price .text-\\[\\#000000\\]',    // 特定样式
                     '.product-price',
                     '.price-value',
                     '.current-price',
@@ -684,31 +689,86 @@ async function extractProductData(page) {
                     '[class*="price"]'
                 ];
 
+                let priceText = '';
+
+                // 方法1：使用扩展选择器逐个查找
                 for (const selector of priceSelectors) {
+                    console.log(`🔍 尝试选择器: ${selector}`);
                     const priceElement = document.querySelector(selector);
                     if (priceElement) {
-                        const priceText = priceElement.textContent.trim();
-                        if (priceText && priceText.length > 0) {
-                            // 如果有productDetail，确保priceText和price都被设置
-                            if (result.productDetail) {
-                                result.productDetail.priceText = priceText;
-                                result.productDetail.price = priceText;
-                            }
-                            console.log(`✓ 找到价格文本: ${priceText}`);
+                        const text = priceElement.textContent.trim();
+                        if (text && text.length > 0) {
+                            priceText = text;
+                            console.log(`✓ 找到价格文本: ${text}`);
                             break;
                         }
                     }
                 }
 
-                // 如果通过DOM没有找到价格，尝试从productDetail获取
-                if (!result.productDetail.priceText && result.productDetail.priceJPY !== undefined) {
-                    const priceText = result.productDetail.priceJPY ? `${result.productDetail.priceJPY}円` : '';
+                // 方法2：如果没有找到，搜索包含円(税込)的文本
+                if (!priceText) {
+                    console.log('🔍 搜索円(税込)格式...');
+                    const allElements = document.querySelectorAll('span, div, p');
+                    for (const element of allElements) {
+                        const text = element.textContent.trim();
+                        if (text && text.match(/円\(税込\)/)) {
+                            priceText = text;
+                            console.log(`✓ 找到价格文本（税込格式）: ${text}`);
+                            break;
+                        }
+                    }
+                }
+
+                // 方法3：搜索包含¥或円的文本
+                if (!priceText) {
+                    console.log('🔍 搜索包含¥或円的文本...');
+                    const allElements = document.querySelectorAll('span, div, p');
+                    for (const element of allElements) {
+                        const text = element.textContent.trim();
+                        if (text && (text.includes('¥') || text.includes('円'))) {
+                            // 确保文本看起来像价格（包含数字）
+                            if (text.match(/\d/)) {
+                                priceText = text;
+                                console.log(`✓ 找到价格文本: ${text}`);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // 方法4：从 __NEXT_DATA__ 回退
+                if (!priceText) {
+                    console.log('🔍 尝试从 __NEXT_DATA__ 获取...');
+                    const nextDataScript = document.querySelector('#__NEXT_DATA__');
+                    if (nextDataScript) {
+                        try {
+                            const nextData = JSON.parse(nextDataScript.textContent);
+                            const productDetail = nextData?.props?.pageProps?.productDetail;
+                            if (productDetail) {
+                                priceText = productDetail.price || productDetail.priceText || '';
+                                if (priceText) {
+                                    console.log(`✓ 从 __NEXT_DATA__ 获取价格: ${priceText}`);
+                                }
+                            }
+                        } catch (e) {
+                            console.log('⚠️ 解析 __NEXT_DATA__ 失败:', e.message);
+                        }
+                    }
+                }
+
+                // 设置到结果中
+                if (priceText) {
                     result.productDetail.priceText = priceText;
                     result.productDetail.price = priceText;
-                    console.log(`✓ 从variant获取价格: ${priceText}`);
+                    result.currentPrice = priceText; // 也设置到顶层
+                    result.priceText = priceText;     // 也设置到顶层
+                    console.log(`✅ 价格提取成功: ${priceText}`);
+                } else {
+                    console.log('⚠️ 未能提取到价格信息');
                 }
+
             } catch (priceError) {
-                console.log('⚠️ 价格提取失败:', priceError.message);
+                console.log('❌ 价格提取失败:', priceError.message);
             }
 
         } catch (error) {
@@ -846,6 +906,11 @@ function buildFinalProductData(extractedData, productId, url, priceInfo = {}) {
     
     // 生成变体（颜色×尺码笛卡尔积）
     if (colors.length > 0 && sizes.length > 0) {
+        // 尝试从 extractedData 获取价格信息
+        const extractedPrice = extractedData.currentPrice || extractedData.priceText || '';
+        // 清理价格文本，只保留数字和円符号
+        const cleanPrice = extractedPrice.replace(/[^\d円]/g, '');
+
         colors.forEach(color => {
             sizes.forEach(size => {
                 variants.push({
@@ -856,7 +921,7 @@ function buildFinalProductData(extractedData, productId, url, priceInfo = {}) {
                     sizeCode: size,
                     availability: 'unknown',
                     sku: `${productId}_${color.code}_${size}`,
-                    priceJPY: null
+                    priceJPY: cleanPrice || null
                 });
             });
         });

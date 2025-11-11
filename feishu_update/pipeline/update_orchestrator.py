@@ -10,6 +10,7 @@ from ..models.progress import ProgressEvent
 from ..services.field_assembler import FieldAssembler
 from ..services.title_generator import TitleGenerator
 from ..services.translator import Translator
+from ..services.detail_fetcher import DetailFetcher
 from ..clients.interfaces import GLMClientInterface, FeishuClientInterface
 from ..loaders.factory import LoaderFactory
 from .parallel_executor import ParallelTitleExecutor
@@ -26,6 +27,7 @@ class UpdateOrchestrator:
         translator: Optional[Translator] = None,
         field_assembler: Optional[FieldAssembler] = None,
         title_executor: Optional[ParallelTitleExecutor] = None,
+        detail_fetcher: Optional[DetailFetcher] = None,
         progress_callback: Optional[callable] = None,
     ) -> None:
         self.glm_client = glm_client
@@ -39,6 +41,7 @@ class UpdateOrchestrator:
         self.title_executor = title_executor or ParallelTitleExecutor(
             generator=self.title_generator
         )
+        self.detail_fetcher = detail_fetcher or DetailFetcher()
         self.progress_callback = progress_callback
 
     def execute(
@@ -144,12 +147,60 @@ class UpdateOrchestrator:
         product_objs = [products[pid] for pid in candidate_ids if pid in products]
         title_results, title_failed = self.title_executor.execute(product_objs)
 
-        # 7. 组装字段，构建 updates 列表（record_id + fields）
-        updates = []
-        
+        # 6.5. 抓取并补充产品详情数据
+        print("🔍 检查并抓取缺失的产品详情...")
+        enhanced_products_list = []
         for pid in candidate_ids:
             product = products.get(pid)
             if not product:
+                continue
+            
+            # 转换Product对象为字典格式（如果需要的话）
+            if hasattr(product, '__dict__'):
+                # 获取 extra 字段中的数据
+                extra = getattr(product, 'extra', {})
+
+                product_dict = {
+                    'productId': product.product_id,
+                    'detailUrl': product.detail_url,
+                    'colors': getattr(product, 'colors', []),
+                    'sizes': getattr(product, 'sizes', []),
+                    'imagesMetadata': getattr(product, 'images_metadata', []),
+                    'productName': getattr(product, 'product_name', ''),
+                    'brand': getattr(product, 'brand', ''),
+                    'priceText': getattr(product, 'price', ''),  # 修正：使用price字段
+                    'currentPrice': getattr(product, 'current_price', ''),
+                    'description': getattr(product, 'description', ''),
+                    # 从 extra 中透传 _detail_data 和其他原始数据
+                    **extra
+                }
+            else:
+                product_dict = product
+            
+            # 检查是否需要抓取详情
+            if self.detail_fetcher.needs_detail_fetch(product_dict):
+                print(f"📄 产品 {pid} 需要补充详情数据...")
+                detail_data = self.detail_fetcher.fetch_product_detail(
+                    product_dict.get('detailUrl', ''), 
+                    pid
+                )
+                if detail_data:
+                    enhanced_dict = self.detail_fetcher.merge_detail_into_product(product_dict, detail_data)
+                    enhanced_products_list.append((pid, enhanced_dict))
+                else:
+                    enhanced_products_list.append((pid, product_dict))
+            else:
+                enhanced_products_list.append((pid, product_dict))
+
+        # 7. 组装字段，构建 updates 列表（record_id + fields）
+        updates = []
+        
+        # 将增强产品列表转换为字典以便快速查找
+        enhanced_products = {pid: enhanced_dict for pid, enhanced_dict in enhanced_products_list}
+        
+        for pid in candidate_ids:
+            enhanced_product = enhanced_products.get(pid)
+            if not enhanced_product:
                 continue
             record_info = existing_records.get(pid)
             if not record_info:
@@ -158,13 +209,35 @@ class UpdateOrchestrator:
                 continue
                 
             pre_title = title_results.get(pid, '')
+            
+            # 提取详情数据（如果存在）
+            detail_data = enhanced_product.get('_detail_data')
+            
+            # 调用FieldAssembler，传递详情数据
             fields = self.field_assembler.build_update_fields(
-                product,
+                product=enhanced_product,
                 pre_generated_title=pre_title,
-                title_only=title_only
+                title_only=title_only,
+                product_detail=detail_data
             )
             if not fields:
                 continue
+
+            # 调试：打印生成的字段
+            print(f"\n📋 产品 {pid} 生成的字段:")
+            print("=" * 60)
+            for field_name, field_value in fields.items():
+                if field_name in ['颜色', '尺码', '图片URL', '尺码表', '详情页文字']:
+                    # 多行字段显示行数
+                    if isinstance(field_value, str):
+                        lines = field_value.split('\n')
+                        print(f"  {field_name}: {len(lines)}行 (总长度:{len(field_value)}字符)")
+                    else:
+                        print(f"  {field_name}: {field_value}")
+                else:
+                    print(f"  {field_name}: {field_value}")
+            print("=" * 60)
+            print(f"共生成 {len(fields)} 个字段\n")
                 
             if (not force_update) and not self._fields_are_different(record_info['fields'], fields):
                 continue

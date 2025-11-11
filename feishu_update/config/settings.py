@@ -12,7 +12,7 @@
 import os
 import json
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Iterable
 from dataclasses import dataclass
 
 
@@ -59,10 +59,52 @@ def get_glm_config(
     )
 
 
+def _iter_candidate_config_paths(project_root: Path) -> Iterable[Path]:
+    """
+    生成候选配置路径（优先级从高到低）
+    1. 环境变量 FEISHU_CONFIG_PATH / TAOBAO_CONFIG_PATH
+    2. 当前仓库下的 TaobaoUploader/config.json
+    3. 仓库同级目录的 TaobaoUploader/config.json
+    4. 历史 cursor 仓库中的配置
+    """
+    env_path = (
+        os.environ.get('FEISHU_CONFIG_PATH')
+        or os.environ.get('TAOBAO_CONFIG_PATH')
+    )
+    if env_path:
+        yield Path(env_path).expanduser()
+    
+    yield project_root / 'TaobaoUploader' / 'config.json'
+    
+    desktop_root = project_root.parent
+    yield desktop_root / 'TaobaoUploader' / 'config.json'
+    yield desktop_root / 'cursor' / 'TaobaoUploader' / 'config.json'
+
+
+def resolve_feishu_config_path() -> Path:
+    """按照候选顺序查找可用的飞书配置文件路径"""
+    current = Path(__file__).resolve()
+    project_root = next(
+        (parent for parent in current.parents if parent.name == 'CallawayJP'),
+        current.parents[2]  # 回退：大概率是仓库根目录
+    )
+    
+    tried = []
+    for candidate in _iter_candidate_config_paths(project_root):
+        tried.append(str(candidate))
+        if candidate.exists():
+            return candidate
+    
+    tried_paths = "\n - ".join(tried)
+    raise FileNotFoundError(
+        "无法找到飞书配置文件。已尝试路径:\n"
+        f" - {tried_paths}\n"
+        "请将 TaobaoUploader/config.json 放在 CallawayJP 仓库中或设置 FEISHU_CONFIG_PATH 环境变量。"
+    )
+
+
 def get_feishu_config() -> FeishuConfig:
     """获取飞书配置
-    
-    从配置文件中加载飞书配置信息。
     
     Returns:
         FeishuConfig: 飞书配置对象
@@ -71,12 +113,7 @@ def get_feishu_config() -> FeishuConfig:
         FileNotFoundError: 配置文件不存在
         ValueError: 配置格式错误
     """
-    # TODO: 这里暂时使用现有的配置文件路径
-    # 后续可以考虑迁移到更合适的位置
-    config_path = Path(__file__).resolve().parents[3] / 'TaobaoUploader' / 'config.json'
-    
-    if not config_path.exists():
-        raise FileNotFoundError(f"配置文件不存在: {config_path}")
+    config_path = resolve_feishu_config_path()
     
     try:
         with open(config_path, 'r', encoding='utf-8') as f:

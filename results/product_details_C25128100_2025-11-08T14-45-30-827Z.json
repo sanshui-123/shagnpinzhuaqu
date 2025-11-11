@@ -1,0 +1,97 @@
+{
+  "scrapeInfo": {
+    "timestamp": "2025-11-08T14:45:30.826Z",
+    "version": "1.0.0",
+    "url": "https://www.callawaygolf.jp/mens/tops/polo/C25128100_.html?pid=C25128100_0010_S",
+    "productId": "C25128100",
+    "totalVariants": 4,
+    "totalColors": 1,
+    "totalSizes": 4,
+    "totalImages": 0,
+    "processingTimeMs": 2,
+    "dataSources": [
+      "dom_enhanced"
+    ]
+  },
+  "product": {
+    "productId": "C25128100",
+    "title": "",
+    "productUrl": "https://www.callawaygolf.jp/mens/tops/polo/C25128100_.html?pid=C25128100_0010_S",
+    "description": "",
+    "brand": "Callaway Golf",
+    "category": "",
+    "tags": [],
+    "mainImage": "",
+    "detailUrl": "https://www.callawaygolf.jp/mens/tops/polo/C25128100_.html?pid=C25128100_0010_S",
+    "sizeChart": {
+      "headers": [],
+      "rows": []
+    }
+  },
+  "variants": [
+    {
+      "variantId": "C25128100_DEFAULT_S",
+      "colorName": "DEFAULT",
+      "colorCode": "DEFAULT",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "C25128100_DEFAULT_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25128100_DEFAULT_M",
+      "colorName": "DEFAULT",
+      "colorCode": "DEFAULT",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "C25128100_DEFAULT_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25128100_DEFAULT_L",
+      "colorName": "DEFAULT",
+      "colorCode": "DEFAULT",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "C25128100_DEFAULT_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25128100_DEFAULT_LL",
+      "colorName": "DEFAULT",
+      "colorCode": "DEFAULT",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "C25128100_DEFAULT_LL",
+      "priceJPY": null
+    }
+  ],
+  "colors": [
+    {
+      "code": "DEFAULT",
+      "name": "DEFAULT"
+    }
+  ],
+  "sizes": [
+    "S",
+    "M",
+    "L",
+    "LL"
+  ],
+  "sizeChart": {
+    "headers": [],
+    "rows": []
+  },
+  "images": {
+    "product": [],
+    "variants": {}
+  },
+  "ossLinks": {
+    "productImages": [],
+    "variantImages": {}
+  }
+}

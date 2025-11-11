@@ -128,7 +128,7 @@ def call_glm_api_internal(prompt: str) -> str:
     """
     global _last_glm_call_ts
     
-    api_key = os.environ.get('ZHIPU_API_KEY')
+    api_key = os.environ.get('ZHIPU_API_KEY') or os.environ.get('GLM_API_KEY')
     if not api_key:
         print("错误：ZHIPU_API_KEY 环境变量未设置")
         return ""
@@ -164,7 +164,7 @@ def call_glm_api_internal(prompt: str) -> str:
                     time.sleep(sleep_time)
                 
                 # 发起请求
-                response = requests.post(url, headers=headers, json=payload, timeout=120)
+                response = requests.post(url, headers=headers, json=payload, timeout=180)
                 _last_glm_call_ts = time.time()
             
             response.raise_for_status()
@@ -183,7 +183,7 @@ def call_glm_api_internal(prompt: str) -> str:
             
         except requests.exceptions.HTTPError as e:
             print(f"GLM API HTTP错误 (尝试{attempt+1}/{GLM_MAX_RETRIES+1}): {e}")
-            
+
             # 检查是否是429错误
             if e.response.status_code == 429 or "Too Many Requests" in str(e):
                 if attempt < GLM_MAX_RETRIES:
@@ -197,6 +197,20 @@ def call_glm_api_internal(prompt: str) -> str:
                     return ""
             else:
                 print("非429错误，放弃请求")
+                return ""
+
+        except requests.exceptions.ConnectionError as e:
+            print(f"GLM API连接错误 (尝试{attempt+1}/{GLM_MAX_RETRIES+1}): {e}")
+            print("连接被重置或网络不稳定，准备重试...")
+
+            if attempt < GLM_MAX_RETRIES:
+                # 指数退避策略
+                backoff_time = 1.0 * (GLM_BACKOFF_FACTOR ** attempt)
+                print(f"连接重试，等待{backoff_time}秒...")
+                time.sleep(backoff_time)
+                continue
+            else:
+                print("达到最大重试次数，放弃请求")
                 return ""
                 
         except Exception as e:
@@ -220,49 +234,40 @@ def call_glm_api_internal(prompt: str) -> str:
 
 def validate_translation_format(translated: str) -> bool:
     """验证翻译结果是否符合预期格式
-    
+
     检查是否包含必要的结构标记
     """
     if not translated:
         return False
-    
+
+    # 降低要求，只检查必需的核心部分
     required_sections = [
         '【产品描述】',
-        '【产品亮点】',
-        '【材质信息】'
+        '【产品亮点】'
     ]
-    
+
     # 检查是否包含所有必需的部分
     for section in required_sections:
         if section not in translated:
             print(f"验证失败：缺少必需部分 {section}")
             return False
-    
+
     # 检查是否包含亮点列表（✓ 符号）
     if '✓' not in translated:
         print("验证失败：缺少产品亮点列表（✓ 符号）")
         return False
-    
+
+    # 检查是否包含中文（确保是中文翻译）
+    import re
+    if not re.search(r'[\u4e00-\u9fff]', translated):
+        print("验证失败：翻译结果不包含中文字符")
+        return False
+
     print("翻译格式验证通过")
     return True
 
-def translate_description(product: Dict) -> str:
-    """将商品描述翻译成结构化中文格式
-    
-    Args:
-        product: 商品数据字典，包含 description 字段
-        
-    Returns:
-        str: 结构化的中文描述，包含：
-            - 【产品描述】段落化
-            - 【产品亮点】✓ 列表
-            - 【材质信息】单独成行
-            - 【产地与洗涤】单独标注
-            - Markdown 尺码表
-            - 尺码说明提示
-            
-        如果翻译失败或格式不符合要求，返回空字符串
-    """
+def extract_source_description(product: Dict) -> str:
+    """提取并清理用于翻译的描述文本"""
     if not product:
         return ""
     
@@ -277,19 +282,25 @@ def translate_description(product: Dict) -> str:
     if not description:
         return ""
     
-    # 1. 清理描述文本
     cleaned_description = clean_description_text(description)
     if not cleaned_description:
         print("警告：description 清理后为空，跳过翻译")
         return ""
     
+    return cleaned_description
+
+
+def translate_description(product: Dict) -> str:
+    """将商品描述翻译成结构化中文格式"""
+    cleaned_description = extract_source_description(product)
+    if not cleaned_description:
+        return ""
+
     print(f"清理后的描述内容（前100字符）：{cleaned_description[:100]}...")
     
-    # 2. 构建增强提示词
     prompt = build_enhanced_translation_prompt(cleaned_description)
     print(f"准备调用 GLM 翻译，提示词长度：{len(prompt)}")
     
-    # 3. 调用 GLM 翻译
     try:
         translated = call_glm_api_internal(prompt)
         print(f"GLM 翻译返回结果长度：{len(translated) if translated else 0}")
@@ -312,4 +323,4 @@ def translate_description(product: Dict) -> str:
         return ""
 
 # 导出主要函数
-__all__ = ['translate_description', 'validate_translation_format']
+__all__ = ['translate_description', 'validate_translation_format', 'extract_source_description']

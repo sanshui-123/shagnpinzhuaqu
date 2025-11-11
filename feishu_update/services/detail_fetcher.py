@@ -170,26 +170,17 @@ class DetailFetcher:
                             'colorName': color_name,
                             'colorCode': color_code
                         })
-            else:
-                # 回退到简单处理：所有图片使用第一个颜色或空颜色
-                product_images = images_data['product']
-                unique_images = list(dict.fromkeys(product_images))
-                
-                first_color_name = colors[0].get('name', '') if colors else ''
-                first_color_code = colors[0].get('code', '') if colors else ''
-                
-                for i, image_url in enumerate(unique_images):
-                    images_metadata.append({
-                        'name': f'Image_{i+1}',
-                        'url': image_url,
-                        'colorName': first_color_name,
-                        'colorCode': first_color_code
-                    })
-            
+                        
             enhanced_product['imagesMetadata'] = images_metadata
         
         # 添加详情数据引用（用于FieldAssembler）
         enhanced_product['_detail_data'] = detail_data
+
+        # 保留尺码表文本，便于后续格式化
+        if detail_data.get('sizeSectionText'):
+            enhanced_product['sizeSectionText'] = detail_data.get('sizeSectionText')
+        if detail_data.get('sizeSection', {}).get('text'):
+            enhanced_product['sizeSectionText'] = detail_data['sizeSection']['text']
         
         return enhanced_product
     

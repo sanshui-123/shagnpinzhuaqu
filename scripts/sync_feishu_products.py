@@ -22,13 +22,20 @@ import requests
 from pathlib import Path
 import time
 import os
+import sys
 import argparse
 from datetime import datetime
 from typing import Dict, List, Set
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from feishu_update.config.settings import resolve_feishu_config_path
+
 def load_config():
     """加载飞书配置"""
-    config_path = Path(__file__).parent.parent.parent / 'TaobaoUploader' / 'config.json'
+    config_path = resolve_feishu_config_path()
     if not config_path.exists():
         raise FileNotFoundError(f"配置文件不存在: {config_path}")
     

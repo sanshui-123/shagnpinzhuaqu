@@ -1,0 +1,237 @@
+{
+  "scrapeInfo": {
+    "timestamp": "2025-11-10T08:28:50.954Z",
+    "version": "1.0.0",
+    "url": "https://www.callawaygolf.jp/mens/tops/outer/H25217103_.html?pid=H25217103_1030_L",
+    "productId": "H25217103",
+    "totalVariants": 12,
+    "totalColors": 3,
+    "totalSizes": 4,
+    "totalImages": 15,
+    "processingTimeMs": 3,
+    "dataSources": [
+      "dom_enhanced"
+    ]
+  },
+  "debugElementsInfo": null,
+  "debugDescriptionInfo": {
+    "strategy": "dom_fallback",
+    "length": 217,
+    "preview": "軽量かつソフトな風合いのポリエステル素材を使用したスウェットパーカーです。フードの先や脇下に施したジャガード編みのロゴテープがアクセントになっています。軽量素材でストレスなく着用でき、厚すぎない素材感なので長いシーズン活躍します。ゴルフだけでなく、普段使いにもおすすめのスウェットです。　素材: 本体 ポリエステル 100% リブ部分 ポリエステル 100% テープ部分 ポリエステル 100%MADE IN VIETNAM洗濯表示:",
+    "source": "DOM抓取策略"
+  },
+  "product": {
+    "productId": "H25217103",
+    "title": "ダブルニットスウェットパーカー (MENS)",
+    "productUrl": "https://www.callawaygolf.jp/mens/tops/outer/H25217103_.html?pid=H25217103_1030_L",
+    "description": "軽量かつソフトな風合いのポリエステル素材を使用したスウェットパーカーです。フードの先や脇下に施したジャガード編みのロゴテープがアクセントになっています。軽量素材でストレスなく着用でき、厚すぎない素材感なので長いシーズン活躍します。ゴルフだけでなく、普段使いにもおすすめのスウェットです。　素材: 本体 ポリエステル 100% リブ部分 ポリエステル 100% テープ部分 ポリエステル 100%MADE IN VIETNAM洗濯表示:",
+    "brand": "Callaway Golf",
+    "category": "",
+    "tags": [],
+    "mainImage": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_skTBP5GBMux41IWZ.jpg%3F1758182228&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+    "detailUrl": "https://www.callawaygolf.jp/mens/tops/outer/H25217103_.html?pid=H25217103_1030_L",
+    "sizeChart": {
+      "headers": [],
+      "rows": []
+    },
+    "sizeSectionHtml": "商品サイズ（仕上がり寸法）<br>M / バスト 105cm / 着丈 66cm / 肩幅 46cm / 袖丈 61cm<br><br>L / バスト 111cm / 着丈 68cm / 肩幅 48cm / 袖丈 63cm<br><br>LL / バスト 117cm / 着丈 70cm / 肩幅 50cm / 袖丈 64.5cm<br><br>3L / バスト 123cm / 着丈 72cm / 肩幅 52cm / 袖丈 65.5cm<br><br>※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)<br>商品生地の特性によって、1-2cm前後の誤差が生じます。<br>商品タグに記載されているサイズはヌード寸法になります。<br>ヌード寸法は、サイズチャートをご確認ください。<br>",
+    "sizeSectionText": "商品サイズ（仕上がり寸法）\nM / バスト 105cm / 着丈 66cm / 肩幅 46cm / 袖丈 61cm\nL / バスト 111cm / 着丈 68cm / 肩幅 48cm / 袖丈 63cm\nLL / バスト 117cm / 着丈 70cm / 肩幅 50cm / 袖丈 64.5cm\n3L / バスト 123cm / 着丈 72cm / 肩幅 52cm / 袖丈 65.5cm\n※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)\n商品生地の特性によって、1-2cm前後の誤差が生じます。\n商品タグに記載されているサイズはヌード寸法になります。\nヌード寸法は、サイズチャートをご確認ください。"
+  },
+  "variants": [
+    {
+      "variantId": "H25217103_1000_S",
+      "colorName": "WHITE",
+      "colorCode": "1000",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "H25217103_1000_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1000_M",
+      "colorName": "WHITE",
+      "colorCode": "1000",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "H25217103_1000_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1000_L",
+      "colorName": "WHITE",
+      "colorCode": "1000",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "H25217103_1000_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1000_LL",
+      "colorName": "WHITE",
+      "colorCode": "1000",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "H25217103_1000_LL",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1040_S",
+      "colorName": "BLACK",
+      "colorCode": "1040",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "H25217103_1040_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1040_M",
+      "colorName": "BLACK",
+      "colorCode": "1040",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "H25217103_1040_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1040_L",
+      "colorName": "BLACK",
+      "colorCode": "1040",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "H25217103_1040_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1040_LL",
+      "colorName": "BLACK",
+      "colorCode": "1040",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "H25217103_1040_LL",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1900_S",
+      "colorName": "GRAY",
+      "colorCode": "1900",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "H25217103_1900_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1900_M",
+      "colorName": "GRAY",
+      "colorCode": "1900",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "H25217103_1900_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1900_L",
+      "colorName": "GRAY",
+      "colorCode": "1900",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "H25217103_1900_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "H25217103_1900_LL",
+      "colorName": "GRAY",
+      "colorCode": "1900",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "H25217103_1900_LL",
+      "priceJPY": null
+    }
+  ],
+  "colors": [
+    {
+      "code": "1000",
+      "name": "WHITE"
+    },
+    {
+      "code": "1040",
+      "name": "BLACK"
+    },
+    {
+      "code": "1900",
+      "name": "GRAY"
+    }
+  ],
+  "sizes": [
+    "S",
+    "M",
+    "L",
+    "LL"
+  ],
+  "sizeChart": {
+    "headers": [],
+    "rows": []
+  },
+  "sizeSection": {
+    "text": "商品サイズ（仕上がり寸法）\nM / バスト 105cm / 着丈 66cm / 肩幅 46cm / 袖丈 61cm\nL / バスト 111cm / 着丈 68cm / 肩幅 48cm / 袖丈 63cm\nLL / バスト 117cm / 着丈 70cm / 肩幅 50cm / 袖丈 64.5cm\n3L / バスト 123cm / 着丈 72cm / 肩幅 52cm / 袖丈 65.5cm\n※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)\n商品生地の特性によって、1-2cm前後の誤差が生じます。\n商品タグに記載されているサイズはヌード寸法になります。\nヌード寸法は、サイズチャートをご確認ください。",
+    "html": "商品サイズ（仕上がり寸法）<br>M / バスト 105cm / 着丈 66cm / 肩幅 46cm / 袖丈 61cm<br><br>L / バスト 111cm / 着丈 68cm / 肩幅 48cm / 袖丈 63cm<br><br>LL / バスト 117cm / 着丈 70cm / 肩幅 50cm / 袖丈 64.5cm<br><br>3L / バスト 123cm / 着丈 72cm / 肩幅 52cm / 袖丈 65.5cm<br><br>※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)<br>商品生地の特性によって、1-2cm前後の誤差が生じます。<br>商品タグに記載されているサイズはヌード寸法になります。<br>ヌード寸法は、サイズチャートをご確認ください。<br>"
+  },
+  "images": {
+    "product": [
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_AenCw9cjWe81Itxh.jpg%3F1758182303&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_I07GcRU0qHu31L4m.jpg%3F1758182257&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_YpHpS0MGd5S022up.jpg%3F1758182261&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_wHxx9jDZo132zizs.jpg%3F1758182249&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sFcEUSSDQx21sptV.jpg%3F1758182259&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_AQxjDiuTJq51gfH6.jpg%3F1758182230&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sxcgUlRkt1512E0f.jpg%3F1758182249&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_2BUBj7BWQwH99gvK.jpg%3F1758182250&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_YotEWM0cJfF12sBr.jpg%3F1758182261&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_knOZXCgcDDb51YpF.jpg%3F1758182270&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_skTBP5GBMux41IWZ.jpg%3F1758182228&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_UOdPNm9aK0497QW3.jpg%3F1758182228&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_soO41Sn1zIk49cEv.jpg%3F1758182238&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gUp0MT4FjhR742gc.jpg%3F1758182234&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6IbclAeijw81YiQp.jpg%3F1758182218&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW"
+    ],
+    "variants": {
+      "1000": [
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_AenCw9cjWe81Itxh.jpg%3F1758182303&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_I07GcRU0qHu31L4m.jpg%3F1758182257&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_YpHpS0MGd5S022up.jpg%3F1758182261&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_wHxx9jDZo132zizs.jpg%3F1758182249&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sFcEUSSDQx21sptV.jpg%3F1758182259&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW"
+      ],
+      "1040": [
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_AQxjDiuTJq51gfH6.jpg%3F1758182230&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sxcgUlRkt1512E0f.jpg%3F1758182249&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_2BUBj7BWQwH99gvK.jpg%3F1758182250&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_YotEWM0cJfF12sBr.jpg%3F1758182261&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_knOZXCgcDDb51YpF.jpg%3F1758182270&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW"
+      ],
+      "1900": [
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_skTBP5GBMux41IWZ.jpg%3F1758182228&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_UOdPNm9aK0497QW3.jpg%3F1758182228&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_soO41Sn1zIk49cEv.jpg%3F1758182238&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gUp0MT4FjhR742gc.jpg%3F1758182234&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6IbclAeijw81YiQp.jpg%3F1758182218&w=3000&q=90&dpl=dpl_5benJj4UTbfCa9QfUUFQwAkyHADW"
+      ]
+    }
+  },
+  "colors_cn_text": "白色\n黑色\n灰色",
+  "ossLinks": {
+    "productImages": [],
+    "variantImages": {}
+  }
+}

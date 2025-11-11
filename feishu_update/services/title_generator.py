@@ -19,19 +19,17 @@ class TitleGenerator:
 
     def generate(self, product: Dict) -> str:
         """生成中文标题
-        
+
         Args:
             product: 产品数据字典
-            
+
         Returns:
             str: 生成的中文标题
-            
+
         Raises:
             RuntimeError: 当 glm_client 未注入时抛出异常
             Exception: 标题生成失败时抛出异常
         """
-        if not self._glm_client:
-            raise RuntimeError("TitleGenerator 需要注入 glm_client")
-        
-        # 使用修复后的title_v6.generate_cn_title，传递GLMClient
-        return title_v6.generate_cn_title(product, self._glm_client)
+        # title_v6.generate_cn_title 只需要一个参数，不需要glm_client
+        # GLM相关的配置在函数内部通过环境变量处理
+        return title_v6.generate_cn_title(product)

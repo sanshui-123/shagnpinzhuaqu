@@ -177,7 +177,11 @@ class SummarizedProductLoader(BaseProductLoader):
             processing_time=0,
             version='',
             total_images=len(images.all),
-            extra=product_info.get('extraData', {})
+            extra={
+                **product_info.get('extraData', {}),
+                # 保留原始详细数据
+                **{k: v for k, v in product_info.items() if k.startswith('_') or k in ['sizeSectionText', 'variantDetails', 'colorDetails']}
+            }
         )
     
     def _parse_images(self, images_data: Dict[str, Any]) -> Images:

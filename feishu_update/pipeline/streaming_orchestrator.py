@@ -235,22 +235,64 @@ class StreamingUpdateOrchestrator:
         dry_run: bool
     ) -> bool:
         """处理单个产品：生成标题 → 组装字段 → 立即同步"""
-        
+
         try:
             # 1. 生成标题（带超时控制）
             print(f"  🏷️ 生成标题...")
             title = self._generate_title_with_timeout(product)
-            
-            # 2. 组装字段
+
+            # 2. 转换Product对象为字典格式，透传 extra 数据
+            if hasattr(product, '__dict__'):
+                # 获取 extra 字段中的数据
+                extra = getattr(product, 'extra', {})
+
+                product_dict = {
+                    'productId': product.product_id,
+                    'detailUrl': product.detail_url,
+                    'colors': getattr(product, 'colors', []),
+                    'sizes': getattr(product, 'sizes', []),
+                    'imagesMetadata': getattr(product, 'images_metadata', []),
+                    'productName': getattr(product, 'product_name', ''),
+                    'brand': getattr(product, 'brand', ''),
+                    'priceText': getattr(product, 'price', ''),
+                    'currentPrice': getattr(product, 'current_price', ''),
+                    'description': getattr(product, 'description', ''),
+                    # 从 extra 中透传 _detail_data 和其他原始数据
+                    **extra
+                }
+            else:
+                product_dict = product
+
+            # 3. 提取详情数据
+            detail_data = product_dict.get('_detail_data')
+
+            # 4. 组装字段
             fields = self.field_assembler.build_update_fields(
-                product,
+                product=product_dict,
                 pre_generated_title=title,
-                title_only=title_only
+                title_only=title_only,
+                product_detail=detail_data
             )
-            
+
             if not fields:
                 print(f"  ⚠️ 没有字段需要更新")
                 return True
+
+            # 调试：打印生成的字段
+            print(f"\n📋 产品 {product_id} 生成的字段:")
+            print("=" * 60)
+            for field_name, field_value in fields.items():
+                if field_name in ['颜色', '尺码', '图片URL', '尺码表', '详情页文字']:
+                    # 多行字段显示行数
+                    if isinstance(field_value, str):
+                        lines = field_value.split('\n')
+                        print(f"  {field_name}: {len(lines)}行 (总长度:{len(field_value)}字符)")
+                    else:
+                        print(f"  {field_name}: {field_value}")
+                else:
+                    print(f"  {field_name}: {field_value}")
+            print("=" * 60)
+            print(f"共生成 {len(fields)} 个字段\n")
                 
             # 3. 检查是否需要更新
             if not force_update and not self._fields_are_different(record_info['fields'], fields):

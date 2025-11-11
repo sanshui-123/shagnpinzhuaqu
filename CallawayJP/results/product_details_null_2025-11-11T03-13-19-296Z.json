@@ -1,0 +1,114 @@
+{
+  "scrapeInfo": {
+    "timestamp": "2025-11-11T03:13:19.295Z",
+    "version": "1.0.0",
+    "url": "https://www.callawaygolf.jp/p/v35598-2",
+    "productId": null,
+    "totalVariants": 4,
+    "totalColors": 1,
+    "totalSizes": 4,
+    "totalImages": 0,
+    "processingTimeMs": 1,
+    "dataSources": [
+      "dom_enhanced"
+    ]
+  },
+  "debugElementsInfo": null,
+  "debugDescriptionInfo": {
+    "strategy": "dom_fallback",
+    "length": 1000,
+    "preview": "(self.__next_f=self.__next_f||[]).push([0]);self.__next_f.push([2,null])self.__next_f.push([1,\"1:HL[\\\"/_next/static/media/47cbc4e2adbc5db9-s.p.woff2\\\",\\\"font\\\",{\\\"crossOrigin\\\":\\\"\\\",\\\"type\\\":\\\"font/woff2\\\"}]\\n2:HL[\\\"/_next/static/css/56a7afc9a4f21a92.css?dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM\\\",\\\"styl",
+    "source": "DOM抓取策略"
+  },
+  "product": {
+    "productId": null,
+    "title": "",
+    "productUrl": "https://www.callawaygolf.jp/p/v35598-2",
+    "description": "(self.__next_f=self.__next_f||[]).push([0]);self.__next_f.push([2,null])self.__next_f.push([1,\"1:HL[\\\"/_next/static/media/47cbc4e2adbc5db9-s.p.woff2\\\",\\\"font\\\",{\\\"crossOrigin\\\":\\\"\\\",\\\"type\\\":\\\"font/woff2\\\"}]\\n2:HL[\\\"/_next/static/css/56a7afc9a4f21a92.css?dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM\\\",\\\"style\\\"]\\n3:HL[\\\"/_next/static/css/9b7bc317a128253f.css?dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM\\\",\\\"style\\\"]\\n4:HL[\\\"/_next/static/css/092e9191dd9e6d64.css?dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM\\\",\\\"style\\\"]\\n5:HL[\\\"/_next/static/css/cc8a6da36f9eb55d.css?dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM\\\",\\\"style\\\"]\\n6:HL[\\\"/_next/static/css/26bb59fa26f0d2fe.css?dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM\\\",\\\"style\\\"]\\n7:HL[\\\"/_next/static/css/a9612a8648f6fc58.css?dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM\\\",\\\"style\\\"]\\n\"])self.__next_f.push([1,\"8:I[11815,[],\\\"\\\"]\\nb:I[55092,[],\\\"\\\"]\\nd:I[82023,[],\\\"\\\"]\\n11:I[59737,[\\\"6340\\\",\\\"static/chunks/6340-8392c7aed1f06d33.js?dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM\\\",\\\"3098\\\",\\\"static/chun",
+    "brand": "Callaway Golf",
+    "category": "",
+    "tags": [],
+    "mainImage": "",
+    "detailUrl": "https://www.callawaygolf.jp/p/v35598-2",
+    "sizeChart": {
+      "headers": [],
+      "rows": []
+    },
+    "sizeSectionHtml": "",
+    "sizeSectionText": "",
+    "currentPrice": null,
+    "originalPrice": null,
+    "priceText": ""
+  },
+  "variants": [
+    {
+      "variantId": "null_DEFAULT_S",
+      "colorName": "DEFAULT",
+      "colorCode": "DEFAULT",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "null_DEFAULT_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "null_DEFAULT_M",
+      "colorName": "DEFAULT",
+      "colorCode": "DEFAULT",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "null_DEFAULT_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "null_DEFAULT_L",
+      "colorName": "DEFAULT",
+      "colorCode": "DEFAULT",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "null_DEFAULT_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "null_DEFAULT_LL",
+      "colorName": "DEFAULT",
+      "colorCode": "DEFAULT",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "null_DEFAULT_LL",
+      "priceJPY": null
+    }
+  ],
+  "colors": [
+    {
+      "code": "DEFAULT",
+      "name": "DEFAULT"
+    }
+  ],
+  "sizes": [
+    "S",
+    "M",
+    "L",
+    "LL"
+  ],
+  "sizeChart": {
+    "headers": [],
+    "rows": []
+  },
+  "sizeSection": {
+    "text": "",
+    "html": ""
+  },
+  "images": {
+    "product": [],
+    "variants": {}
+  },
+  "colors_cn_text": "DEFAULT",
+  "ossLinks": {
+    "productImages": [],
+    "variantImages": {}
+  }
+}

@@ -86,7 +86,15 @@ SIZE_US_TO_CN = {
 SPECIAL_SIZE_MAPPING = {
     'XS': 'XS (特小号)',
     'FREE': '均码',
-    'ONE SIZE': '均码'
+    'ONE SIZE': '均码',
+    'ONESIZE': '均码',
+    'OS': '均码',
+    'F': '均码',
+    'FR': '均码',
+    'UNI': '均码',
+    'UNISEX': '均码',
+    'NA': '均码',
+    'フリー': '均码'
 }
 
 
@@ -134,7 +142,7 @@ def convert_size_to_cn(size: str, gender: str) -> str:
 
 
 def build_size_multiline(sizes: List[str], gender: str) -> str:
-    """构建尺码多行字符串，输出带中文说明格式(S (小号))"""
+    """构建尺码多行字符串，输出纯英文格式(S/M/L/XL)，特殊尺码返回均码"""
     if not sizes:
         return ""
     lines = []
@@ -142,35 +150,16 @@ def build_size_multiline(sizes: List[str], gender: str) -> str:
         clean = str(size).strip()
         if not clean:
             continue
-        
+
+        # 先检查是否是特殊尺码（FR, FREE, ONE SIZE等）
         upper = clean.upper()
-        converted = ""
-        
-        # 特殊尺码映射（保持完整说明）
-        if clean in SPECIAL_SIZE_MAPPING:
-            converted = SPECIAL_SIZE_MAPPING[clean]
-        elif upper in SPECIAL_SIZE_MAPPING:
+        if upper in SPECIAL_SIZE_MAPPING:
             converted = SPECIAL_SIZE_MAPPING[upper]
-        # 女装数字尺码（保持完整说明）
-        elif gender == '女' and clean in JAPAN_SIZE_MAPPING['women']:
-            converted = JAPAN_SIZE_MAPPING['women'][clean]
-        # 通用尺码（保持完整说明）
-        elif upper in JAPAN_SIZE_MAPPING['unisex']:
-            converted = JAPAN_SIZE_MAPPING['unisex'][upper]
-        # 鞋码
-        elif clean in JAPAN_SIZE_MAPPING['shoes']:
-            converted = JAPAN_SIZE_MAPPING['shoes'][clean]
-        # 美国尺码转换（需要查找完整说明）
         else:
-            base = SIZE_US_TO_CN.get(upper)
-            if base and base in JAPAN_SIZE_MAPPING['unisex']:
-                converted = JAPAN_SIZE_MAPPING['unisex'][base]
-            elif base:
-                converted = f"{base} (美码转换)"
-            else:
-                converted = clean
-        
+            # 使用 convert_size_to_cn 获取纯英文尺码
+            converted = convert_size_to_cn(clean, gender)
+
         if converted and converted not in lines:
             lines.append(converted)
-    
+
     return "\n".join(lines)

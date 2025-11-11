@@ -6,7 +6,7 @@
       "detailUrl": "https://www.callawaygolf.jp/mens/accessories/others/R24298105_.html?pid=R24298105_1010_NA",
       "_detail_data": {
         "scrapeInfo": {
-          "timestamp": "2025-11-11T04:01:37.773Z",
+          "timestamp": "2025-11-11T09:20:25.081Z",
           "version": "1.0.0",
           "url": "https://www.callawaygolf.jp/mens/accessories/others/R24298105_.html?pid=R24298105_1010_NA",
           "productId": "R24298105",
@@ -14,7 +14,7 @@
           "totalColors": 5,
           "totalSizes": 4,
           "totalImages": 25,
-          "processingTimeMs": 3,
+          "processingTimeMs": 2,
           "dataSources": [
             "dom_enhanced"
           ]
@@ -42,9 +42,9 @@
           },
           "sizeSectionHtml": "商品サイズ（仕上がり寸法）<br>NA / マーカー 直径 2.8cm　クリップ台座 縦 6.2cm/ 横 3.2cm <br><br>※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)<br>商品生地の特性によって、1-2cm前後の誤差が生じます。<br>商品タグに記載されているサイズはヌード寸法になります。<br>ヌード寸法は、サイズチャートをご確認ください。<br>",
           "sizeSectionText": "商品サイズ（仕上がり寸法）\nNA / マーカー 直径 2.8cm　クリップ台座 縦 6.2cm/ 横 3.2cm\n※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)\n商品生地の特性によって、1-2cm前後の誤差が生じます。\n商品タグに記載されているサイズはヌード寸法になります。\nヌード寸法は、サイズチャートをご確認ください。",
-          "currentPrice": null,
+          "currentPrice": "￥5,280",
           "originalPrice": null,
-          "priceText": ""
+          "priceText": "￥5,280"
         },
         "variants": [
           {
@@ -55,7 +55,7 @@
             "sizeCode": "S",
             "availability": "unknown",
             "sku": "R24298105_1040_S",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1040_M",
@@ -65,7 +65,7 @@
             "sizeCode": "M",
             "availability": "unknown",
             "sku": "R24298105_1040_M",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1040_L",
@@ -75,7 +75,7 @@
             "sizeCode": "L",
             "availability": "unknown",
             "sku": "R24298105_1040_L",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1040_LL",
@@ -85,7 +85,7 @@
             "sizeCode": "LL",
             "availability": "unknown",
             "sku": "R24298105_1040_LL",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1030_S",
@@ -95,7 +95,7 @@
             "sizeCode": "S",
             "availability": "unknown",
             "sku": "R24298105_1030_S",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1030_M",
@@ -105,7 +105,7 @@
             "sizeCode": "M",
             "availability": "unknown",
             "sku": "R24298105_1030_M",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1030_L",
@@ -115,7 +115,7 @@
             "sizeCode": "L",
             "availability": "unknown",
             "sku": "R24298105_1030_L",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1030_LL",
@@ -125,87 +125,87 @@
             "sizeCode": "LL",
             "availability": "unknown",
             "sku": "R24298105_1030_LL",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
-            "variantId": "R24298105_AUTO_33UF_S",
+            "variantId": "R24298105_AUTO_ZWVF_S",
             "colorName": "BROWN",
-            "colorCode": "AUTO_33UF",
+            "colorCode": "AUTO_ZWVF",
             "sizeName": "S",
             "sizeCode": "S",
             "availability": "unknown",
-            "sku": "R24298105_AUTO_33UF_S",
-            "priceJPY": null
+            "sku": "R24298105_AUTO_ZWVF_S",
+            "priceJPY": "5280"
           },
           {
-            "variantId": "R24298105_AUTO_33UF_M",
+            "variantId": "R24298105_AUTO_ZWVF_M",
             "colorName": "BROWN",
-            "colorCode": "AUTO_33UF",
+            "colorCode": "AUTO_ZWVF",
             "sizeName": "M",
             "sizeCode": "M",
             "availability": "unknown",
-            "sku": "R24298105_AUTO_33UF_M",
-            "priceJPY": null
+            "sku": "R24298105_AUTO_ZWVF_M",
+            "priceJPY": "5280"
           },
           {
-            "variantId": "R24298105_AUTO_33UF_L",
+            "variantId": "R24298105_AUTO_ZWVF_L",
             "colorName": "BROWN",
-            "colorCode": "AUTO_33UF",
+            "colorCode": "AUTO_ZWVF",
             "sizeName": "L",
             "sizeCode": "L",
             "availability": "unknown",
-            "sku": "R24298105_AUTO_33UF_L",
-            "priceJPY": null
+            "sku": "R24298105_AUTO_ZWVF_L",
+            "priceJPY": "5280"
           },
           {
-            "variantId": "R24298105_AUTO_33UF_LL",
+            "variantId": "R24298105_AUTO_ZWVF_LL",
             "colorName": "BROWN",
-            "colorCode": "AUTO_33UF",
+            "colorCode": "AUTO_ZWVF",
             "sizeName": "LL",
             "sizeCode": "LL",
             "availability": "unknown",
-            "sku": "R24298105_AUTO_33UF_LL",
-            "priceJPY": null
+            "sku": "R24298105_AUTO_ZWVF_LL",
+            "priceJPY": "5280"
           },
           {
-            "variantId": "R24298105_AUTO_D5N5_S",
+            "variantId": "R24298105_AUTO_G3DA_S",
             "colorName": "PINK",
-            "colorCode": "AUTO_D5N5",
+            "colorCode": "AUTO_G3DA",
             "sizeName": "S",
             "sizeCode": "S",
             "availability": "unknown",
-            "sku": "R24298105_AUTO_D5N5_S",
-            "priceJPY": null
+            "sku": "R24298105_AUTO_G3DA_S",
+            "priceJPY": "5280"
           },
           {
-            "variantId": "R24298105_AUTO_D5N5_M",
+            "variantId": "R24298105_AUTO_G3DA_M",
             "colorName": "PINK",
-            "colorCode": "AUTO_D5N5",
+            "colorCode": "AUTO_G3DA",
             "sizeName": "M",
             "sizeCode": "M",
             "availability": "unknown",
-            "sku": "R24298105_AUTO_D5N5_M",
-            "priceJPY": null
+            "sku": "R24298105_AUTO_G3DA_M",
+            "priceJPY": "5280"
           },
           {
-            "variantId": "R24298105_AUTO_D5N5_L",
+            "variantId": "R24298105_AUTO_G3DA_L",
             "colorName": "PINK",
-            "colorCode": "AUTO_D5N5",
+            "colorCode": "AUTO_G3DA",
             "sizeName": "L",
             "sizeCode": "L",
             "availability": "unknown",
-            "sku": "R24298105_AUTO_D5N5_L",
-            "priceJPY": null
+            "sku": "R24298105_AUTO_G3DA_L",
+            "priceJPY": "5280"
           },
           {
-            "variantId": "R24298105_AUTO_D5N5_LL",
+            "variantId": "R24298105_AUTO_G3DA_LL",
             "colorName": "PINK",
-            "colorCode": "AUTO_D5N5",
+            "colorCode": "AUTO_G3DA",
             "sizeName": "LL",
             "sizeCode": "LL",
             "availability": "unknown",
-            "sku": "R24298105_AUTO_D5N5_LL",
-            "priceJPY": null
+            "sku": "R24298105_AUTO_G3DA_LL",
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1000_S",
@@ -215,7 +215,7 @@
             "sizeCode": "S",
             "availability": "unknown",
             "sku": "R24298105_1000_S",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1000_M",
@@ -225,7 +225,7 @@
             "sizeCode": "M",
             "availability": "unknown",
             "sku": "R24298105_1000_M",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1000_L",
@@ -235,7 +235,7 @@
             "sizeCode": "L",
             "availability": "unknown",
             "sku": "R24298105_1000_L",
-            "priceJPY": null
+            "priceJPY": "5280"
           },
           {
             "variantId": "R24298105_1000_LL",
@@ -245,7 +245,7 @@
             "sizeCode": "LL",
             "availability": "unknown",
             "sku": "R24298105_1000_LL",
-            "priceJPY": null
+            "priceJPY": "5280"
           }
         ],
         "colors": [
@@ -258,11 +258,11 @@
             "name": "BLUE"
           },
           {
-            "code": "AUTO_33UF",
+            "code": "AUTO_ZWVF",
             "name": "BROWN"
           },
           {
-            "code": "AUTO_D5N5",
+            "code": "AUTO_G3DA",
             "name": "PINK"
           },
           {
@@ -334,14 +334,14 @@
               "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_oE888xgPwrR312hN.jpg%3F1729156811&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
               "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_kkVhgGO97B402oOU.jpg%3F1729156824&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
             ],
-            "AUTO_33UF": [
+            "AUTO_ZWVF": [
               "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_XtqyCVIR1F41oZvn.jpg%3F1729156815&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
               "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_68HPYxn48PZ59Rn6.jpg%3F1729156815&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
               "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gsMbLJ5wVE41AC8q.jpg%3F1729156811&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
               "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_8696sm55l91c5VKO.jpg%3F1729156823&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
               "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_UIr4Wj4b2aj71QIM.jpg%3F1729156824&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
             ],
-            "AUTO_D5N5": [
+            "AUTO_G3DA": [
               "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_Eu0KnjKcuxk53gMw.jpg%3F1729156821&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
               "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_QklmiCROp433Qg2r.jpg%3F1729156810&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
               "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_cNobNnLo3Y551swx.jpg%3F1729156821&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",

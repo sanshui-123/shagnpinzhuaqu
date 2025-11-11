@@ -1,0 +1,296 @@
+{
+  "scrapeInfo": {
+    "timestamp": "2025-11-11T04:37:28.148Z",
+    "version": "1.0.0",
+    "url": "https://www.callawaygolf.jp/mens/accessories/others/C25292102_.html?pid=C25292102_1010_FR",
+    "productId": "C25292102",
+    "totalVariants": 16,
+    "totalColors": 4,
+    "totalSizes": 4,
+    "totalImages": 20,
+    "processingTimeMs": 4,
+    "dataSources": [
+      "dom_enhanced"
+    ]
+  },
+  "debugElementsInfo": null,
+  "debugDescriptionInfo": {
+    "strategy": "dom_fallback",
+    "length": 161,
+    "preview": "存在感のあるスクエアバックルとパンチング柄が特徴のセレーションベルトです。7mmピッチののこぎり型のギザギザにより、細かなサイズ調整が可能。ワンタッチで着脱でき、ストレッチ性にも優れているため、快適にフィットするベルトです。　ストレッチベルト巾35mm全長113cm最長100cm素材: 合成皮革MADE IN CHINA",
+    "source": "DOM抓取策略"
+  },
+  "product": {
+    "productId": "C25292102",
+    "title": "セレーションベルト (MENS)",
+    "productUrl": "https://www.callawaygolf.jp/mens/accessories/others/C25292102_.html?pid=C25292102_1010_FR",
+    "description": "存在感のあるスクエアバックルとパンチング柄が特徴のセレーションベルトです。7mmピッチののこぎり型のギザギザにより、細かなサイズ調整が可能。ワンタッチで着脱でき、ストレッチ性にも優れているため、快適にフィットするベルトです。　ストレッチベルト巾35mm全長113cm最長100cm素材: 合成皮革MADE IN CHINA",
+    "brand": "Callaway Golf",
+    "category": "",
+    "tags": [],
+    "mainImage": "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6oVyWXLoMQ3169R7.jpg%3F1753190787&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+    "detailUrl": "https://www.callawaygolf.jp/mens/accessories/others/C25292102_.html?pid=C25292102_1010_FR",
+    "sizeChart": {
+      "headers": [],
+      "rows": []
+    },
+    "sizeSectionHtml": "商品サイズ（仕上がり寸法）<br>FR / 全長 113cm / 幅 3.5cm / 最小ウエスト 90cm(カット可能) / 最大ウエスト 100cm",
+    "sizeSectionText": "商品サイズ（仕上がり寸法）\nFR / 全長 113cm / 幅 3.5cm / 最小ウエスト 90cm(カット可能) / 最大ウエスト 100cm",
+    "currentPrice": null,
+    "originalPrice": null,
+    "priceText": ""
+  },
+  "variants": [
+    {
+      "variantId": "C25292102_1040_S",
+      "colorName": "BLACK",
+      "colorCode": "1040",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "C25292102_1040_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1040_M",
+      "colorName": "BLACK",
+      "colorCode": "1040",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "C25292102_1040_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1040_L",
+      "colorName": "BLACK",
+      "colorCode": "1040",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "C25292102_1040_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1040_LL",
+      "colorName": "BLACK",
+      "colorCode": "1040",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "C25292102_1040_LL",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1900_S",
+      "colorName": "GRAY",
+      "colorCode": "1900",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "C25292102_1900_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1900_M",
+      "colorName": "GRAY",
+      "colorCode": "1900",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "C25292102_1900_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1900_L",
+      "colorName": "GRAY",
+      "colorCode": "1900",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "C25292102_1900_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1900_LL",
+      "colorName": "GRAY",
+      "colorCode": "1900",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "C25292102_1900_LL",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1031_S",
+      "colorName": "NAVY",
+      "colorCode": "1031",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "C25292102_1031_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1031_M",
+      "colorName": "NAVY",
+      "colorCode": "1031",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "C25292102_1031_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1031_L",
+      "colorName": "NAVY",
+      "colorCode": "1031",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "C25292102_1031_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1031_LL",
+      "colorName": "NAVY",
+      "colorCode": "1031",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "C25292102_1031_LL",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1000_S",
+      "colorName": "WHITE",
+      "colorCode": "1000",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "C25292102_1000_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1000_M",
+      "colorName": "WHITE",
+      "colorCode": "1000",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "C25292102_1000_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1000_L",
+      "colorName": "WHITE",
+      "colorCode": "1000",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "C25292102_1000_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25292102_1000_LL",
+      "colorName": "WHITE",
+      "colorCode": "1000",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "C25292102_1000_LL",
+      "priceJPY": null
+    }
+  ],
+  "colors": [
+    {
+      "code": "1040",
+      "name": "BLACK"
+    },
+    {
+      "code": "1900",
+      "name": "GRAY"
+    },
+    {
+      "code": "1031",
+      "name": "NAVY"
+    },
+    {
+      "code": "1000",
+      "name": "WHITE"
+    }
+  ],
+  "sizes": [
+    "S",
+    "M",
+    "L",
+    "LL"
+  ],
+  "sizeChart": {
+    "headers": [],
+    "rows": []
+  },
+  "sizeSection": {
+    "text": "商品サイズ（仕上がり寸法）\nFR / 全長 113cm / 幅 3.5cm / 最小ウエスト 90cm(カット可能) / 最大ウエスト 100cm",
+    "html": "商品サイズ（仕上がり寸法）<br>FR / 全長 113cm / 幅 3.5cm / 最小ウエスト 90cm(カット可能) / 最大ウエスト 100cm"
+  },
+  "images": {
+    "product": [
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_oLPyIkWmBls692gO.jpg%3F1753190756&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_IQei2QPoEWT21sHj.jpg%3F1753190793&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_YBd8wzQvYUA46w32.jpg%3F1753190716&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_2LIXNy6GJa771AhO.jpg%3F1753190767&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_QwjVLth1omI032Co.jpg%3F1753190808&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sr4IJpnoYkg41o3b.jpg%3F1753190699&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_I4LLehU1EZI02wz7.jpg%3F1753190808&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_YmTUNcVIZZN59sTp.jpg%3F1753190801&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_Y49PBe9rViG87YTU.jpg%3F1753190792&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_EbBArjcWBP01Y272.jpg%3F1753190788&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_I3OIgwN4V4t31sem.jpg%3F1753190770&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_QTiCdlclbfV21cA3.jpg%3F1753190752&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sXwGpDSAfCz31oEW.jpg%3F1753190801&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gJZTaykwai476Y3V.jpg%3F1753190805&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6CiL6T68B1T79IbP.jpg%3F1753190769&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6oVyWXLoMQ3169R7.jpg%3F1753190787&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gWLLIv1OyX71IfGW.jpg%3F1753190775&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6fExOiWt6FA36w4q.jpg%3F1753190706&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gCNil5PR17Z02gJH.jpg%3F1753190805&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+      "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_kkUtW8Twn67UOV7w.jpg%3F1753190705&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
+    ],
+    "variants": {
+      "1000": [
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6oVyWXLoMQ3169R7.jpg%3F1753190787&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gWLLIv1OyX71IfGW.jpg%3F1753190775&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6fExOiWt6FA36w4q.jpg%3F1753190706&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gCNil5PR17Z02gJH.jpg%3F1753190805&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_kkUtW8Twn67UOV7w.jpg%3F1753190705&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
+      ],
+      "1031": [
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_I3OIgwN4V4t31sem.jpg%3F1753190770&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_QTiCdlclbfV21cA3.jpg%3F1753190752&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sXwGpDSAfCz31oEW.jpg%3F1753190801&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_gJZTaykwai476Y3V.jpg%3F1753190805&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_6CiL6T68B1T79IbP.jpg%3F1753190769&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
+      ],
+      "1040": [
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_oLPyIkWmBls692gO.jpg%3F1753190756&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_IQei2QPoEWT21sHj.jpg%3F1753190793&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_YBd8wzQvYUA46w32.jpg%3F1753190716&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_2LIXNy6GJa771AhO.jpg%3F1753190767&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_QwjVLth1omI032Co.jpg%3F1753190808&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
+      ],
+      "1900": [
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_sr4IJpnoYkg41o3b.jpg%3F1753190699&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_I4LLehU1EZI02wz7.jpg%3F1753190808&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_YmTUNcVIZZN59sTp.jpg%3F1753190801&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_Y49PBe9rViG87YTU.jpg%3F1753190792&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM",
+        "https://www.callawaygolf.jp/_next/image?url=https%3A%2F%2Fcdn2.webdamdb.com%2F1280_EbBArjcWBP01Y272.jpg%3F1753190788&w=3000&q=90&dpl=dpl_Ao26Gpwdy9CAzKcGNxzoedVyQtjM"
+      ]
+    }
+  },
+  "colors_cn_text": "黑色\n灰色\n藏青色\n白色",
+  "ossLinks": {
+    "productImages": [],
+    "variantImages": {}
+  }
+}

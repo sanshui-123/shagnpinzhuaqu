@@ -127,7 +127,14 @@ class DetailedProductLoader(BaseProductLoader):
             processing_time=scrape_info.get('processingTimeMs', 0),
             version=scrape_info.get('version', ''),
             total_images=scrape_info.get('totalImages', len(images.all)),
-            extra=product_info.get('extra', {})
+            extra={
+                **product_info.get('extra', {}),
+                # 保留完整的原始数据结构
+                '_detail_data': data,
+                'variant_details': variants_data,
+                'color_details': colors,
+                'size_details': sizes
+            }
         )
     
     def _parse_product_from_dict(self, product_id: str, product_info: Dict[str, Any]) -> Product:
@@ -169,7 +176,14 @@ class DetailedProductLoader(BaseProductLoader):
             processing_time=product_info.get('processingTime', 0),
             version=product_info.get('version', ''),
             total_images=product_info.get('totalImages', len(images.all)),
-            extra=product_info.get('extra', {})
+            extra={
+                **product_info.get('extra', {}),
+                # 保留原始详细数据
+                **{k: v for k, v in product_info.items() if k.startswith('_') or k in ['sizeSectionText', 'variantDetails', 'colorDetails', 'sizeChart', 'images']},
+                'variant_details': variants,
+                'color_details': colors,
+                'size_details': sizes
+            }
         )
     
     def _parse_variants(self, variants_data: List[Dict[str, Any]]) -> List[Variant]:

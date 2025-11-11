@@ -27,17 +27,17 @@ def determine_gender(product_data):
     
     # 检查category字段
     if 'womens' in category_lower or 'ladies' in category_lower:
-        return '女性'
+        return '女'
     elif 'mens' in category_lower:
-        return '男性'
+        return '男'
     
     # 检查产品名称 - 英文和日文
     if any(word in product_name_lower for word in ['women', 'ladies', 'womens', 'レディース', '女性']):
-        return '女性'
+        return '女'
     elif any(word in product_name_lower for word in ['men', 'mens', '(mens)', 'メンズ', '男性']):
-        return '男性'
+        return '男'
     else:
-        return '中性'
+        return '男'  # 默认男
 
 def determine_clothing_type(product_data):
     """确定服装类型
@@ -82,12 +82,34 @@ def determine_clothing_type(product_data):
     ]):
         return '裤子'
         
+    # 检查腰带类
+    elif any(word in product_name_lower for word in [
+        'belt', 'waist belt', 'seration belt',
+        'ベルト', 'ウエストベルト', '腰带', '皮带', 'セレーションベルト'
+    ]):
+        return '腰带'
+
     # 检查帽子类
     elif any(word in product_name_lower for word in [
         'hat', 'cap', 'beanie',
         'ハット', 'キャップ', '帽子', '球帽'
     ]):
         return '帽子'
+
+    # 检查球杆头套类
+    elif any(word in product_name_lower for word in [
+        'head cover', 'headcover', 'club head cover',
+        'ヘッドカバー', 'クラブヘッドカバー', '球杆头套', '杆头套'
+    ]):
+        return '球杆头套'
+
+    # 检查标记夹类
+    elif any(word in product_name_lower for word in [
+        'marker', 'ball marker', 'divot tool', 'pitchfork',
+        'マーカー', 'ボールマーカー', 'ディボットツール', 'マークツール',
+        '标记', '标记夹', '球位标记', '果岭叉', '修复叉'
+    ]):
+        return '高尔夫配件'
         
     # 检查鞋子类  
     elif any(word in product_name_lower for word in [
