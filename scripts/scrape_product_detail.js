@@ -895,13 +895,50 @@ function buildFinalProductData(extractedData, productId, url, priceInfo = {}) {
     
     // 提取尺码信息
     const sizes = [];
-    if (extractedData.variationAttributes && extractedData.variationAttributes.size) {
+
+    // 检查是否为配件类产品（腰带、帽子等）
+    const isAccessory = url.includes('/accessories/') ||
+                       url.includes('/belt') ||
+                       url.includes('/cap') ||
+                       url.includes('/hat') ||
+                       url.includes('/glove') ||
+                       url.includes('/sock') ||
+                       productId.startsWith('C') && productId.length === 8; // C系列编码通常是配件
+
+    // 如果是配件，先尝试从extractedData中提取FR等尺码信息
+    if (isAccessory && extractedData.sizeChart) {
+        // 从sizeChart或sizeSection中查找FR、均码等信息
+        const sizeChartText = extractedData.sizeChart.sizeChart || '';
+        const frMatch = sizeChartText.match(/FR/i);
+        const uniformSizeMatch = sizeChartText.match(/均码|フリーサイズ|FREE SIZE/i);
+
+        if (frMatch) {
+            sizes.push('FR');
+            console.log(`✅ 配件产品检测到FR尺码信息`);
+        }
+        if (uniformSizeMatch) {
+            sizes.push('均码');
+            console.log(`✅ 配件产品检测到均码信息`);
+        }
+    }
+
+    // 对于非配件产品，或者配件没有找到特殊尺码时的标准处理
+    if (sizes.length === 0 && extractedData.variationAttributes && extractedData.variationAttributes.size) {
         extractedData.variationAttributes.size.forEach(size => {
             sizes.push(size.value || size.name || size);
         });
-    } else {
-        // 默认尺码
+        console.log(`✅ 从variationAttributes提取到 ${sizes.length} 个尺码`);
+    }
+    // 只有非配件产品才使用默认尺码
+    else if (sizes.length === 0 && !isAccessory) {
         sizes.push('S', 'M', 'L', 'LL');
+        console.log(`⚠️ 非配件产品使用默认尺码: S, M, L, LL`);
+    }
+
+    // 配件产品如果没有找到尺码信息，保持空数组或使用均码
+    if (sizes.length === 0 && isAccessory) {
+        console.log(`✅ 配件产品未找到尺码信息，将使用均码`);
+        sizes.push('均码');
     }
     
     // 生成变体（颜色×尺码笛卡尔积）

@@ -63,13 +63,22 @@ class FieldAssembler:
 
         # 价格
         # 首先确保主数据中有价格信息
-        if product.get('priceText') is None and product_detail:
-            # 从 productDetail 中获取价格信息到主数据
-            detail_product = product_detail.get('product', {})
-            if detail_product.get('priceText'):
-                product['priceText'] = detail_product.get('priceText')
-            elif detail_product.get('price'):
-                product['priceText'] = detail_product.get('price')
+        if product.get('priceText') is None:
+            # 尝试从 _detail_data 中获取价格信息
+            if '_detail_data' in product:
+                detail_data = product.get('_detail_data', {})
+                detail_product = detail_data.get('product', {})
+                if detail_product.get('priceText'):
+                    product['priceText'] = detail_product.get('priceText')
+                elif detail_product.get('price'):
+                    product['priceText'] = detail_product.get('price')
+            elif product_detail:
+                # 从 productDetail 中获取价格信息到主数据
+                detail_product = product_detail.get('product', {})
+                if detail_product.get('priceText'):
+                    product['priceText'] = detail_product.get('priceText')
+                elif detail_product.get('price'):
+                    product['priceText'] = detail_product.get('price')
 
         # 计算最终价格
         final_price = calculate_final_price(product)
@@ -89,7 +98,7 @@ class FieldAssembler:
                 )
 
             # 如果还是没有价格，尝试从变体中获取
-            if not detail_price and 'variants' in product_detail:
+            if not detail_price and product_detail and 'variants' in product_detail:
                 variants = product_detail.get('variants', [])
                 for variant in variants:
                     variant_price = variant.get('priceJPY') or variant.get('price')
