@@ -384,35 +384,6 @@ async function extractProductData(page) {
             
             // 提取尺码选择器数据
             const extractedSizes = [];
-            const sizeSelectors = [
-                '[data-size]',
-                '.size-selector button',
-                '.variant-size',
-                'button[class*="size"]',
-                'select[name*="size"] option',
-                '[class*="size-option"]'
-            ];
-            
-            console.log('📏 搜索尺码选择器...');
-            
-            for (const selector of sizeSelectors) {
-                const elements = document.querySelectorAll(selector);
-                console.log(`发现 ${elements.length} 个 ${selector} 元素`);
-                
-                elements.forEach(element => {
-                    const sizeValue = element.getAttribute('data-size') ||
-                                    element.getAttribute('data-value') ||
-                                    element.getAttribute('value') ||
-                                    element.textContent?.trim();
-                    
-                    if (sizeValue && !extractedSizes.includes(sizeValue)) {
-                        extractedSizes.push(sizeValue);
-                        console.log(`✓ 找到尺码: ${sizeValue}`);
-                    }
-                });
-                
-                if (extractedSizes.length > 0) break; // 找到尺码就停止
-            }
             
             // 提取所有图片
             const allImages = [];
@@ -780,8 +751,167 @@ async function extractProductData(page) {
     });
 }
 
+// 增强的尺码提取函数 - 使用下拉菜单方式
+async function extractSizesFromDropdown(page) {
+    console.log('🎯 开始增强的尺码下拉菜单提取...');
+    const extractedSizes = [];
+
+    // 使用已验证的选择器
+    const primarySelectors = [
+        'button[id^="headlessui-listbox-button"]',  // 已验证有效的选择器
+        'button[aria-haspopup="listbox"]',
+        '.size-selector button',
+        '[data-testid*="size"] button'
+    ];
+
+    for (const selector of primarySelectors) {
+        try {
+            // 等待按钮出现
+            await page.waitForSelector(selector, { timeout: 2000 });
+            const button = await page.$(selector);
+
+            if (button) {
+                console.log(`📏 找到下拉按钮: ${selector}`);
+
+                // 1. 滚动到按钮位置
+                console.log('📐 滚动到按钮位置...');
+                await button.evaluate(el => el.scrollIntoView({ block: 'center' }));
+                await page.waitForTimeout(500);
+
+                // 2. Hover 激活（某些组件需要 hover 才显示）
+                console.log('👆 Hover 激活按钮...');
+                await button.hover();
+                await page.waitForTimeout(300);
+
+                // 3. 多次点击尝试
+                let clickAttempts = 0;
+                const maxAttempts = 3;
+
+                while (clickAttempts < maxAttempts && extractedSizes.length === 0) {
+                    clickAttempts++;
+                    console.log(`🖱️ 第 ${clickAttempts} 次点击尝试...`);
+
+                    try {
+                        // 点击按钮
+                        await button.click();
+
+                        // 4. 显式等待下拉列表出现
+                        console.log('⏳ 等待下拉列表出现...');
+
+                        try {
+                            // 等待选项出现
+                            await page.waitForSelector('ul[id^="headlessui-listbox-options"] li', {
+                                visible: true,
+                                timeout: 1500
+                            });
+
+                            // 5. 提取尺码选项
+                            const sizes = await page.evaluate(() => {
+                                const optionSelectors = [
+                                    'ul[id^="headlessui-listbox-options"] li',  // 主要选择器
+                                    '[role="option"]',
+                                    'ul li[data-headlessui-state]'
+                                ];
+
+                                let foundOptions = [];
+                                for (const optSelector of optionSelectors) {
+                                    const options = document.querySelectorAll(optSelector);
+                                    if (options.length > 0) {
+                                        console.log(`✓ 找到 ${options.length} 个选项，使用选择器: ${optSelector}`);
+                                        foundOptions = Array.from(options);
+                                        break;
+                                    }
+                                }
+
+                                if (foundOptions.length > 0) {
+                                    const sizes = [];
+                                    foundOptions.forEach(option => {
+                                        const sizeText = option.textContent?.trim();
+                                        if (sizeText && !sizes.includes(sizeText)) {
+                                            sizes.push(sizeText);
+                                        }
+                                    });
+                                    return sizes;
+                                }
+                                return [];
+                            });
+
+                            if (sizes && sizes.length > 0) {
+                                extractedSizes.push(...sizes);
+                                console.log(`✅ 成功提取 ${sizes.length} 个尺码: ${sizes.join(', ')}`);
+                                break;
+                            } else {
+                                console.log('⚠️ 未找到尺码选项，继续尝试...');
+                            }
+
+                        } catch (waitError) {
+                            console.log('⚠️ 下拉列表未出现，继续尝试...');
+                        }
+
+                        // 如果第一次点击失败，等待后重试
+                        if (clickAttempts < maxAttempts) {
+                            await page.waitForTimeout(1000);
+                        }
+
+                    } catch (clickError) {
+                        console.log(`⚠️ 点击失败: ${clickError.message}`);
+                    }
+                }
+
+                // 6. 如果点击都失败了，尝试按 Enter 键
+                if (extractedSizes.length === 0 && clickAttempts === maxAttempts) {
+                    console.log('⌨️ 尝试使用 Enter 键激活...');
+                    await button.focus();
+                    await page.keyboard.press('Enter');
+                    await page.waitForTimeout(500);
+
+                    // 再次检查选项
+                    try {
+                        await page.waitForSelector('ul[id^="headlessui-listbox-options"] li', {
+                            visible: true,
+                            timeout: 1000
+                        });
+
+                        const sizes = await page.evaluate(() => {
+                            const options = document.querySelectorAll('ul[id^="headlessui-listbox-options"] li');
+                            return Array.from(options).map(opt => opt.textContent.trim()).filter(t => t);
+                        });
+
+                        if (sizes && sizes.length > 0) {
+                            extractedSizes.push(...sizes);
+                            console.log(`✅ Enter 键方式成功提取 ${sizes.length} 个尺码: ${sizes.join(', ')}`);
+                        }
+                    } catch (e) {
+                        console.log('⚠️ Enter 键方式也未能提取尺码');
+                    }
+                }
+
+                // 7. 关闭下拉菜单（如果还在打开状态）
+                try {
+                    await button.click();
+                    await page.waitForTimeout(200);
+                } catch (e) {
+                    // 忽略关闭错误
+                }
+
+                // 如果成功提取到尺码，返回结果
+                if (extractedSizes.length > 0) {
+                    console.log(`🎉 下拉菜单方式成功提取 ${extractedSizes.length} 个尺码`);
+                    return extractedSizes;
+                }
+            }
+
+        } catch (error) {
+            console.log(`⚠️ 选择器 "${selector}" 处理失败: ${error.message}`);
+        }
+    }
+
+    console.log('❌ 所有下拉菜单尝试都失败了');
+    return extractedSizes;
+}
+
 // 构建最终产品数据
-function buildFinalProductData(extractedData, productId, url, priceInfo = {}) {
+function buildFinalProductData(extractedData, productId, url, priceInfo = {}, dropdownSizes = []) {
     console.log('🔄 构建最终产品数据...');
     
     const startTime = Date.now();
@@ -896,6 +1026,12 @@ function buildFinalProductData(extractedData, productId, url, priceInfo = {}) {
     // 提取尺码信息
     const sizes = [];
 
+    // 第一优先级：使用下拉菜单提取的尺码
+    if (dropdownSizes && dropdownSizes.length > 0) {
+        sizes.push(...dropdownSizes);
+        console.log(`✅ 使用下拉菜单提取的尺码: ${sizes.join(', ')}`);
+    }
+
     // 检查是否为配件类产品（腰带、帽子等）
     const isAccessory = url.includes('/accessories/') ||
                        url.includes('/belt') ||
@@ -906,7 +1042,7 @@ function buildFinalProductData(extractedData, productId, url, priceInfo = {}) {
                        productId.startsWith('C') && productId.length === 8; // C系列编码通常是配件
 
     // 如果是配件，先尝试从extractedData中提取FR等尺码信息
-    if (isAccessory && extractedData.sizeChart) {
+    if (isAccessory && extractedData.sizeChart && sizes.length === 0) {
         // 从sizeChart或sizeSection中查找FR、均码等信息
         const sizeChartText = extractedData.sizeChart.sizeChart || '';
         const frMatch = sizeChartText.match(/FR/i);
@@ -929,10 +1065,30 @@ function buildFinalProductData(extractedData, productId, url, priceInfo = {}) {
         });
         console.log(`✅ 从variationAttributes提取到 ${sizes.length} 个尺码`);
     }
-    // 只有非配件产品才使用默认尺码
+    // 只有非配件产品才尝试从尺码表文本提取
     else if (sizes.length === 0 && !isAccessory) {
-        sizes.push('S', 'M', 'L', 'LL');
-        console.log(`⚠️ 非配件产品使用默认尺码: S, M, L, LL`);
+        // 尝试从 sizeSection 文本中提取尺码
+        const sizeSectionText = extractedData.sizeSectionText || '';
+        if (sizeSectionText) {
+            console.log('🔍 尝试从尺码表中提取尺码...');
+            // 匹配尺码行格式: "M / バスト 110cm ..."
+            const sizeMatches = sizeSectionText.match(/^[A-Z0-9L]+(?:\/[A-Z0-9L]+)?\s*\/\s*バスト/gm);
+            if (sizeMatches && sizeMatches.length > 0) {
+                const extractedSizesFromText = [];
+                sizeMatches.forEach(match => {
+                    // 提取尺码部分（在第一个 / 之前）
+                    const sizeValue = match.split('/')[0].trim();
+                    if (sizeValue && !extractedSizesFromText.includes(sizeValue)) {
+                        extractedSizesFromText.push(sizeValue);
+                    }
+                });
+
+                if (extractedSizesFromText.length > 0) {
+                    sizes.push(...extractedSizesFromText);
+                    console.log(`✅ 从尺码表提取到 ${sizes.length} 个尺码: ${sizes.join(', ')}`);
+                }
+            }
+        }
     }
 
     // 配件产品如果没有找到尺码信息，保持空数组或使用均码
@@ -940,30 +1096,7 @@ function buildFinalProductData(extractedData, productId, url, priceInfo = {}) {
         console.log(`✅ 配件产品未找到尺码信息，将使用均码`);
         sizes.push('均码');
     }
-    
-    // 生成变体（颜色×尺码笛卡尔积）
-    if (colors.length > 0 && sizes.length > 0) {
-        // 尝试从 extractedData 获取价格信息
-        const extractedPrice = extractedData.currentPrice || extractedData.priceText || '';
-        // 清理价格文本，只保留数字和円符号
-        const cleanPrice = extractedPrice.replace(/[^\d円]/g, '');
-
-        colors.forEach(color => {
-            sizes.forEach(size => {
-                variants.push({
-                    variantId: `${productId}_${color.code}_${size}`,
-                    colorName: color.name,
-                    colorCode: color.code,
-                    sizeName: size,
-                    sizeCode: size,
-                    availability: 'unknown',
-                    sku: `${productId}_${color.code}_${size}`,
-                    priceJPY: cleanPrice || null
-                });
-            });
-        });
-    }
-    
+      
     // 处理尺码表
     let sizeChart = { headers: [], rows: [] };
     if (extractedData.sizeChart) {
@@ -1151,8 +1284,15 @@ async function main() {
 
         console.log(`💰 价格信息: ${priceInfo.priceText || '未找到'}`);
 
-        // 构建最终数据
-        const finalData = buildFinalProductData(extractedData, options.productId, options.url, priceInfo);
+        // 尝试使用增强的下拉菜单方式提取尺码
+        let dropdownSizes = [];
+        if (multiColorData.colors.length > 0) {
+            console.log('📏 尝试从下拉菜单提取尺码（第一优先级）...');
+            dropdownSizes = await extractSizesFromDropdown(page);
+        }
+
+        // 构建最终数据（传递下拉菜单提取的尺码）
+        const finalData = buildFinalProductData(extractedData, options.productId, options.url, priceInfo, dropdownSizes);
         
         // 确保输出目录存在
         if (!fs.existsSync(options.outputDir)) {
@@ -1613,7 +1753,7 @@ async function extractMultiColorData(page) {
         }
         
         console.log(`✅ 多颜色抓取完成: ${multiColorData.colors.length}种颜色, 总计${multiColorData.allImages.size}张图片`);
-        
+
     } catch (error) {
         console.log(`❌ 多颜色抓取失败: ${error.message}`);
     }
@@ -1625,5 +1765,6 @@ module.exports = {
     extractProductData,
     buildFinalProductData,
     extractMultiColorData,
+    extractSizesFromDropdown,
     main
 };
