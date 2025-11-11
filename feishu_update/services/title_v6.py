@@ -434,39 +434,34 @@ def optimize_title(title: str) -> str:
                     break
 
             # 如果还是没有合适的，直接填充以达到最小长度
-             if not found and len(title) < 26:
-             need_len = 26 - len(title)  # 计算需要补充的字数
-    
-              # 根据需要的字数选择合适的修饰词
-             if need_len <= 2:
-        add_mod = '新款'
-           elif need_len <= 4:
-        add_mod = '舒适时尚'
-         elif need_len <= 6:
-           add_mod = '新款时尚轻便'
-        else:
-        # 需要更多字数，组合多个修饰词（不重复）
-        all_mods = ['新款', '时尚', '轻便', '透气', '运动']
-        add_mod = ''
-        for mod in all_mods:
-            if len(add_mod) + len(mod) <= need_len:
-                add_mod += mod
-            if len(add_mod) >= need_len:
-                break
-    
-    # 只插入一次
-    title = title[:insert_pos] + add_mod + title[insert_pos:]
-    
-    # 最终检查：如果还是不够26字或超过30字，截断/补充
-    if len(title) < 26:
-        title = title[:insert_pos] + add_mod + '优雅' + title[insert_pos:]
-    if len(title) > 30:
-        title = title[:30]
+            if not found and len(title) < 26:
+                need_len = 26 - len(title)  # 计算需要补充的字数
 
-                # 如果还差一点，加单个字
+                # 根据需要的字数选择合适的修饰词
+                if need_len <= 2:
+                    add_mod = '新款'
+                elif need_len <= 4:
+                    add_mod = '舒适时尚'
+                elif need_len <= 6:
+                    add_mod = '新款时尚轻便'
+                else:
+                    # 需要更多字数，组合多个修饰词（不重复）
+                    all_mods = ['新款', '时尚', '轻便', '透气', '运动']
+                    add_mod = ''
+                    for mod in all_mods:
+                        if len(add_mod) + len(mod) <= need_len:
+                            add_mod += mod
+                        if len(add_mod) >= need_len:
+                            break
+
+                # 只插入一次
+                title = title[:insert_pos] + add_mod + title[insert_pos:]
+
+                # 最终检查：如果还是不够26字或超过30字，截断/补充
                 if len(title) < 26:
-                    remaining = 26 - len(title)
-                    title = title[:insert_pos] + '优雅'[:remaining] + title[insert_pos:]
+                    title = title[:insert_pos] + add_mod + '优雅' + title[insert_pos:]
+                if len(title) > 30:
+                    title = title[:30]
 
     return title
 

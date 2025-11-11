@@ -97,10 +97,16 @@ class FieldAssembler:
                         # 清理价格文本，提取数字
                         price_match = re.search(r'([0-9,]+)', str(variant_price))
                         if price_match:
-                            detail_price = f"{int(price_match.group(1).replace(',', ''))}円"
+                            # 设置到product中，这样calculate_final_price可以处理
+                            product['priceText'] = f"￥{int(price_match.group(1).replace(',', ''))}"
                             break
 
-            fields['价格'] = detail_price or ''
+            # 再次尝试计算最终价格（可能从变体中获取了）
+            final_price = calculate_final_price(product)
+            if final_price is not None and final_price != '':
+                fields['价格'] = final_price
+            else:
+                fields['价格'] = detail_price or ''
 
         # 商品链接
         detail_url = product.get('detailUrl') or product.get('detail_url')

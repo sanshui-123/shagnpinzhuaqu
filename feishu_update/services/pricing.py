@@ -43,9 +43,9 @@ def calculate_final_price(product_data):
         
         # 应用公式: 日元 * 0.055 + 250
         calculated_price = yen_price * 0.055 + 250
-        
-        # 向上取整到10 (例如: 1523.5 -> 1530)
-        final_price = math.ceil(calculated_price / 10) * 10
+
+        # 截断到10的倍数 (例如: 1523.5 -> 1520)
+        final_price = int(calculated_price / 10) * 10
         
         return str(int(final_price))
         
