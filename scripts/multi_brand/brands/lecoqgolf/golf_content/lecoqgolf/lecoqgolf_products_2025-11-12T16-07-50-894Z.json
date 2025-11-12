@@ -1,0 +1,20 @@
+{
+  "brand": "Le Coq Sportif Golf",
+  "brandId": "lecoqgolf",
+  "scrapeTime": "2025-11-12T16:07:50.895Z",
+  "baseUrl": "https://store.descente.co.jp",
+  "totalProducts": 0,
+  "totalCollections": 1,
+  "status": "no_products",
+  "results": [
+    {
+      "collection": "mens",
+      "collectionName": "男士系列",
+      "url": "https://store.descente.co.jp/brand/le%20coq%20sportif%20golf/ds_M?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1",
+      "products": [],
+      "error": "Too many arguments. If you need to pass more than 1 argument to the function wrap them in an object.",
+      "totalPages": 0,
+      "timestamp": "2025-11-12T16:07:26.100Z"
+    }
+  ]
+}

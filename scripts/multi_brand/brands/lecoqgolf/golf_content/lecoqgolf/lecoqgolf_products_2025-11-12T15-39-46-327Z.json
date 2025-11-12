@@ -1,0 +1,27 @@
+{
+  "brand": "Le Coq Sportif Golf",
+  "brandId": "lecoqgolf",
+  "scrapeTime": "2025-11-12T15:39:46.327Z",
+  "baseUrl": "https://store.descente.co.jp",
+  "totalProducts": 0,
+  "totalCollections": 2,
+  "status": "no_products",
+  "results": [
+    {
+      "collection": "mens",
+      "collectionName": "男士系列",
+      "url": "https://store.descente.co.jp/brand/le%20coq%20sportif%20golf/ds_M?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1",
+      "products": [],
+      "error": "page.setUserAgent is not a function",
+      "timestamp": "2025-11-12T15:39:45.860Z"
+    },
+    {
+      "collection": "womens",
+      "collectionName": "女士系列",
+      "url": "https://store.descente.co.jp/brand/le%20coq%20sportif%20golf/ds_F?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1",
+      "products": [],
+      "error": "page.setUserAgent is not a function",
+      "timestamp": "2025-11-12T15:39:46.117Z"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "pages": {
+    "homepage": {
+      "url": "/",
+      "selectors": {
+        "productContainer": ".new-arrivals, .featured-products, .products-container",
+        "productItems": ".product-item, .product-card, .item"
+      }
+    },
+    "clubs": {
+      "url": "/clubs",
+      "selectors": {
+        "productContainer": ".clubs-container, .products-grid",
+        "productItems": ".club-item, .product-item"
+      }
+    },
+    "drivers": {
+      "url": "/clubs/drivers",
+      "selectors": {
+        "productContainer": ".drivers-container",
+        "productItems": ".driver-item, .product-item"
+      }
+    },
+    "apparel": {
+      "url": "/apparel",
+      "selectors": {
+        "productContainer": ".apparel-container, .clothing-grid",
+        "productItems": ".apparel-item, .clothing-item"
+      }
+    }
+  },
+  "pagination": {
+    "nextButton": ".next-page, .pagination-next, [rel=\"next\"]",
+    "itemSelector": ".product-item, .item-card",
+    "maxPages": 5
+  },
+  "productDetails": {
+    "title": ".product-title, .product-name, h1",
+    "description": ".product-description, .product-details, .description",
+    "price": ".product-price, .price-current, .actual-price",
+    "originalPrice": ".price-original, .price-was, .compare-at-price",
+    "images": ".product-gallery img, .product-images img, .gallery-item img",
+    "specifications": ".product-specs, .specifications, .tech-specs",
+    "features": ".product-features, .key-features, .features-list",
+    "availability": ".stock-status, .availability, .in-stock"
+  },
+  "waitFor": {
+    "productGrid": ".product-grid, .products-container",
+    "productImage": "img[src]"
+  }
+}

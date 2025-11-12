@@ -1,0 +1,72 @@
+{
+  "name": "Le Coq Sportif Golf",
+  "domain": "store.descente.co.jp",
+  "baseUrl": "https://store.descente.co.jp",
+  "enabled": true,
+  "schedule": {
+    "interval": "10-days",
+    "dayOfMonth": 6
+  },
+  "scraper": {
+    "type": "playwright",
+    "timeout": 45000,
+    "retries": 3,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "headless": true,
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "waitStrategy": {
+      "waitForNetworkIdle": true,
+      "minWaitTime": 3000,
+      "maxWaitTime": 15000
+    }
+  },
+  "selectors": {
+    "productGrid": ".catalogList_item",
+    "productName": ".commodityName",
+    "productUrl": "a",
+    "productImage": ".catalogList_image img",
+    "productPrice": ".price",
+    "productCategory": ".brandName",
+    "productBrand": ".brandName",
+    "badgeSale": ".badgeSale",
+    "badgeNew": ".badgeNew"
+  },
+  "categories": [
+    "mens",
+    "womens",
+    "tops",
+    "bottoms",
+    "outerwear",
+    "accessories"
+  ],
+  "urls": {
+    "main": "/brand/le%20coq%20sportif%20golf/ds_M?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1",
+    "womens": "/brand/le%20coq%20sportif%20golf/ds_F?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1"
+  },
+  "pagination": {
+    "enabled": true,
+    "nextSelector": ".pager_next a",
+    "pageParam": "currentPage",
+    "maxPages": 5,
+    "itemsPerPage": 48
+  },
+  "constraints": {
+    "minProductsPerPage": 5,
+    "maxPagesPerCategory": 3,
+    "requestDelay": 3000,
+    "maxConcurrentPages": 1
+  },
+  "output": {
+    "format": "json",
+    "path": "golf_content/lecoqgolf",
+    "filename": "lecoqgolf_products.json"
+  },
+  "antiDetection": {
+    "randomDelays": true,
+    "rotateUserAgents": true,
+    "simulateHumanBehavior": true
+  }
+}

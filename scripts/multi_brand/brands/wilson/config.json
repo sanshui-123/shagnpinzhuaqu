@@ -1,0 +1,50 @@
+{
+  "name": "Wilson Staff",
+  "domain": "www.wilson.com/golf",
+  "baseUrl": "https://www.wilson.com/golf",
+  "enabled": true,
+  "schedule": {
+    "interval": "10-days",
+    "dayOfMonth": 1
+  },
+  "scraper": {
+    "type": "puppeteer",
+    "timeout": 30000,
+    "retries": 3,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "headless": true,
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "selectors": {
+    "productGrid": ".product-grid, .product-list, .items-grid, .catalog-items",
+    "productName": ".product-title, .product-name, .item-title, h3, h2",
+    "productUrl": "a",
+    "productImage": ".product-image img, .item-image img, .product-photo img",
+    "productPrice": ".product-price, .price, .product-cost, .item-price",
+    "productCategory": ".product-category, .category, .item-category"
+  },
+  "categories": [
+    "drivers",
+    "fairways",
+    "hybrids",
+    "irons",
+    "wedges",
+    "putters",
+    "balls",
+    "bags"
+  ],
+  "output": {
+    "format": "json",
+    "path": "golf_content/wilson",
+    "filename": "wilson_products.json"
+  },
+  "constraints": {
+    "minProductsPerPage": 5,
+    "maxPagesPerCategory": 5,
+    "requestDelay": 2000,
+    "maxConcurrentPages": 3
+  }
+}

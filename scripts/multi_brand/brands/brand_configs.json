@@ -1,0 +1,125 @@
+{
+  "brands": {
+    "callaway": {
+      "name": "Callaway Golf",
+      "domain": "www.callawaygolf.com",
+      "baseUrl": "https://www.callawaygolf.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 1 },
+      "regional": {
+        "jp": {
+          "domain": "www.callawaygolf.jp",
+          "baseUrl": "https://www.callawaygolf.jp"
+        }
+      }
+    },
+    "taylormade": {
+      "name": "TaylorMade Golf",
+      "domain": "www.taylormadegolf.com",
+      "baseUrl": "https://www.taylormadegolf.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 2 }
+    },
+    "titleist": {
+      "name": "Titleist",
+      "domain": "www.titleist.com",
+      "baseUrl": "https://www.titleist.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 3 }
+    },
+    "ping": {
+      "name": "PING Golf",
+      "domain": "www.ping.com",
+      "baseUrl": "https://www.ping.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 4 }
+    },
+    "cobra": {
+      "name": "Cobra Golf",
+      "domain": "www.cobragolf.com",
+      "baseUrl": "https://www.cobragolf.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 5 }
+    },
+    "bridgestone": {
+      "name": "Bridgestone Golf",
+      "domain": "www.bridgestonegolf.com",
+      "baseUrl": "https://www.bridgestonegolf.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 6 }
+    },
+    "mizuno": {
+      "name": "Mizuno Golf",
+      "domain": "www.munet.com/mizuno",
+      "baseUrl": "https://www.munet.com/mizuno",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 7 }
+    },
+    "srixon": {
+      "name": "Srixon",
+      "domain": "www.srixon.com",
+      "baseUrl": "https://www.srixon.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 8 }
+    },
+    "pxg": {
+      "name": "PXG",
+      "domain": "www.pxg.com",
+      "baseUrl": "https://www.pxg.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 9 }
+    },
+    "honma": {
+      "name": "Honma Golf",
+      "domain": "www.honmagolf.com",
+      "baseUrl": "https://www.honmagolf.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 10 }
+    },
+    "wilson": {
+      "name": "Wilson Staff",
+      "domain": "www.wilson.com/golf",
+      "baseUrl": "https://www.wilson.com/golf",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 1 }
+    },
+    "adams": {
+      "name": "Adams Golf",
+      "domain": "www.adamsgolf.com",
+      "baseUrl": "https://www.adamsgolf.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 2 }
+    },
+    "cleveland": {
+      "name": "Cleveland Golf",
+      "domain": "www.clevelandgolf.com",
+      "baseUrl": "https://www.clevelandgolf.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 3 }
+    },
+    "scotty": {
+      "name": "Scotty Cameron",
+      "domain": "www.scottycameron.com",
+      "baseUrl": "https://www.scottycameron.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 4 }
+    },
+    "odyssey": {
+      "name": "Odyssey Golf",
+      "domain": "www.odysseygolf.com",
+      "baseUrl": "https://www.odysseygolf.com",
+      "enabled": true,
+      "schedule": { "dayOfMonth": 5 }
+    }
+  },
+  "schedule": {
+    "interval": "10-days",
+    "groups": [
+      ["callaway", "taylormade", "titleist"],
+      ["ping", "cobra", "bridgestone"],
+      ["mizuno", "srixon", "pxg"],
+      ["honma", "wilson", "adams"],
+      ["cleveland", "scotty", "odyssey"]
+    ]
+  }
+}
