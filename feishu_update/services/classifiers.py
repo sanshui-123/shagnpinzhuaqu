@@ -41,44 +41,71 @@ def determine_gender(product_data):
 
 def determine_clothing_type(product_data):
     """确定服装类型
-    
+
     Args:
         product_data: 产品数据
-        
+
     Returns:
         str: 服装类型
     """
     if isinstance(product_data, dict):
         product_name = product_data.get('productName', '')
         category = product_data.get('category', '')
+        detail_url = product_data.get('detailUrl', '')
     elif hasattr(product_data, 'product_name'):
         product_name = product_data.product_name
         category = getattr(product_data, 'category', '')
+        detail_url = getattr(product_data, 'detailUrl', '')
     else:
         return '其他'
-    
+
     # 转换为小写便于匹配
     product_name_lower = product_name.lower()
     category_lower = category.lower()
+    url_lower = detail_url.lower()
+
+    # 🆕 优先使用URL路径分类 - 最准确的分类源
+    if '/outer/' in url_lower or '/jacket/' in url_lower:
+        return '外套'
+    elif '/shirt/' in url_lower or '/polo/' in url_lower or '/tops/' in url_lower:
+        if '/outer/' in url_lower:
+            return '外套'  # tops/outer 优先归类为外套
+        return 'T恤/Polo衫'
+    elif '/pant/' in url_lower or '/trouser/' in url_lower or '/bottom/' in url_lower:
+        return '裤子'
+    elif '/accessory/' in url_lower:
+        return '高尔夫配件'
+    elif '/shoe/' in url_lower or '/footwear/' in url_lower:
+        return '球鞋'
     
     # 检查外套类 - 英文和日文
     if any(word in product_name_lower for word in [
         'jacket', 'outerwear', 'blouson', 'vest', 'windbreaker',
-        'ブルゾン', 'ジャケット', 'アウター', 'ベスト', '外套', '夹克', '马甲', '背心'
+        'ブルゾン', 'ジャケット', 'アウター', 'ベスト', '外套', '夹克', '马甲', '背心',
+        # 🆕 新增日文关键词 - 针对日本网站优化
+        'パーカー', 'パーカ', 'スウェット', 'スウェ', 'フルジップ', 'ジップ',
+        'カノコ', 'ダブルニット', 'パーカー', 'フルジップパーカー',  # parka, sweat, full zip, 鹿纹, 双织
+        'ニット', 'ジップ', 'ジヤケット', 'ウインドブレーカー'  # knit, zip, jacket, windbreaker
     ]):
         return '外套'
     
     # 检查T恤/Polo衫类 - 英文和日文
     elif any(word in product_name_lower for word in [
         'shirt', 'polo', 't-shirt', 'tshirt', 'top',
-        'シャツ', 'ポロ', 'ティーシャツ', 'トップス', 'polo衫', 't恤'
+        'シャツ', 'ポロ', 'ティーシャツ', 'トップス', 'polo衫', 't恤',
+        # 🆕 新增日文关键词
+        'Tシャツ', 'ティーシャツ', 'ポロシャツ', 'トップス', '半袖', '長袖',
+        'カッターシャツ', 'ブラウス', 'カーティー'  # T-shirt, polo shirt, tops, short sleeve, long sleeve
     ]):
         return 'T恤/Polo衫'
     
-    # 检查裤子类 - 英文和日文  
+    # 检查裤子类 - 英文和日文
     elif any(word in product_name_lower for word in [
         'pant', 'trouser', 'short', 'skirt',
-        'パンツ', 'ズボン', 'ショーツ', 'スカート', '裤子', '短裤', '裙子'
+        'パンツ', 'ズボン', 'ショーツ', 'スカート', '裤子', '短裤', '裙子',
+        # 🆕 新增日文关键词
+        'トラウザー', 'スラックス', 'ショートパンツ', 'ロングパンツ',
+        'ボトムス', 'クロップドパンツ', 'プリントパンツ'  # trousers, slacks, shorts, pants, bottoms
     ]):
         return '裤子'
         
