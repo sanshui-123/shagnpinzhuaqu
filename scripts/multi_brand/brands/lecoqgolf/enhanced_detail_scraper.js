@@ -50,6 +50,7 @@ class EnhancedDetailScraper {
                 gender: await this.extractGenderFromPosition(page),
                 colors: await this.extractColors(page),
                 images: await this.extractImages(page),
+                imageUrls: await this.extractAllImageUrls(page),
                 sizes: await this.extractSizes(page),
                   categories: await this.extractCategories(page),
                 detailDescription: await this.extractAndTranslateDetailDescription(page),
@@ -349,6 +350,39 @@ class EnhancedDetailScraper {
         });
     }
 
+    async extractAllImageUrls(page) {
+        return await page.evaluate(() => {
+            // 查找所有产品图片
+            const imgElements = document.querySelectorAll('img[src*="LE/LE"], img[src*="commodity_image"]');
+
+            const allImageUrls = [];
+            const uniqueUrls = new Set();
+
+            imgElements.forEach(el => {
+                if (el.src) {
+                    // 去重并添加所有图片URL
+                    if (!uniqueUrls.has(el.src)) {
+                        uniqueUrls.add(el.src);
+                        allImageUrls.push(el.src);
+                    }
+                }
+            });
+
+            // 如果没有找到产品图片，尝试查找其他可能的图片元素
+            if (allImageUrls.length === 0) {
+                const productImages = document.querySelectorAll('img[src*="jpg"], img[src*="jpeg"], img[src*="png"]');
+                productImages.forEach(el => {
+                    if (el.src && !el.src.includes('logo') && !el.src.includes('icon') && !uniqueUrls.has(el.src)) {
+                        uniqueUrls.add(el.src);
+                        allImageUrls.push(el.src);
+                    }
+                });
+            }
+
+            return allImageUrls;
+        });
+    }
+
     async extractSizes(page) {
         return await page.evaluate(() => {
             const sizes = [];
@@ -542,6 +576,13 @@ class EnhancedDetailScraper {
 
         console.log('\n🖼️ 图片统计:');
         console.log(`  总数: ${this.results.images.total}张`);
+        console.log(`  图片URL总数: ${this.results.imageUrls ? this.results.imageUrls.length : 0}个`);
+        if (this.results.imageUrls && this.results.imageUrls.length > 0) {
+            console.log(`  前3个图片URL:`);
+            this.results.imageUrls.slice(0, 3).forEach((url, index) => {
+                console.log(`    ${index + 1}. ${url}`);
+            });
+        }
 
         console.log('\n📏 尺码信息:');
         this.results.sizes.forEach((size, index) => {
