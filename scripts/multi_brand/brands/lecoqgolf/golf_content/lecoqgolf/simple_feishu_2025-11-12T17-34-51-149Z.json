@@ -1,0 +1,38 @@
+{
+  "testType": "simple_feishu_sync",
+  "total": 1,
+  "successful": 1,
+  "failed": 0,
+  "timestamp": "2025-11-12T17:34:51.149Z",
+  "fields": [
+    "商品标题",
+    "品牌",
+    "商品编号",
+    "性别",
+    "价格",
+    "颜色选项",
+    "尺码选项",
+    "库存率(%)",
+    "图片总数",
+    "主要图片链接",
+    "详情页链接",
+    "抓取时间"
+  ],
+  "fieldCount": 12,
+  "records": [
+    {
+      "商品标题": "双面フーディー夹克",
+      "品牌": "le coq sportif golf",
+      "商品编号": "LG5FWB50M",
+      "性别": "男",
+      "价格": "￥19,800",
+      "颜色选项": "ネイビー（NV00）, ネイビー×グレー（NV01）, ブラック（BK00）, ブルー（BL00）, グレー（GY00）, ベージュ（BG00）",
+      "尺码选项": "S, M, L, LL",
+      "库存率(%)": 72,
+      "图片总数": 48,
+      "主要图片链接": "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EM012989_1_l.jpg",
+      "详情页链接": "https://store.descente.co.jp/commodity/SDSC0140D/LE1872EM012989/",
+      "抓取时间": "2025-11-12T17:34:51.108Z"
+    }
+  ]
+}
