@@ -21,6 +21,7 @@ import json
 import sys
 import argparse
 import time
+import os
 import requests
 from pathlib import Path
 from typing import Dict, List, Any, Optional
@@ -40,33 +41,77 @@ class FeishuSync:
         self.table_id = table_id
         self.base_url = "https://open.feishu.cn/open-apis/bitable/v1/apps"
 
-        # 13个飞书字段映射（固定不变）
+        # 13个飞书字段映射（处理字段名差异）
+        # 根据飞书API错误信息调整，只使用确实存在的字段
         self.feishu_field_mapping = {
-            '商品链接': 'field_link',       # 商品链接
-            '商品ID': 'field_id',           # 商品ID
-            '商品标题': 'field_title',      # 商品标题
-            '品牌名': 'field_brand',        # 品牌名
-            '价格': 'field_price',         # 价格
-            '性别': 'field_gender',        # 性别
-            '衣服分类': 'field_category',   # 衣服分类
-            '图片总数': 'field_image_count', # 图片总数
-            '图片链接': 'field_images',      # 图片链接
-            '颜色': 'field_colors',        # 颜色
-            '尺码': 'field_sizes',         # 尺码
-            '详情页文字': 'field_description', # 详情页文字
-            '尺码表': 'field_size_chart'    # 尺码表
+            '商品链接': '商品链接',         # 商品链接
+            '商品ID': '商品ID',             # 商品ID
+            '商品标题': '商品标题',         # 商品标题
+            '品牌名': '品牌名',             # 品牌名 - 需要从'品牌'字段映射
+            '价格': '价格',                 # 价格
+            '性别': '性别',                 # 性别
+            '衣服分类': '衣服分类',         # 衣服分类 - 需要从'服装类型'字段映射
+            # 以下字段可能不存在，暂时注释
+            # '图片总数': '图片总数',         # 图片总数 - API显示不存在
+            # '图片链接': '图片链接',         # 图片链接 - API显示不存在
+            '颜色': '颜色',                 # 颜色
+            '尺码': '尺码',                 # 尺码 - 需要从'尺寸'字段映射
+            # '详情页文字': '详情页文字',     # 详情页文字 - API显示不存在
+            # '尺码表': '尺码表'             # 尺码表 - API显示不存在
         }
 
         # 请求配置
         self.headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f'Bearer {app_token}' if app_token else None
+            'Content-Type': 'application/json'
         }
 
         # 同步配置
         self.batch_size = 50  # 每批同步数量
         self.request_delay = 1.0  # 请求间隔（秒）
         self.max_retries = 3  # 最大重试次数
+
+        # Token缓存
+        self._cached_token: Optional[str] = None
+        self._token_expires_at: float = 0.0
+
+        # API端点
+        self.auth_url = 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal'
+
+    def _get_token(self) -> str:
+        """获取飞书访问令牌，支持缓存
+
+        Returns:
+            str: 访问令牌
+        """
+        current_time = time.time()
+
+        # 检查缓存的token是否还有效（提前5分钟过期）
+        if self._cached_token and current_time < (self._token_expires_at - 300):
+            return self._cached_token
+
+        # 获取新token
+        try:
+            resp = requests.post(
+                self.auth_url,
+                json={'app_id': self.app_id, 'app_secret': self.app_secret},
+                timeout=15
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+            if data.get('code') != 0:
+                raise RuntimeError(f"获取飞书token失败: {data}")
+
+            self._cached_token = data['tenant_access_token']
+            # 假设token有效期为2小时
+            self._token_expires_at = current_time + 7200
+
+            print(f"✅ 飞书token获取成功")
+            return self._cached_token
+
+        except Exception as e:
+            print(f"❌ 获取飞书token失败: {e}")
+            raise e
 
     def load_step2_data(self, input_path: str) -> List[Dict]:
         """
@@ -104,13 +149,34 @@ class FeishuSync:
         Returns:
             配置是否有效
         """
-        if not self.app_token:
-            print("❌ 飞书应用token未配置")
+        # 从环境变量读取飞书配置（使用app_id + app_secret方式）
+        self.app_id = os.environ.get('FEISHU_APP_ID')
+        self.app_secret = os.environ.get('FEISHU_APP_SECRET')
+        self.table_id = os.environ.get('FEISHU_TABLE_ID')
+
+        if not self.app_id:
+            print("❌ 飞书应用ID未配置 (FEISHU_APP_ID)")
+            return False
+
+        if not self.app_secret:
+            print("❌ 飞书应用密钥未配置 (FEISHU_APP_SECRET)")
             return False
 
         if not self.table_id:
-            print("❌ 飞书表格ID未配置")
+            print("❌ 飞书表格ID未配置 (FEISHU_TABLE_ID)")
             return False
+
+        # 也需要app_token（多维表格应用token）
+        if not self.app_token:
+            self.app_token = os.environ.get('FEISHU_APP_TOKEN')
+            if not self.app_token:
+                print("❌ 飞书应用Token未配置 (FEISHU_APP_TOKEN)")
+                return False
+
+        print(f"✅ 飞书配置验证通过:")
+        print(f"   App ID: {self.app_id[:8]}...{self.app_id[-8:] if len(self.app_id) > 16 else self.app_id}")
+        print(f"   App Token: {self.app_token[:8]}...{self.app_token[-8:] if len(self.app_token) > 16 else self.app_token}")
+        print(f"   Table ID: {self.table_id}")
 
         return True
 
@@ -122,12 +188,24 @@ class FeishuSync:
             连接是否成功
         """
         try:
+            # 使用动态token
+            token = self._get_token()
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {token}'
+            }
+
             url = f"{self.base_url}/{self.app_token}/tables/{self.table_id}/records?page_size=1"
-            response = requests.get(url, headers=self.headers, timeout=10)
+            response = requests.get(url, headers=headers, timeout=10)
 
             if response.status_code == 200:
-                print("✅ 飞书连接测试成功")
-                return True
+                data = response.json()
+                if data.get('code') == 0:
+                    print("✅ 飞书连接测试成功")
+                    return True
+                else:
+                    print(f"❌ 飞书API返回错误: {data}")
+                    return False
             else:
                 print(f"❌ 飞书连接测试失败: {response.status_code}")
                 print(f"响应: {response.text}")
@@ -151,23 +229,22 @@ class FeishuSync:
             "fields": {}
         }
 
-        # 映射13个字段到飞书
+        # 映射字段到飞书（处理字段名差异，简化格式）
         for field_name, field_key in self.feishu_field_mapping.items():
-            value = product.get(field_name, '')
+            # 处理字段名差异
+            if field_name == '品牌名':
+                value = product.get('品牌', '')  # 从'品牌'字段获取
+            elif field_name == '衣服分类':
+                value = product.get('服装类型', '')  # 从'服装类型'字段获取
+            elif field_name == '尺码':
+                value = product.get('尺寸', '')  # 从'尺寸'字段获取
+            elif field_name == '商品标题':
+                value = product.get('商品名称', '')  # 从'商品名称'字段获取
+            else:
+                value = product.get(field_name, '')
 
-            # 特殊处理不同数据类型
-            if field_name == '商品链接' and value:
-                record["fields"][field_key] = {
-                    "link": {
-                        "url": value,
-                        "text": "查看商品"
-                    }
-                }
-            elif field_name == '图片链接' and value:
-                # 图片链接处理（逗号分隔）
-                images = [img.strip() for img in str(value).split(',') if img.strip()]
-                record["fields"][field_key] = images[:10]  # 最多10张图片
-            elif field_name == '颜色' and value:
+            # 简化处理，所有字段都作为普通文本
+            if field_name == '颜色' and value:
                 # 颜色处理（多行文本）
                 colors = str(value).split('\n')
                 record["fields"][field_key] = '\n'.join(colors[:20])  # 最多20行
@@ -186,8 +263,12 @@ class FeishuSync:
             elif field_name == '尺码表' and value:
                 # 尺码表处理
                 record["fields"][field_key] = str(value)[:2000] if len(str(value)) > 2000 else str(value)
+            elif field_name == '图片链接' and value:
+                # 图片链接处理（逗号分隔）
+                images = [img.strip() for img in str(value).split(',') if img.strip()]
+                record["fields"][field_key] = '\n'.join(images[:10])  # 最多10张图片，用换行分隔
             else:
-                # 普通字段
+                # 普通字段（包括商品链接，直接使用URL文本）
                 record["fields"][field_key] = value if value else None
 
         return record
@@ -206,6 +287,13 @@ class FeishuSync:
         print(f"🔄 同步第{batch_num}批: {len(products)} 个产品")
 
         try:
+            # 使用动态token
+            token = self._get_token()
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {token}'
+            }
+
             # 准备记录数据
             records = []
             for product in products:
@@ -220,15 +308,19 @@ class FeishuSync:
             }
 
             # 发送请求
-            response = requests.post(url, headers=self.headers, json=payload, timeout=30)
+            response = requests.post(url, headers=headers, json=payload, timeout=30)
 
             if response.status_code == 200:
                 result = response.json()
-                success_count = result.get('data', {}).get('created_count', 0)
-                print(f"   ✅ 成功同步: {success_count} 个记录")
-                return {"success": True, "count": success_count, "batch": batch_num}
+                if result.get('code') == 0:
+                    success_count = result.get('data', {}).get('created_count', 0)
+                    print(f"   ✅ 成功同步: {success_count} 个记录")
+                    return {"success": True, "count": success_count, "batch": batch_num}
+                else:
+                    print(f"   ❌ 飞书API错误: {result}")
+                    return {"success": False, "error": result, "batch": batch_num}
             else:
-                print(f"   ❌ 同步失败: {response.status_code}")
+                print(f"   ❌ HTTP错误: {response.status_code}")
                 print(f"   响应: {response.text}")
                 return {"success": False, "error": response.text, "batch": batch_num}
 
@@ -377,6 +469,12 @@ def main():
     try:
         # 初始化飞书同步器
         sync = FeishuSync(app_token=args.token, table_id=args.table)
+
+        # 加载环境变量配置
+        if not sync.app_token:
+            sync.app_token = os.environ.get('FEISHU_APP_TOKEN')
+        if not sync.table_id:
+            sync.table_id = os.environ.get('FEISHU_TABLE_ID')
 
         # 加载第二步数据
         products = sync.load_step2_data(str(input_path))
