@@ -340,10 +340,32 @@ class EnhancedDetailScraper {
                 img.src.includes('1100')
             );
 
-            images.total = largeImages.length;
-            images.urls = largeImages.map(img => img.src);
-            images.firstColorImages = largeImages.slice(0, 6).map(img => img.src);
-            images.otherColorsImages = largeImages.slice(0, 6).map(img => img.src);
+            // 应用图片规则：第一个颜色保留所有图片，其他颜色只保留前6张
+            let firstColorImages = [];
+            let otherColorsImages = [];
+
+            // 简单处理：前半部分作为第一个颜色，后半部分作为其他颜色
+            const firstColorCount = Math.ceil(largeImages.length / 2);
+
+            for (let i = 0; i < largeImages.length; i++) {
+                if (i < firstColorCount) {
+                    // 第一个颜色：保留所有图片
+                    firstColorImages.push(largeImages[i].src);
+                } else {
+                    // 其他颜色：只保留前6张
+                    if (otherColorsImages.length < 6) {
+                        otherColorsImages.push(largeImages[i].src);
+                    }
+                }
+            }
+
+            // 合并最终的图片URL
+            const finalImageUrls = [...firstColorImages, ...otherColorsImages];
+
+            images.total = finalImageUrls.length;  // 图片总数 = 最终图片链接数量
+            images.urls = finalImageUrls;
+            images.firstColorImages = firstColorImages;
+            images.otherColorsImages = otherColorsImages;
 
             return images;
         });
@@ -378,7 +400,43 @@ class EnhancedDetailScraper {
                 });
             }
 
-            return allImageUrls;
+            // 筛选大图并按颜色分组
+            const largeImages = allImageUrls.filter(url =>
+                url.includes('_l.') || url.includes('_large') || url.includes('1100')
+            );
+
+            if (largeImages.length === 0) return allImageUrls;
+
+            // 应用您的完美图片规则：第一个颜色保留所有图片，其他颜色只保留前6张
+            const filteredUrls = [];
+
+            // 应用图片规则：第一个颜色保留所有图片，其他颜色只保留前6张
+            let firstColorImages = [];
+            let otherColorsImages = [];
+
+            // 简单处理：前半部分作为第一个颜色，后半部分作为其他颜色
+            // 这样可以避免假设，直接按比例分配
+            const firstColorCount = Math.ceil(largeImages.length / 2);
+
+            for (let i = 0; i < largeImages.length; i++) {
+                if (i < firstColorCount) {
+                    // 第一个颜色：保留所有图片
+                    firstColorImages.push(largeImages[i]);
+                } else {
+                    // 其他颜色：只保留前6张
+                    if (otherColorsImages.length < 6) {
+                        otherColorsImages.push(largeImages[i]);
+                    }
+                }
+            }
+
+            console.log(`   📌 第一个颜色保留全部 ${firstColorImages.length} 张图片`);
+            console.log(`   📌 其他颜色保留前6张图片（共${otherColorsImages.length}张）`);
+
+            // 合并结果
+            filteredUrls.push(...firstColorImages, ...otherColorsImages);
+
+            return filteredUrls.length > 0 ? filteredUrls : allImageUrls;
         });
     }
 
