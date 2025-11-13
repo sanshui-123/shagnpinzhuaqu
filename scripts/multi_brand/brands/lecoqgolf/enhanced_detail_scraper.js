@@ -42,20 +42,19 @@ class EnhancedDetailScraper {
 
             // 按照新要求提取数据
             this.results = {
-                url: url,
-                productCode: await this.extractProductCodeFromName(page),
-                title: await this.extractAndTranslateTitle(page),
-                brand: this.brandName, // 写死品牌
-                price: await this.extractPrice(page),
-                gender: await this.extractGenderFromPosition(page),
-                colors: await this.extractColors(page),
-                images: await this.extractImages(page),
-                imageUrls: await this.extractAllImageUrls(page),
-                sizes: await this.extractSizes(page),
-                  categories: await this.extractCategories(page),
-                detailDescription: await this.extractAndTranslateDetailDescription(page),
-                sizeChart: await this.extractAndTranslateSizeChart(page),
-                scrapedAt: new Date().toISOString()
+                商品链接: url,
+                商品ID: await this.extractProductCodeFromName(page),
+                商品标题: await this.extractAndTranslateTitle(page),
+                品牌名: this.brandName, // 写死品牌
+                价格: await this.extractPrice(page),
+                性别: await this.extractGenderFromPosition(page),
+                颜色: await this.extractColors(page),
+                图片总数: await this.extractImages(page),
+                图片链接: await this.extractAllImageUrls(page),
+                尺码: await this.extractSizes(page),
+                衣服分类: await this.extractClothingCategory(page),
+                详情页文字: await this.extractAndTranslateDetailDescription(page),
+                尺码表: await this.extractAndTranslateSizeChart(page)
             };
 
             return this.results;
@@ -405,7 +404,58 @@ class EnhancedDetailScraper {
         });
     }
 
-  
+    async extractClothingCategory(page) {
+        return await page.evaluate(() => {
+            // 尝试从多个位置提取衣服分类信息
+
+            // 方法1：从面包屑导航提取
+            const breadcrumbs = document.querySelectorAll('.breadcrumb a, [class*="breadcrumb"] a, .breadcrumb li');
+            for (const breadcrumb of breadcrumbs) {
+                const text = breadcrumb.textContent.trim();
+                if (text.includes('ウェア') || text.includes('ウエア') || text.includes('アウター') ||
+                    text.includes('トップス') || text.includes('ボトムス') || text.includes('パンツ') ||
+                    text.includes('スカート') || text.includes('ドレス') || text.includes('ジャケット') ||
+                    text.includes('ブルゾン') || text.includes('コート') || text.includes('ベスト') ||
+                    text.includes('シャツ') || text.includes('ニット') || text.includes('セーター') ||
+                    text.includes('ポロシャツ') || text.includes('Tシャツ')) {
+                    return text;
+                }
+            }
+
+            // 方法2：从页面标题提取
+            const title = document.title;
+            if (title.includes('ブルゾン')) return 'ブルゾン';
+            if (title.includes('ジャケット')) return 'ジャケット';
+            if (title.includes('コート')) return 'コート';
+            if (title.includes('ベスト')) return 'ベスト';
+            if (title.includes('シャツ')) return 'シャツ';
+            if (title.includes('ニット')) return 'ニット';
+            if (title.includes('セーター')) return 'セーター';
+            if (title.includes('ポロシャツ')) return 'ポロシャツ';
+            if (title.includes('パンツ')) return 'パンツ';
+            if (title.includes('スカート')) return 'スカート';
+            if (title.includes('ドレス')) return 'ドレス';
+
+            // 方法3：从产品分类标签提取
+            const categoryElements = document.querySelectorAll('[class*="category"], [class*="tag"], .product-category');
+            for (const element of categoryElements) {
+                const text = element.textContent.trim();
+                if (text && (text.includes('ウェア') || text.includes('アウター') || text.includes('トップス'))) {
+                    return text;
+                }
+            }
+
+            // 方法4：从商品描述关键词提取
+            const description = document.body.textContent;
+            if (description.includes('アウター')) return 'アウター';
+            if (description.includes('トップス')) return 'トップス';
+
+            // 如果都没找到，返回高尔夫服装
+            return 'ゴルフウェア';
+        });
+    }
+
+
     async extractCategories(page) {
         return await page.evaluate(() => {
             const categories = [];
@@ -560,41 +610,43 @@ class EnhancedDetailScraper {
 
     printResults() {
         console.log('\n=== 📊 增强版详情页抓取结果 ===\n');
-        console.log('🔗 URL:', this.results.url);
-        console.log('🏷️ 商品编号:', this.results.productCode);
-        console.log('📝 标题:');
-        console.log('  原文:', this.results.title.original);
-        console.log('  译文:', this.results.title.translated);
-        console.log('🏷️ 品牌:', this.results.brand);
-        console.log('👕 性别:', this.results.gender);
-        console.log('💰 价格:', this.results.price);
+        console.log('🔗 商品链接:', this.results.商品链接);
+        console.log('🏷️ 商品ID:', this.results.商品ID);
+        console.log('📝 商品标题:');
+        console.log('  原文:', this.results.商品标题.original);
+        console.log('  译文:', this.results.商品标题.translated);
+        console.log('🏷️ 品牌名:', this.results.品牌名);
+        console.log('👕 性别:', this.results.性别);
+        console.log('💰 价格:', this.results.价格);
 
         console.log('\n🎨 颜色信息:');
-        this.results.colors.forEach((color, index) => {
+        this.results.颜色.forEach((color, index) => {
             console.log(`  ${index + 1}. ${color.name}`);
         });
 
         console.log('\n🖼️ 图片统计:');
-        console.log(`  总数: ${this.results.images.total}张`);
-        console.log(`  图片URL总数: ${this.results.imageUrls ? this.results.imageUrls.length : 0}个`);
-        if (this.results.imageUrls && this.results.imageUrls.length > 0) {
+        console.log(`  总数: ${this.results.图片总数.total}张`);
+        console.log(`  图片URL总数: ${this.results.图片链接 ? this.results.图片链接.length : 0}个`);
+        if (this.results.图片链接 && this.results.图片链接.length > 0) {
             console.log(`  前3个图片URL:`);
-            this.results.imageUrls.slice(0, 3).forEach((url, index) => {
+            this.results.图片链接.slice(0, 3).forEach((url, index) => {
                 console.log(`    ${index + 1}. ${url}`);
             });
         }
 
         console.log('\n📏 尺码信息:');
-        this.results.sizes.forEach((size, index) => {
+        this.results.尺码.forEach((size, index) => {
             console.log(`  ${index + 1}. ${size.size}`);
         });
 
-        console.log('\n📄 详情描述（译文前200字符）:');
-        console.log(`  ${this.results.detailDescription.translated.substring(0, 200)}...`);
+        console.log('\n👕 衣服分类:', this.results.衣服分类);
 
-        if (this.results.sizeChart.text) {
+        console.log('\n📄 详情描述（译文前200字符）:');
+        console.log(`  ${this.results.详情页文字.translated.substring(0, 200)}...`);
+
+        if (this.results.尺码表.text) {
             console.log('\n📏 尺码表信息（前200字符）:');
-            console.log(`  ${this.results.sizeChart.translatedText.substring(0, 200)}...`);
+            console.log(`  ${this.results.尺码表.translatedText.substring(0, 200)}...`);
         }
     }
 }
