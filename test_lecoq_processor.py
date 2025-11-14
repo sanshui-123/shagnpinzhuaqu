@@ -5,6 +5,22 @@
 验证第二步通用核心的正确性
 """
 
+import os
+from pathlib import Path
+
+# 加载环境变量
+env_file = Path("callaway.env")
+if env_file.exists():
+    with open(env_file, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if line and '=' in line and not line.startswith('#'):
+                key, value = line.split('=', 1)
+                os.environ[key] = value
+    print("✅ 已加载callaway.env环境变量")
+else:
+    print("⚠️ 未找到callaway.env文件")
+
 from callaway_13field_processor import Callaway13FieldProcessor
 
 def test_lecoq_with_callaway_processor():

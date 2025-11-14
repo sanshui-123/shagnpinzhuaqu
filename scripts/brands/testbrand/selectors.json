@@ -1,0 +1,37 @@
+{
+  "pages": {
+    "homepage": {
+      "url": "/",
+      "selectors": {
+        "productContainer": ".products-container",
+        "productItems": ".product-item"
+      }
+    },
+    "clubs": {
+      "url": "/clubs",
+      "selectors": {
+        "productContainer": ".clubs-container",
+        "productItems": ".club-item"
+      }
+    },
+    "apparel": {
+      "url": "/apparel",
+      "selectors": {
+        "productContainer": ".apparel-container",
+        "productItems": ".apparel-item"
+      }
+    }
+  },
+  "pagination": {
+    "nextButton": ".next-page",
+    "itemSelector": ".product-item",
+    "maxPages": 5
+  },
+  "productDetails": {
+    "title": ".product-title",
+    "description": ".product-description",
+    "price": ".product-price",
+    "images": ".product-gallery img",
+    "specifications": ".product-specs"
+  }
+}

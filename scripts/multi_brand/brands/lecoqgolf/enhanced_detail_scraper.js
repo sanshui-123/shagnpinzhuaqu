@@ -405,7 +405,19 @@ class EnhancedDetailScraper {
                 };
             });
 
-            return this.results;
+            // 🔧 添加第二部分期望的字段映射，保持原有字段不变
+            // 这样既保持原有的抓取数据，又能匹配第二部分的需求
+            const enhancedResults = { ...this.results };
+
+            // 第二部分期望的字段映射
+            enhancedResults['详情页链接'] = this.results['商品链接'];           // 映射商品链接
+            enhancedResults['商品编号'] = this.results['商品ID'];               // 映射商品ID
+            enhancedResults['productName'] = this.results['商品标题'];         // 映射商品标题
+            enhancedResults['productId'] = this.results['商品ID'];             // 映射商品ID
+            enhancedResults['priceText'] = this.results['价格'];               // 映射价格
+            enhancedResults['detailUrl'] = this.results['商品链接'];           // 映射商品链接
+
+            return enhancedResults;
 
         } catch (error) {
             console.error('❌ 抓取失败:', error.message);

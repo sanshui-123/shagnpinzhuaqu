@@ -1,0 +1,45 @@
+{
+  "name": "Testbrand",
+  "domain": "testbrand.com",
+  "baseUrl": "https://testbrand.com",
+  "enabled": true,
+  "schedule": {
+    "interval": "10-days",
+    "dayOfMonth": 1
+  },
+  "scraper": {
+    "type": "puppeteer",
+    "timeout": 30000,
+    "retries": 3,
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+    "headless": true,
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    }
+  },
+  "selectors": {
+    "productGrid": ".product-grid .product-item",
+    "productName": ".product-title",
+    "productUrl": "a",
+    "productImage": ".product-image img",
+    "productPrice": ".price",
+    "productCategory": ".category"
+  },
+  "categories": [
+    "drivers",
+    "fairways",
+    "hybrids",
+    "irons",
+    "wedges",
+    "putters",
+    "apparel",
+    "shoes",
+    "accessories"
+  ],
+  "output": {
+    "format": "json",
+    "path": "golf_content/testbrand",
+    "filename": "testbrand_products.json"
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "timestamp": "2025-11-12T15:14:42.483Z",
+  "duration": 11489,
+  "overall": 35,
+  "results": {
+    "fileSystem": {
+      "healthy": false,
+      "message": "缺失必需目录: 核心模块, 监控模块",
+      "details": {
+        "missing": [
+          "核心模块",
+          "监控模块"
+        ],
+        "checked": [
+          "根目录",
+          "核心模块",
+          "品牌目录",
+          "监控模块"
+        ]
+      }
+    },
+    "dependencies": {
+      "healthy": false,
+      "message": "缺失依赖: puppeteer, commander",
+      "details": {
+        "installed": [
+          "fs",
+          "path",
+          "events"
+        ],
+        "missing": [
+          "puppeteer",
+          "commander"
+        ]
+      }
+    },
+    "brandConfigs": {
+      "healthy": true,
+      "message": "1/1 品牌配置正常",
+      "details": {
+        "total": 1,
+        "healthy": 1,
+        "healthRatio": 100,
+        "brandStatus": {
+          "callaway": {
+            "healthy": true,
+            "hasConfig": true,
+            "enabled": true
+          }
+        }
+      }
+    },
+    "diskSpace": {
+      "healthy": false,
+      "message": "磁盘空间不足",
+      "details": {
+        "freeSpaceGB": 0,
+        "minSpaceGB": 1
+      }
+    },
+    "network": {
+      "healthy": false,
+      "message": "0/2 网络连接正常",
+      "details": {
+        "results": [
+          {
+            "url": "https://www.google.com",
+            "success": false,
+            "error": "fetch failed"
+          },
+          {
+            "url": "https://www.callawaygolf.com",
+            "success": false,
+            "status": 429
+          }
+        ]
+      }
+    },
+    "history": {
+      "healthy": true,
+      "message": "暂无历史记录",
+      "details": {
+        "hasHistory": false
+      }
+    }
+  },
+  "alerts": [],
+  "recommendations": [
+    "修复缺失的目录结构",
+    "安装缺失的依赖模块",
+    "清理磁盘空间，确保至少有1GB可用空间",
+    "检查网络连接和防火墙设置"
+  ]
+}
