@@ -1782,7 +1782,8 @@ class Callaway13FieldProcessor:
 
             # 5. 颜色翻译
             colors = (product.get('colors', []) or
-                     product.get('颜色选项', ''))
+                     product.get('颜色选项', '') or
+                     product.get('颜色', []))
             if colors:
                 # 如果是字符串，分割处理
                 if isinstance(colors, str):
@@ -1800,7 +1801,8 @@ class Callaway13FieldProcessor:
 
             # 6. 尺寸处理
             sizes = (product.get('sizes', []) or
-                   product.get('尺寸选项', ''))
+                   product.get('尺寸选项', '') or
+                   product.get('尺码', []))
             if sizes:
                 # 如果是字符串，分割处理
                 if isinstance(sizes, str):
@@ -1826,15 +1828,27 @@ class Callaway13FieldProcessor:
                 print("⚠️ 描述翻译失败或无内容")
 
             # 8. 图片处理
-            image_groups = product.get('imageGroups', [])
+            image_groups = (product.get('imageGroups', []) or
+                           product.get('图片链接', []))
             if image_groups:
-                processed_groups = process_images_by_color(image_groups)
-                # 收集所有图片链接
-                all_images = []
-                for group in processed_groups:
-                    all_images.extend(group.get('images', []))
-                result['图片链接'] = ', '.join(all_images[:10])  # 只保留前10张
-                print(f"✓ 图片处理完成: {len(processed_groups)}个颜色组，共{len(all_images)}张图片")
+                # 检查数据格式
+                if isinstance(image_groups, list) and len(image_groups) > 0:
+                    if isinstance(image_groups[0], str):
+                        # 如果是字符串数组，直接拼接
+                        result['图片链接'] = ', '.join(image_groups[:10])
+                        print(f"✓ 图片处理完成: {len(image_groups)}张图片")
+                    else:
+                        # 如果是对象数组，按原有逻辑处理
+                        processed_groups = process_images_by_color(image_groups)
+                        # 收集所有图片链接
+                        all_images = []
+                        for group in processed_groups:
+                            all_images.extend(group.get('images', []))
+                        result['图片链接'] = ', '.join(all_images[:10])  # 只保留前10张
+                        print(f"✓ 图片处理完成: {len(processed_groups)}个颜色组，共{len(all_images)}张图片")
+                else:
+                    result['图片链接'] = str(image_groups)
+                    print("✓ 图片处理完成")
             else:
                 # 尝试从其他字段获取图片
                 main_image = product.get('mainImage', '')

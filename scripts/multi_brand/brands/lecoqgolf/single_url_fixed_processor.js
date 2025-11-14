@@ -189,7 +189,7 @@ class SingleURLFixedProcessor {
 
                         // 去重并排序
                         const uniqueImages = [...new Set(firstColorImages)];
-                        return uniqueImages.slice(0, 6); // 只取前6张图片
+                        return uniqueImages; // 返回所有符合条件的图片，不限制数量
                     })(),
 
                     // 尺码数据 - 改进的抓取逻辑
