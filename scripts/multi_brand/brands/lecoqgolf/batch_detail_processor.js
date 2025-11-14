@@ -142,57 +142,57 @@ class BatchDetailProcessor {
 
     convertToFeishuFormat(detailData, product) {
         const feishuRecord = {
-            // 基础信息
-            '商品标题': detailData.title.translated || detailData.title.original || '',
-            '品牌': detailData.brand,
-            '商品编号': detailData.productCode,
-            '性别': detailData.gender,
-            '价格': detailData.price,
-            '详情页链接': detailData.url,
+            // 基础信息 - 使用新的数据结构
+            '商品标题': detailData.商品标题 || '',
+            '品牌': detailData.品牌名 || 'Le Coq公鸡乐卡克',
+            '商品编号': detailData.商品ID || '',
+            '性别': detailData.性别 || '',
+            '价格': detailData.价格 || '',
+            '详情页链接': detailData.商品链接 || '',
 
-            // 分类信息
-            '一级分类': detailData.categories[0] || '',
-            '二级分类': detailData.categories[1] || '',
-            '三级分类': detailData.categories[2] || '',
-            '四级分类': detailData.categories[3] || '',
-            '五级分类': detailData.categories[4] || '',
+            // 分类信息 - 暂时留空，因为新规则不抓取衣服分类
+            '一级分类': '',
+            '二级分类': '',
+            '三级分类': '',
+            '四级分类': '',
+            '五级分类': '',
 
-            // 产品规格
-            '颜色选项': detailData.colors.map(c => c.name).join(', ') || '',
-            '颜色数量': detailData.colors.length,
-            '首个颜色': detailData.colors.find(c => c.isFirstColor)?.name || '',
-            '尺寸选项': detailData.sizes.map(s => s.size).join(', ') || '',
-            '尺寸数量': detailData.sizes.length,
+            // 产品规格 - 使用新的数据结构
+            '颜色选项': (detailData.颜色 && detailData.颜色.map(c => c.name).join(', ')) || '',
+            '颜色数量': detailData.颜色 ? detailData.颜色.length : 0,
+            '首个颜色': (detailData.颜色 && detailData.颜色.find(c => c.isFirstColor)?.name) || '',
+            '尺寸选项': (detailData.尺码 && detailData.尺码.join(', ')) || '',
+            '尺寸数量': detailData.尺码 ? detailData.尺码.length : 0,
 
-            // 库存信息
-            '总尺码数': detailData.inventoryStats.totalSizes || 0,
-            '有库存尺码': detailData.inventoryStats.availableSizes || 0,
-            '缺货尺码': detailData.inventoryStats.soldOutSizes || 0,
-            '库存率(%)': detailData.inventoryStats.stockPercentage || 0,
+            // 库存信息 - 新数据结构中没有库存统计，设为默认值
+            '总尺码数': detailData.尺码 ? detailData.尺码.length : 0,
+            '有库存尺码': detailData.尺码 ? detailData.尺码.length : 0, // 假设都有库存
+            '缺货尺码': 0,
+            '库存率(%)': 100,
 
-            // 图片信息
-            '图片总数': detailData.images.total || 0,
-            '首个颜色图片数': detailData.images.firstColorImages.length || 0,
-            '其他颜色图片数': detailData.images.otherColorsImages.length || 0,
-            '主要图片链接': detailData.images.firstColorImages[0] || '',
-            '所有图片链接': detailData.images.urls.slice(0, 10).join('\n') + (detailData.images.urls.length > 10 ? `\n... 还有 ${detailData.images.urls.length - 10} 张` : ''),
+            // 图片信息 - 使用新的数据结构（只有第一个颜色的图片）
+            '图片总数': detailData.图片链接 ? detailData.图片链接.length : 0,
+            '首个颜色图片数': detailData.图片链接 ? detailData.图片链接.length : 0,
+            '其他颜色图片数': 0, // 新规则只抓取第一个颜色
+            '主要图片链接': (detailData.图片链接 && detailData.图片链接[0]) || '',
+            '所有图片链接': (detailData.图片链接 && detailData.图片链接.slice(0, 10).join('\n') + (detailData.图片链接.length > 10 ? `\n... 还有 ${detailData.图片链接.length - 10} 张` : '')) || '',
 
-            // 功能特性（安全访问）
-            '核心功能': ((detailData.description && detailData.description.features) ? detailData.description.features : []).slice(0, 3).join(', ') || '',
-            '材质信息': ((detailData.description && detailData.description.materials) ? detailData.description.materials : []).join(', ') || '',
-            '所有功能': ((detailData.description && detailData.description.features) ? detailData.description.features : []).slice(0, 5).join('\n') || '',
+            // 功能特性 - 新数据结构中没有这些字段，设为默认值
+            '核心功能': '',
+            '材质信息': '',
+            '所有功能': '',
 
-            // 翻译内容
-            '详情页译文': detailData.detailDescription.translated || '',
-            '尺码表译文': detailData.sizeChart.translatedText || '',
+            // 翻译内容 - 新规则不包含翻译，设为空
+            '详情页译文': '',
+            '尺码表译文': '',
 
-            // 原始内容
-            '标题原文': detailData.title.original || '',
-            '详情页原文': detailData.detailDescription.original || '',
-            '尺码表原文': detailData.sizeChart.text || '',
+            // 原始内容 - 使用新的数据结构
+            '标题原文': detailData.商品标题 || '',
+            '详情页原文': detailData.详情页文字 || '',
+            '尺码表原文': (detailData.尺码表 && detailData.尺码表.text) || '',
 
             // 时间戳
-            '抓取时间': detailData.scrapedAt || new Date().toISOString(),
+            '抓取时间': new Date().toISOString(),
             '更新时间': new Date().toISOString(),
 
             // 系统信息

@@ -39,7 +39,8 @@ BRAND_KEYWORDS = {
     'cleveland': ['cleveland', 'cleveland golf'],
     'mizuno': ['mizuno', '美津濃', '美津浓'],
     'ping': ['ping', 'ping golf'],
-    'taylormade': ['taylor made', 'taylormade', 'tm', '泰勒梅']
+    'taylormade': ['taylor made', 'taylormade', 'tm', '泰勒梅'],
+    'lecoqsportifgolf': ['le coq', 'lecoq', 'ル コック', '公鸡', '乐卡克', 'le coq sportif', 'le coq sportif golf']
 }
 
 # 品牌中文名映射
@@ -55,7 +56,7 @@ BRAND_MAP = {
     'mizuno': '美津浓Mizuno',
     'ping': 'Ping',
     'taylormade': '泰勒梅TaylorMade',
-    'lecoqsportifgolf': 'Le Coq Sportif Golf'
+    'lecoqsportifgolf': 'Le Coq公鸡乐卡克'
 }
 
 # 品牌简称
@@ -71,7 +72,7 @@ BRAND_SHORT_NAME = {
     'mizuno': '美津浓',
     'ping': 'Ping',
     'taylormade': '泰勒梅',
-    'lecoqsportifgolf': 'Le Coq Sportif'
+    'lecoqsportifgolf': 'Le Coq公鸡乐卡克'
 }
 
 # 品牌别名映射 - 用于识别各种拼写变体和多语言名称
@@ -165,8 +166,14 @@ BRAND_ALIASES = {
     'toulondesign': 'toulon',
     'le coq sportif': 'lecoqsportifgolf',
     'lecoqsportifgolf': 'lecoqsportifgolf',
-    'ルコックスポルティフ': 'lecoqsportifgolf',
-    'ルコック': 'lecoqsportifgolf'
+    'le coq': 'lecoqsportifgolf',
+    'lecoq': 'lecoqsportifgolf',
+    'ル コック': 'lecoqsportifgolf',
+    'ルコック': 'lecoqsportifgolf',
+    '公鸡': 'lecoqsportifgolf',
+    '乐卡克': 'lecoqsportifgolf',
+    'le coq sportif golf': 'lecoqsportifgolf',
+    'ルコックスポルティフ': 'lecoqsportifgolf'
 }
 
 # ============================================================================
@@ -283,7 +290,8 @@ COLOR_NAME_TRANSLATION = {
     # 日文颜色映射
     'ブラック': '黑色',
     'ホワイト': '白色',
-    'ネイビー': '藏蓝色',
+    'ネイビー': '藏青色',
+    'ネイビー×グレー': '藏青色×灰色',
     'グレー': '灰色',
     'グレイ': '灰色',
     'ブルー': '蓝色',
@@ -316,6 +324,7 @@ COLOR_NAME_TRANSLATION = {
     'レッド': '红色',
     'ブルー': '蓝色',
     'ネイビー': '藏青色',
+    'ネイビー×グレー': '藏青色×灰色',
     'グレー': '灰色',
     'グリーン': '绿色',
     'イエロー': '黄色',
@@ -724,6 +733,7 @@ def build_smart_prompt(product: Dict) -> str:
 - Mizuno → "美津浓"
 - Ping → "Ping"
 - TaylorMade → "泰勒梅"
+- Le Coq Sportif → "Le Coq公鸡乐卡克"
 本商品的品牌是：{brand_short}
 
 3. 性别判断
@@ -776,10 +786,52 @@ def build_smart_prompt(product: Dict) -> str:
 
 严格要求（必须遵守）：
 
-1. 长度要求
-总长度：26-30个汉字
-如果长度不够，可以在功能词前加修饰：
-- "新款"、"时尚"、"轻便"、"透气"、"运动"、"专业"、"经典"等
+1. 长度要求（最严格！必须遵守）
+总长度：26-30个汉字，一个字符都不能多，一个都不能少！
+
+长度计算方法：
+- 季节部分（如"25秋冬"）：4字
+- 品牌部分（如"卡拉威"）：2-8字
+- "高尔夫"：3字（必须且只能出现1次）
+- 性别部分（如"男士"）：2字
+- 功能词部分：2-6字
+- 结尾词部分（如"夹克"）：2字
+
+如果长度不够，必须通过以下方式精确调整：
+
+A. 扩展功能词（2-6字）：
+- 基础功能词：保暖、弹力、防泼水、速干、轻量
+- 扩展功能词：保暖舒适、弹力全拉链、防泼水防风、速干透气、轻量透气
+- 修饰功能词：时尚保暖舒适、专业弹力全拉链、轻便防泼水防风
+
+B. 扩展修饰词（在功能词前）：
+- 基础修饰：新款、时尚、轻便、透气、运动、专业、经典
+- 组合修饰：新款时尚、时尚轻便、专业经典、运动时尚
+- 三字修饰：新款时尚的、专业高品质、轻便快干型
+
+C. 严格长度控制（精确到每个字符）：
+- 如果生成后少于26字，必须在功能词前增加修饰词
+- 如果生成后超过30字，必须精简功能词或修饰词
+- 最终必须确保总字数在26-30字之间
+
+D. 长度精确计算方法：
+总字数 = 季节字数 + 品牌字数 + "高尔夫"(3字) + 性别字数 + 功能词字数 + 结尾词字数
+
+对于本产品：
+- 季节：25秋冬 = 4字
+- 品牌：Le Coq公鸡乐卡克 = 7字
+- "高尔夫" = 3字
+- 性别：男士 = 2字
+- 功能词：保暖棉服可拆卸 = 6字（可调整）
+- 结尾词：夹克 = 2字
+- 当前总计：24字（需要增加2-6字）
+
+解决方案（精确增加字数）：
+- 增加1字：保暖棉服可拆卸轻便夹克 (30字) ✅
+- 增加2字：保暖舒适棉服可拆卸夹克 (31字) ❌ 超长
+- 精确控制：保暖棉服可拆卸轻便夹克 = 30字 ✅
+
+建议模式：保暖棉服可拆卸 + 1字修饰 = 27-29字
 
 2. 格式要求
 - 只用简体中文，不要日文假名、英文字母、繁体字
@@ -812,12 +864,20 @@ def build_smart_prompt(product: Dict) -> str:
 - 25秋冬泰勒梅高尔夫男士保暖棉服夹克（27字）
 - 26春夏Puma高尔夫女士轻便运动短裤（28字）
 
-输出要求：
+输出要求（严格执行）：
 - 直接输出标题，不要任何解释、不要"好的"等应答词、不要markdown格式
-- 确保标题26-30个汉字
-- 确保格式正确
+- 最终标题必须是26-30个汉字，少一个字或多一个字都算失败
+- 在输出前，自己先数一遍字数，确保符合要求
+- 如果不确定长度，宁可稍长也不要太短
 
-现在生成标题："""
+字数验证步骤：
+1. 生成标题初稿
+2. 计算字数：len(标题)
+3. 如果字数 < 26，在功能词前增加修饰词
+4. 如果字数 > 30，精简功能词或修饰词
+5. 最终输出26-30字的标题
+
+现在严格按照要求生成标题："""
 
     return prompt
 
@@ -931,7 +991,7 @@ def call_glm_api(
 
 def clean_title(title: str) -> str:
     """
-    清理标题中的常见问题
+    清理标题中的常见问题，并自动调整长度到26-30字
     """
     if not title:
         return title
@@ -971,6 +1031,125 @@ def clean_title(title: str) -> str:
             title = title[:idx].strip()
             break
 
+    # 长度自动调整
+    title = adjust_title_length(title)
+
+    return title
+
+
+def adjust_title_length(title: str) -> str:
+    """
+    自动调整标题长度到26-30字范围
+    """
+    if not title:
+        return title
+
+    current_length = len(title)
+
+    # 如果长度刚好，直接返回
+    if 26 <= current_length <= 30:
+        return title
+
+    # 如果太长，需要缩短
+    if current_length > 30:
+        return shorten_title(title, current_length)
+
+    # 如果太短，需要加长
+    if current_length < 26:
+        return lengthen_title(title, current_length)
+
+    return title
+
+
+def shorten_title(title: str, current_length: int) -> str:
+    """
+    缩短标题到30字以内
+    """
+    excess = current_length - 30
+
+    # 策略1: 删除多余的修饰词
+    modifiers_to_remove = ['轻便', '时尚', '新款', '专业', '舒适']
+    for modifier in modifiers_to_remove:
+        if excess <= 0:
+            break
+        if modifier in title:
+            title = title.replace(modifier, '', 1)
+            excess -= len(modifier)
+
+    # 策略2: 精简功能词
+    if excess > 0:
+        function_word_replacements = {
+            '保暖棉服': '保暖',
+            '弹力全拉链': '全拉链',
+            '防泼水防风': '防泼水',
+            '速干透气': '速干'
+        }
+        for long_word, short_word in function_word_replacements.items():
+            if excess <= 0:
+                break
+            if long_word in title:
+                title = title.replace(long_word, short_word, 1)
+                excess -= len(long_word) - len(short_word)
+
+    # 如果还是太长，直接截断
+    if len(title) > 30:
+        title = title[:30]
+
+    return title
+
+
+def lengthen_title(title: str, current_length: int) -> str:
+    """
+    加长标题到26字以上
+    """
+    needed = 26 - current_length
+
+    # 策略1: 在功能词前添加修饰词
+    function_words = ['保暖', '弹力', '防泼水', '速干', '轻量', '舒适']
+    modifiers = {
+        1: ['新', '轻', '专'],
+        2: ['新款', '时尚', '专业', '轻便'],
+        3: ['高品质', '新款时尚', '专业经典']
+    }
+
+    for word in function_words:
+        if word in title and needed > 0:
+            # 选择合适的修饰词长度
+            if needed in modifiers:
+                modifier_list = modifiers[needed]
+            else:
+                modifier_list = modifiers[2]  # 用3字修饰词然后调整
+
+            for modifier in modifier_list:
+                new_word = modifier + word
+                if new_word in title:
+                    continue  # 避免重复添加
+
+                title = title.replace(word, new_word, 1)
+                needed -= len(modifier)
+
+                if needed <= 0:
+                    break
+
+            if needed <= 0:
+                break
+
+    # 如果还是不够长，在结尾词前添加修饰
+    if needed > 0:
+        endings = ['夹克', '上衣', '长裤', '短裤', '帽子', '手套']
+        for ending in endings:
+            if ending in title and needed > 0:
+                if needed >= 2:
+                    modifier = '时尚'
+                elif needed >= 1:
+                    modifier = '新'
+                else:
+                    break
+
+                title = title.replace(ending, modifier + ending, 1)
+                needed -= len(modifier)
+                break
+
     return title
 
 
@@ -986,8 +1165,12 @@ def optimize_title(title: str) -> str:
     japanese_pattern = re.compile(r'[\u3040-\u309F\u30A0-\u30FF\uFF66-\uFF9F]')
     title = japanese_pattern.sub('', title)
 
-    # 去除特殊符号
-    title = re.sub(r'[/／\\|｜×＋\+\-\*•·\s]+', '', title)
+    # 去除特殊符号（保留必要的空格）
+    title = re.sub(r'[/／\\|｜×＋\+\-\*•·]+', '', title)
+    # 只删除连续的空格，保留单个空格
+    title = re.sub(r'\s{2,}', ' ', title)
+    # 删除首尾空格
+    title = title.strip()
 
     # 2. 确保"高尔夫"只出现一次
     if title.count('高尔夫') > 1:
@@ -1598,23 +1781,38 @@ class Callaway13FieldProcessor:
                 print("❌ AI标题生成失败")
 
             # 5. 颜色翻译
-            colors = product.get('colors', [])
+            colors = (product.get('colors', []) or
+                     product.get('颜色选项', ''))
             if colors:
-                result['颜色'] = build_color_multiline(colors)
-                print(f"✓ 颜色翻译完成: {len(colors)}种颜色")
+                # 如果是字符串，分割处理
+                if isinstance(colors, str):
+                    color_list = [c.strip() for c in colors.split(',') if c.strip()]
+                    # 处理中文颜色名
+                    color_list = [color.split('（')[0].strip() for color in color_list]
+                    result['颜色'] = build_color_multiline(color_list)
+                    print(f"✓ 颜色翻译完成: {len(color_list)}种颜色")
+                else:
+                    result['颜色'] = build_color_multiline(colors)
+                    print(f"✓ 颜色翻译完成: {len(colors)}种颜色")
             else:
                 result['颜色'] = ''
                 print("⚠️ 无颜色信息")
 
             # 6. 尺寸处理
-            sizes = product.get('sizes', [])
+            sizes = (product.get('sizes', []) or
+                   product.get('尺寸选项', ''))
             if sizes:
-                # 如果是列表，用逗号分隔
-                if isinstance(sizes, list):
+                # 如果是字符串，分割处理
+                if isinstance(sizes, str):
+                    size_list = [s.strip() for s in sizes.split(',') if s.strip()]
+                    result['尺寸'] = ', '.join(size_list)
+                    print(f"✓ 尺寸处理完成: {len(size_list)}种尺码")
+                elif isinstance(sizes, list):
                     result['尺寸'] = ', '.join(str(s) for s in sizes)
+                    print(f"✓ 尺寸处理完成: {len(sizes)}种尺码")
                 else:
                     result['尺寸'] = str(sizes)
-                print(f"✓ 尺寸处理完成: {len(sizes)}种尺码")
+                    print(f"✓ 尺寸处理完成")
             else:
                 result['尺寸'] = ''
                 print("⚠️ 无尺码信息")

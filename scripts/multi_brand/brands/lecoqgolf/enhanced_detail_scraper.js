@@ -11,7 +11,7 @@ class EnhancedDetailScraper {
     constructor() {
         this.url = '';
         this.results = {};
-        this.brandName = 'le coq sportif golf'; // 品牌写死
+        this.brandName = 'Le Coq公鸡乐卡克'; // 根据用户要求写死品牌名
     }
 
     async scrapeDetailPage(url) {
@@ -40,22 +40,370 @@ class EnhancedDetailScraper {
             // 等待内容加载
             await page.waitForTimeout(5000);
 
-            // 按照新要求提取数据
-            this.results = {
-                商品链接: url,
-                商品ID: await this.extractProductCodeFromName(page),
-                商品标题: await this.extractAndTranslateTitle(page),
-                品牌名: this.brandName, // 写死品牌
-                价格: await this.extractPrice(page),
-                性别: await this.extractGenderFromPosition(page),
-                颜色: await this.extractColors(page),
-                图片总数: await this.extractImages(page),
-                图片链接: await this.extractAllImageUrls(page),
-                尺码: await this.extractSizes(page),
-                衣服分类: await this.extractClothingCategory(page),
-                详情页文字: await this.extractAndTranslateDetailDescription(page),
-                尺码表: await this.extractAndTranslateSizeChart(page)
-            };
+            // 点击尺码表按钮以显示详细尺寸数据
+            try {
+                // 方法1：查找并点击"サイズ詳細"链接
+                const sizeDetailButton = await page.locator('text=サイズ詳細').first();
+                if (await sizeDetailButton.isVisible()) {
+                    await sizeDetailButton.click();
+                    console.log('✅ 点击了サイズ詳細按钮');
+                } else {
+                    // 方法2：查找包含"サイズ"的链接或按钮
+                    const sizeLinks = await page.locator('a:has-text("サイズ"), button:has-text("サイズ")').all();
+                    for (const link of sizeLinks) {
+                        if (await link.isVisible()) {
+                            await link.click();
+                            console.log('✅ 点击了包含"サイズ"的按钮');
+                            break;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('⚠️ 尝试点击尺码表按钮失败:', error.message);
+                // 方法3：尝试使用JavaScript直接点击
+                await page.evaluate(() => {
+                    const allElements = document.querySelectorAll('*');
+                    for (const element of allElements) {
+                        const text = element.textContent.trim();
+                        if (text.includes('サイズ詳細') || (text.includes('サイズ') && element.tagName === 'A')) {
+                            try {
+                                element.click();
+                                return 'clicked';
+                            } catch (e) {
+                                // 继续尝试下一个
+                            }
+                        }
+                    }
+                    return 'not_found';
+                });
+            }
+
+            await page.waitForTimeout(3000); // 等待尺码表内容加载
+
+            // 使用single_url_fixed_processor.js的成功逻辑提取数据
+            this.results = await page.evaluate(() => {
+                return {
+                    // 基础信息
+                    "商品链接": window.location.href,
+                    "商品ID": (() => {
+                        // 优先从尺码表中提取品牌商品编号
+                        const sizeChartArea = document.querySelector('table, [class*="size-table"], [class*="chart"]');
+                        if (sizeChartArea) {
+                            const chartText = sizeChartArea.textContent;
+                            const afterBrandCodeText = chartText.split('ブランド商品番号※店舗お問い合わせ用')[1];
+                            if (afterBrandCodeText) {
+                                const brandCodeMatch = afterBrandCodeText.match(/\b([A-Z]{2,}\d{4,})\b/);
+                                if (brandCodeMatch) return brandCodeMatch[1];
+                            }
+
+                            const lgCodeMatch = chartText.match(/\b(LG[A-Z0-9]{6,})\b/);
+                            if (lgCodeMatch) return lgCodeMatch[1];
+
+                            const brandCodeMatch = chartText.match(/\b([A-Z]{2,}\d{4,})\b/);
+                            if (brandCodeMatch && brandCodeMatch[1].length >= 6) {
+                                return brandCodeMatch[1];
+                            }
+                        }
+
+                        const elementsWithNames = document.querySelectorAll('[name]');
+                        for (const element of elementsWithNames) {
+                            const nameValue = element.getAttribute('name');
+                            if (nameValue && nameValue.match(/^[A-Z]{2,}\d{4,}$/)) {
+                                return nameValue;
+                            }
+                        }
+
+                        const urlMatch = window.location.pathname.match(/\/([A-Z0-9]+)\/?$/);
+                        if (urlMatch) {
+                            return urlMatch[1];
+                        }
+
+                        return '';
+                    })(),
+
+                    "商品标题": (() => {
+                        const titleSelectors = ['.productName', '.commodityName', '.product-title', 'h1'];
+                        let title = '';
+                        for (const selector of titleSelectors) {
+                            const element = document.querySelector(selector);
+                            if (element) {
+                                const text = element.textContent.trim();
+                                if (text && text.length > 5) {
+                                    title = text;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!title) title = document.title || '';
+                        return title;
+                    })(),
+
+                    "品牌名": "Le Coq公鸡乐卡克", // 写死品牌名
+
+                    "价格": (() => {
+                        const selectors = ['.price', '.price-current', '[class*="price"]'];
+                        for (const selector of selectors) {
+                            const element = document.querySelector(selector);
+                            if (element) {
+                                const price = element.textContent.trim();
+                                const priceMatch = price.match(/[￥¥$]\s*[\d,]+/);
+                                if (priceMatch) return priceMatch[0];
+                            }
+                        }
+                        return '';
+                    })(),
+
+                    "性别": (() => {
+                        const url = window.location.href;
+
+                        // 首先检查URL路径
+                        if (url.includes('/ds_M/') || url.includes('/mens/')) {
+                            return '男';
+                        }
+                        if (url.includes('/ds_F/') || url.includes('/ds_L/') || url.includes('/womens/') || url.includes('/ladies/')) {
+                            return '女';
+                        }
+
+                        // 检查URL中的品牌和性别标识
+                        if (url.includes('le%20coq%20sportif%20golf/ds_M')) {
+                            return '男';
+                        }
+                        if (url.includes('le%20coq%20sportif%20golf/ds_F') || url.includes('le%20coq%20sportif%20golf/ds_L')) {
+                            return '女';
+                        }
+
+                        // 检查面包屑导航
+                        const breadcrumbs = document.querySelectorAll('.breadcrumb a, [class*="breadcrumb"] a');
+                        for (const breadcrumb of breadcrumbs) {
+                            const text = breadcrumb.textContent.trim().toLowerCase();
+                            if (text.includes('men') || text.includes('男性') || text.includes('メンズ')) {
+                                return '男';
+                            }
+                            if (text.includes('women') || text.includes('女性') || text.includes('ウィメンズ')) {
+                                return '女';
+                            }
+                        }
+
+                        // 从尺码表检查性别类型
+                        const sizeChartText = document.body.textContent;
+                        if (sizeChartText.includes('性別タイプ：メンズ') || sizeChartText.includes('性別タイプ: メンズ')) {
+                            return '男';
+                        }
+                        if (sizeChartText.includes('性別タイプ：ウィメンズ') || sizeChartText.includes('性別タイプ: ウィメンズ') ||
+                            sizeChartText.includes('性別タイプ：ラブズ') || sizeChartText.includes('性別タイプ: ラブズ')) {
+                            return '女';
+                        }
+
+                        // 默认判断为男性（根据当前URL是在ds_M下）
+                        return '男';
+                    })(),
+
+                    // 颜色数据
+                    "颜色": (() => {
+                        const colors = [];
+                        const colorElements = document.querySelectorAll('#color-selector .colorName, .colorName, [class*="color-option"], [data-color]');
+
+                        colorElements.forEach((element, index) => {
+                            const colorName = element.textContent.trim();
+                            if (colorName && !colors.find(c => c.name === colorName)) {
+                                colors.push({
+                                    name: colorName,
+                                    isFirstColor: index === 0
+                                });
+                            }
+                        });
+
+                        return colors;
+                    })(),
+
+                    // 图片数据 - 只抓取第一个颜色，1100*1100尺寸
+                    "图片链接": (() => {
+                        const imgElements = document.querySelectorAll('img[src*="LE/LE"], img[src*="commodity_image"]');
+                        const firstColorImages = [];
+
+                        imgElements.forEach(el => {
+                            if (el.src) {
+                                // 检查是否是1100尺寸的图片
+                                if (el.src.includes('_1100.') || el.src.includes('1100')) {
+                                    firstColorImages.push(el.src);
+                                }
+                                // 如果没有1100，使用大图 (_l.)
+                                else if (el.src.includes('_l.') && !el.src.includes('_thumbM')) {
+                                    firstColorImages.push(el.src);
+                                }
+                            }
+                        });
+
+                        // 去重并排序
+                        const uniqueImages = [...new Set(firstColorImages)];
+                        return uniqueImages; // 不限制图片数量
+                    })(),
+
+                    // 尺码数据 - 改进的抓取逻辑
+                    "尺码": (() => {
+                        const sizes = [];
+
+                        // 方法1：专门查找颜色选择板块内的尺码选项（根据你的截图）
+                        const colorSection = document.querySelector('[id*="color"], [class*="color"]');
+                        if (colorSection) {
+                            // 查找颜色板块内的所有尺码元素
+                            const sizeElements = colorSection.querySelectorAll('select[name*="size"] option, button[class*="size"], div[class*="size"]');
+                            sizeElements.forEach(element => {
+                                const text = element.textContent.trim();
+                                // 匹配标准尺码格式：S, M, L, LL, 3L, XL等
+                                if (text.match(/^[SMLX][L0-9]*$/)) {
+                                    if (!sizes.includes(text)) {
+                                        sizes.push(text);
+                                    }
+                                }
+                            });
+
+                            // 查找包含"3L"的所有元素
+                            const allElements3L = colorSection.querySelectorAll('*');
+                            allElements3L.forEach(element => {
+                                const text = element.textContent.trim();
+                                if (text === '3L' && !sizes.includes('3L')) {
+                                    sizes.push('3L');
+                                }
+                            });
+                        }
+
+                        // 方法2：查找专门的尺码选择器
+                        const sizeSections = [
+                            document.querySelector('[id*="size"]'),
+                            document.querySelector('[class*="size"]'),
+                            document.querySelector('select[name*="size"]'),
+                            document.querySelector('.size-select')
+                        ];
+
+                        sizeSections.forEach(section => {
+                            if (section) {
+                                const sizeOptions = section.querySelectorAll('option, button, div[class*="size-item"], [class*="size"]');
+                                sizeOptions.forEach(option => {
+                                    const text = option.textContent.trim();
+                                    if (text.match(/^[SMLX][L0-9]*$/)) {
+                                        if (!sizes.includes(text)) {
+                                            sizes.push(text);
+                                        }
+                                    }
+                                });
+                            }
+                        });
+
+                        // 方法3：从下拉菜单查找（包括隐藏的select）
+                        document.querySelectorAll('select').forEach(select => {
+                            const options = select.querySelectorAll('option');
+                            options.forEach(option => {
+                                const text = option.textContent.trim();
+                                if (text === '3L' || text.match(/^[SMLX][L0-9]*$/)) {
+                                    if (!sizes.includes(text)) {
+                                        sizes.push(text);
+                                    }
+                                }
+                            });
+                        });
+
+                        // 方法4：查找页面中所有包含"3L"的文本
+                        const bodyElements = document.querySelectorAll('*');
+                        bodyElements.forEach(element => {
+                            const text = element.textContent.trim();
+                            if (text === '3L' && !sizes.includes('3L')) {
+                                sizes.push('3L');
+                            }
+                        });
+
+                        // 方法5：使用正则表达式查找所有可能的尺码
+                        const bodyText = document.body.textContent;
+                        const sizePattern = /\b(S|M|L|LL|3L|XL|2XL|3XL|4XL)\b/g;
+                        const foundSizes = bodyText.match(sizePattern);
+                        if (foundSizes) {
+                            foundSizes.forEach(size => {
+                                if (!sizes.includes(size)) {
+                                    sizes.push(size);
+                                }
+                            });
+                        }
+
+                        // 排序并去重，按标准顺序
+                        const standardOrder = ['S', 'M', 'L', 'LL', '3L', 'XL', '2XL', '3XL', '4XL'];
+                        return [...new Set(sizes)].sort((a, b) => {
+                            const aIndex = standardOrder.indexOf(a);
+                            const bIndex = standardOrder.indexOf(b);
+                            if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+                            if (aIndex !== -1) return -1;
+                            if (bIndex !== -1) return 1;
+                            return a.localeCompare(b);
+                        });
+                    })(),
+
+                    // 详情页描述 - 只抓取原文
+                    "详情页文字": (() => {
+                        const descriptionElements = document.querySelectorAll('.description, .product-description, [class*="description"], .product-detail, .item-detail');
+                        let fullText = '';
+
+                        descriptionElements.forEach(el => {
+                            const text = el.textContent.trim();
+                            if (text && text.length > 10) {
+                                fullText += text + '\n';
+                            }
+                        });
+
+                        if (!fullText || fullText.length < 50) {
+                            const mainContent = document.querySelector('main, .main, .content, .product-content');
+                            if (mainContent) {
+                                fullText = mainContent.textContent.trim();
+                            }
+                        }
+
+                        return fullText
+                            .replace(/\n\s*\n/g, '\n')
+                            .replace(/^\s+|\s+$/g, '');
+                    })(),
+
+                    "尺码表": {
+                        "html": (() => {
+                            // 查找包含详细尺寸数据的表格（优先寻找包含着丈、肩宽、胸围的表格）
+                            const sizeTables = document.querySelectorAll('table');
+                            for (const table of sizeTables) {
+                                const text = table.textContent;
+                                // 优先查找包含具体测量项目的表格（包含数值的详细表格）
+                                if ((text.includes('着丈') || text.includes('肩幅') || text.includes('胸囲') || text.includes('身丈')) &&
+                                    /\\d+/.test(text)) {
+                                    return table.outerHTML;
+                                }
+                            }
+                            // 如果没找到详细数据，再查找基本的尺码表格
+                            for (const table of sizeTables) {
+                                const text = table.textContent;
+                                if (text.includes('商品サイズ') || text.includes('実寸')) {
+                                    return table.outerHTML;
+                                }
+                            }
+                            return '';
+                        })(),
+                        "text": (() => {
+                            // 查找包含详细尺寸数据的表格
+                            const sizeTables = document.querySelectorAll('table');
+                            for (const table of sizeTables) {
+                                const text = table.textContent.trim();
+                                // 优先查找包含具体测量项目的表格（包含数值的详细表格）
+                                if ((text.includes('着丈') || text.includes('肩幅') || text.includes('胸囲') || text.includes('身丈')) &&
+                                    /\\d+/.test(text)) {
+                                    return text;
+                                }
+                            }
+                            // 如果没找到详细数据，再查找基本的尺码表格
+                            for (const table of sizeTables) {
+                                const text = table.textContent.trim();
+                                if (text.includes('商品サイズ') || text.includes('実寸')) {
+                                    return text;
+                                }
+                            }
+                            return '';
+                        })()
+                    }
+                };
+            });
 
             return this.results;
 
@@ -340,32 +688,29 @@ class EnhancedDetailScraper {
                 img.src.includes('1100')
             );
 
-            // 应用图片规则：第一个颜色保留所有图片，其他颜色只保留前6张
-            let firstColorImages = [];
-            let otherColorsImages = [];
+            // 按图片URL排序确保一致性
+            largeImages.sort((a, b) => {
+                const aNum = parseInt(a.src.match(/_(\d+)_l\.jpg/)?.[1] || '0');
+                const bNum = parseInt(b.src.match(/_(\d+)_l\.jpg/)?.[1] || '0');
+                return aNum - bNum;
+            });
 
-            // 简单处理：前半部分作为第一个颜色，后半部分作为其他颜色
-            const firstColorCount = Math.ceil(largeImages.length / 2);
+            // 规则：每个颜色6张图片，6个颜色 = 36张图片
+            const imagesPerColor = 6;
+            const totalColors = 6;
+            const maxImages = imagesPerColor * totalColors;
 
-            for (let i = 0; i < largeImages.length; i++) {
-                if (i < firstColorCount) {
-                    // 第一个颜色：保留所有图片
-                    firstColorImages.push(largeImages[i].src);
-                } else {
-                    // 其他颜色：只保留前6张
-                    if (otherColorsImages.length < 6) {
-                        otherColorsImages.push(largeImages[i].src);
-                    }
-                }
-            }
+            // 取前36张图片，如果不够就取全部
+            const selectedImages = largeImages.slice(0, maxImages);
 
-            // 合并最终的图片URL
-            const finalImageUrls = [...firstColorImages, ...otherColorsImages];
+            // 分配给第一个颜色（6张）和其他颜色（30张）
+            const firstColorImages = selectedImages.slice(0, imagesPerColor);
+            const otherColorsImages = selectedImages.slice(imagesPerColor);
 
-            images.total = finalImageUrls.length;  // 图片总数 = 最终图片链接数量
-            images.urls = finalImageUrls;
-            images.firstColorImages = firstColorImages;
-            images.otherColorsImages = otherColorsImages;
+            images.total = selectedImages.length;
+            images.urls = selectedImages.map(img => img.src);
+            images.firstColorImages = firstColorImages.map(img => img.src);
+            images.otherColorsImages = otherColorsImages.map(img => img.src);
 
             return images;
         });
@@ -443,22 +788,58 @@ class EnhancedDetailScraper {
     async extractSizes(page) {
         return await page.evaluate(() => {
             const sizes = [];
-            const sizeElements = document.querySelectorAll('[class*="size"]');
 
-            sizeElements.forEach(element => {
-                const text = element.textContent.trim();
-                const sizeMatch = text.match(/[SML][L0-9]*/);
-                if (sizeMatch) {
-                    const size = sizeMatch[0];
-                    if (!sizes.find(s => s.size === size)) {
-                        sizes.push({
-                            size: size
-                        });
+            // 方法1：查找所有可能的尺码元素
+            const sizeSelectors = [
+                '[class*="size"] option',
+                '[class*="size"] li',
+                '[class*="size"] span',
+                '[name*="size"]',
+                '.size-select option',
+                '.size-list li'
+            ];
+
+            sizeSelectors.forEach(selector => {
+                const elements = document.querySelectorAll(selector);
+                elements.forEach(element => {
+                    const text = element.textContent.trim();
+                    // 匹配 S, M, L, LL, 3L 等尺码
+                    const sizeMatch = text.match(/^[A-Z0-9]+$/);
+                    if (sizeMatch && !sizes.includes(text)) {
+                        sizes.push(text);
                     }
-                }
+                });
             });
 
-            return sizes;
+            // 方法2：从下拉菜单中查找
+            const selectElements = document.querySelectorAll('select');
+            selectElements.forEach(select => {
+                const options = select.querySelectorAll('option');
+                options.forEach(option => {
+                    const text = option.textContent.trim();
+                    const sizeMatch = text.match(/^[SML][L0-9]*$/);
+                    if (sizeMatch && !sizes.includes(text)) {
+                        sizes.push(text);
+                    }
+                });
+            });
+
+            // 方法3：查找页面中所有可能的尺码文本
+            const bodyText = document.body.textContent;
+            const sizePattern = /\b[SML][L0-9]*\b/g;
+            const foundSizes = bodyText.match(sizePattern);
+            if (foundSizes) {
+                foundSizes.forEach(size => {
+                    if (size !== 'M' || !sizes.includes('M')) { // 避免重复M
+                        if (!sizes.includes(size)) {
+                            sizes.push(size);
+                        }
+                    }
+                });
+            }
+
+            // 排序并去重
+            return [...new Set(sizes)].sort();
         });
     }
 
@@ -532,53 +913,32 @@ class EnhancedDetailScraper {
 
     async extractAndTranslateDetailDescription(page) {
         return await page.evaluate(() => {
-            // 提取详情页描述文字
-            const descriptionElements = document.querySelectorAll('.description, .product-description, [class*="description"]');
+            // 提取详情页描述文字 - 只抓取原文，不翻译
+            const descriptionElements = document.querySelectorAll('.description, .product-description, [class*="description"], .product-detail, .item-detail');
             let fullText = '';
 
             descriptionElements.forEach(el => {
                 const text = el.textContent.trim();
-                if (text) {
+                if (text && text.length > 10) { // 过滤掉太短的文本
                     fullText += text + '\n';
                 }
             });
 
-            // 简单翻译映射（后续可接入GLM）
-            const translations = {
-                '袖が取り外し可能な2WAY仕様': '可拆卸袖子的两用设计',
-                '中わたブルゾン': '中棉夹克',
-                'ブルゾンとして、ベストとして': '作为夹克，作为马甲',
-                'アームホール内側': '袖窿内侧',
-                'ストレッチ素材のアクションプリーツ': '伸缩材质的活动褶',
-                '肩甲骨周りの可動域を広げ': '扩大肩胛骨周围的活动范围',
-                'スイング時のストレスを軽減': '减轻挥杆时的压力',
-                '独自開発の保温機能': '独自开发的保温功能',
-                '光吸収性能を高めた蓄熱保温素材': '提高了光吸收性能的蓄热保温材料',
-                '従来の未加工素材と比べて+5℃の効果': '与传统未加工材料相比+5℃的效果',
-                'ほぼ全ての光を熱に変換': '将几乎所有光转化为热量',
-                'たとえ運動しなくても暖かさを実感': '即使不运动也能感受到温暖',
-                'トライアングル柄のキルトステッチ': '三角形图案的绗缝',
-                'デザイン性と保温性を両立': '兼顾设计性和保温性',
-                'ロゴ刺繍': '标志刺绣',
-                'ワッペン': '布章',
-                '配色テープ': '配色带',
-                'ファスナー付きポケット': '带拉链的口袋',
-                'シルエット：レギュラー': '版型：常规',
-                '表地：ストレッチ性と防風性を兼ね備えたポリエステルタフタ': '表料：兼具伸缩性和防风性的聚酯纤维塔夫绸',
-                '裏地：ヒートナビ機能付きのストレッチ裏地': '里料：带热航功能的伸缩里料',
-                '中わた：ストレッチ性のある機能中わた': '中棉：有伸缩性的功能中棉',
-                '機能性とファッション性あふれる': '充满功能性和时尚性',
-                'お洒落なゴルフスタイルを創造します': '创造时尚的高尔夫风格'
-            };
+            // 如果没有找到描述元素，尝试从页面主体内容中提取
+            if (!fullText || fullText.length < 50) {
+                const mainContent = document.querySelector('main, .main, .content, .product-content');
+                if (mainContent) {
+                    fullText = mainContent.textContent.trim();
+                }
+            }
 
-            let translatedText = fullText;
-            Object.entries(translations).forEach(([jp, cn]) => {
-                translatedText = translatedText.replace(new RegExp(jp, 'g'), cn);
-            });
+            // 清理文本 - 移除多余的空白和换行
+            fullText = fullText
+                .replace(/\n\s*\n/g, '\n')
+                .replace(/^\s+|\s+$/g, '');
 
             return {
-                original: fullText,
-                translated: translatedText
+                original: fullText
             };
         });
     }
@@ -607,41 +967,17 @@ class EnhancedDetailScraper {
                 await buttonToClick.click();
                 await page.waitForTimeout(2000);
 
-                // 提取尺码表内容
+                // 提取尺码表内容 - 只抓取原文，不翻译
                 const sizeChartData = await page.evaluate(() => {
                     const sizeChartArea = document.querySelector('table, [class*="size-table"], [class*="chart"]');
 
                     if (sizeChartArea) {
-                        let tableHtml = sizeChartArea.innerHTML;
+                        let tableHtml = sizeChartArea.outerHTML; // 获取完整HTML包括table标签
                         let tableText = sizeChartArea.textContent || '';
-
-                        // 简单的日文到中文翻译映射
-                        const translations = {
-                            '重さ': '重量',
-                            '着丈': '衣长',
-                            '肩幅': '肩宽',
-                            '胸囲': '胸围',
-                            '袖丈': '袖长',
-                            '袖幅': '袖宽',
-                            '（片足）': '（单只）',
-                            '商品サイズ': '商品尺寸',
-                            '商品サイズ(実寸)': '商品尺寸（实寸）',
-                            'ヌード寸': '裸体尺寸'
-                        };
-
-                        let translatedHtml = tableHtml;
-                        let translatedText = tableText;
-
-                        Object.entries(translations).forEach(([jp, cn]) => {
-                            translatedHtml = translatedHtml.replace(new RegExp(jp, 'g'), cn);
-                            translatedText = translatedText.replace(new RegExp(jp, 'g'), cn);
-                        });
 
                         return {
                             html: tableHtml,
-                            translatedHtml: translatedHtml,
-                            text: tableText,
-                            translatedText: translatedText
+                            text: tableText.trim()
                         };
                     }
                     return null;
@@ -649,9 +985,7 @@ class EnhancedDetailScraper {
 
                 return sizeChartData || {
                     html: '',
-                    translatedHtml: '',
-                    text: '',
-                    translatedText: ''
+                    text: ''
                 };
             }
         } catch (error) {
@@ -717,6 +1051,12 @@ if (require.main === module) {
     scraper.scrapeDetailPage(testUrl)
         .then(results => {
             scraper.results = results;
+
+            // 显示完整的抓取数据
+            console.log('\n=== 🎯 完整抓取数据输出 ===\n');
+            console.log('📄 JSON格式完整输出：');
+            console.log(JSON.stringify(results, null, 2));
+
             scraper.printResults();
 
             // 保存结果到文件
@@ -728,10 +1068,10 @@ if (require.main === module) {
             }
 
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const outputFile = `${outputPath}enhanced_detail_${timestamp}.json`;
+            const outputFile = `${outputPath}single_url_complete_data_${timestamp}.json`;
 
             fs.writeFileSync(outputFile, JSON.stringify(results, null, 2));
-            console.log(`\n💾 增强版结果已保存: ${outputFile}`);
+            console.log(`\n💾 完整数据已保存: ${outputFile}`);
         })
         .catch(error => {
             console.error('❌ 测试失败:', error);
