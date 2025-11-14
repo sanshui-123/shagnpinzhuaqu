@@ -312,9 +312,9 @@ class DetailPageScraper {
                 sizeImages.push(...allImages);
             }
 
-            // 分类图片：第一个颜色的所有图片，其他颜色的前6张
-            const firstColorImages = sizeImages.slice(0, 6); // 默认前6张作为第一个颜色
-            const otherColorsImages = sizeImages.slice(0, 6);  // 其他颜色也取前6张
+            // 分类图片：第一个颜色的所有图片，其他颜色的所有图片
+            const firstColorImages = sizeImages; // 返回所有符合条件的图片，不限制数量
+            const otherColorsImages = sizeImages;  // 返回所有符合条件的图片，不限制数量
 
             images.total = sizeImages.length;
             images.urls = sizeImages.map(img => img.src);
