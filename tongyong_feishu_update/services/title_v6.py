@@ -126,6 +126,8 @@ def build_smart_prompt(product: Dict) -> str:
 1. 季节判断
 从商品名提取年份+季节代码：
 - "25FW"、"25AW" → "25秋冬"
+- "25SS"、"25SP" → "25春夏"
+- "26FW"、"26AW" → "26秋冬"
 - "26SS"、"26SP" → "26春夏"
 如果没有，默认用"25秋冬"
 
@@ -414,8 +416,8 @@ def optimize_title(title: str) -> str:
 
     # 去除特殊符号（不包括空格）
     title = re.sub(r'[/／\\|｜×＋\+\-\*•·]+', '', title)
-    # 去除英文字母和数字
-    title = re.sub(r'[a-zA-Z0-9]+', '', title)
+    # 去除英文字母（保留数字，用于年份）
+    title = re.sub(r'[a-zA-Z]+', '', title)
     # 去除空格
     title = re.sub(r'\s+', '', title)
 
