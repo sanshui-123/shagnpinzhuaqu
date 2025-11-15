@@ -21,7 +21,7 @@ except ImportError:
         'puma': ['puma', '彪马'],
         'adidas': ['adidas', '阿迪达斯'],
         'nike': ['nike', '耐克'],
-        'lecoqgolf': ['ルコック', 'le coq', 'lecoq']
+        'lecoqgolf': ['ルコック', 'le coq', 'lecoq', 'le coq sportif', 'sportif golf']
     }
 
     BRAND_MAP = {
