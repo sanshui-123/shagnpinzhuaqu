@@ -139,27 +139,77 @@ class SingleURLFixedProcessor {
 
                         // 从尺码表检查性别类型
                         const sizeChartText = document.body.textContent;
+                        const pageText = document.body.textContent;
 
-                        // 优先检查明确的女性标识
-                        if (sizeChartText.includes('性別タイプ：レディース') || sizeChartText.includes('性別タイプ: レディース') ||
-                            sizeChartText.includes('性別タイプ：ウィメンズ') || sizeChartText.includes('性別タイプ: ウィメンズ') ||
-                            sizeChartText.includes('性別タイプ：ラブズ') || sizeChartText.includes('性別タイプ: ラブズ')) {
+                        // 1. 最高优先级：检查尺码表中的明确性别标识
+                        const hasLadiesGenderType = sizeChartText.includes('性別タイプ：レディース') || sizeChartText.includes('性別タイプ: レディース');
+                        const hasMensGenderType = sizeChartText.includes('性別タイプ：メンズ') || sizeChartText.includes('性別タイプ: メンズ');
+
+                        if (hasLadiesGenderType) {
                             return '女';
                         }
-
-                        // 然后检查男性标识
-                        if (sizeChartText.includes('性別タイプ：メンズ') || sizeChartText.includes('性別タイプ: メンズ')) {
+                        if (hasMensGenderType) {
                             return '男';
                         }
 
-                        // 检查页面是否有明确的女装标识
-                        const pageText = document.body.textContent.toLowerCase();
-                        if (pageText.includes('レディース') || pageText.includes('女性') || pageText.includes('ladies')) {
+                        // 调试：如果没有找到明确的性别类型，检查尺码表文本
+                        const debugText = sizeChartText.substring(sizeChartText.indexOf('性別タイプ'), Math.min(sizeChartText.indexOf('性別タイプ') + 200, sizeChartText.length));
+
+                        // 检查是否有其他形式的性别类型标识
+                        if (sizeChartText.includes('レディース')) {
+                            return '女';
+                        }
+                        if (sizeChartText.includes('メンズ')) {
+                            return '男';
+                        }
+
+                        // 2. 检查URL中的性别路径
+                        if (window.location.href.includes('/ds_L/') || window.location.href.includes('/ds_F/')) {
+                            return '女';
+                        }
+                        if (window.location.href.includes('/ds_M/')) {
+                            return '男';
+                        }
+
+                        // 3. 检查面包屑导航中的性别
+                        const navBreadcrumbs = document.querySelectorAll('.breadcrumb a, [class*="breadcrumb"] a, .nav a');
+                        for (const breadcrumb of navBreadcrumbs) {
+                            const text = breadcrumb.textContent.trim();
+                            if (text.includes('レディース')) {
+                                return '女';
+                            }
+                            if (text.includes('メンズ')) {
+                                return '男';
+                            }
+                        }
+
+                        // 4. 检查主要产品信息区域的性别标识（排除推荐商品）
+                        const productArea = document.querySelector('.product-detail, .commodity-detail, [class*="product"], [class*="commodity"]');
+                        let productText = '';
+                        if (productArea) {
+                            productText = productArea.textContent;
+                        } else {
+                            // 如果找不到产品区域，使用前1000个字符
+                            productText = pageText.substring(0, 1000);
+                        }
+
+                        // 检查产品区域的性别标识
+                        if (productText.includes('レディース')) {
+                            return '女';
+                        }
+                        if (productText.includes('メンズ')) {
+                            return '男';
+                        }
+
+                        // 5. 检查其他女性标识
+                        if (productText.includes('女性') || productText.includes('ladies') ||
+                            productText.includes('ウィメンズ') || productText.includes('women')) {
                             return '女';
                         }
 
-                        // 检查页面是否有明确的男装标识
-                        if (pageText.includes('メンズ') || pageText.includes('男性') || pageText.includes('mens')) {
+                        // 6. 检查其他男性标识
+                        if (productText.includes('男性') || productText.includes('mens') ||
+                            productText.includes('men')) {
                             return '男';
                         }
 
