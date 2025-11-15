@@ -1743,9 +1743,9 @@ class Callaway13FieldProcessor:
             # 基础字段
             '商品ID': product.get('商品编号', product.get('productId', '')),
             '商品名称': product.get('商品标题', product.get('productName', '')),
-            '品牌': '',
-            '商品链接': product.get('详情页链接', product.get('detailUrl', '')),
-            '分类': '',
+            '品牌': product.get('品牌名', product.get('brand', '')),  # 修复：支持中文字段名
+            '商品链接': product.get('商品链接', product.get('详情页链接', product.get('detailUrl', ''))),
+            '分类': product.get('分类', product.get('category', '')),
             '价格': product.get('价格', product.get('priceText', '')),
 
             # 改写字段
@@ -1759,10 +1759,14 @@ class Callaway13FieldProcessor:
         }
 
         try:
-            # 1. 品牌识别
-            brand_key, brand_chinese, brand_short = extract_brand_from_product(product)
-            result['品牌'] = brand_chinese
-            print(f"✓ 品牌识别: {brand_chinese}")
+            # 1. 品牌识别 - 如果第一步已经识别了品牌，直接使用
+            if result['品牌']:
+                brand_chinese = result['品牌']
+                print(f"✓ 品牌识别: {brand_chinese} (来自第一步)")
+            else:
+                brand_key, brand_chinese, brand_short = extract_brand_from_product(product)
+                result['品牌'] = brand_chinese
+                print(f"✓ 品牌识别: {brand_chinese} (自动识别)")
 
             # 2. 性别分类
             result['性别'] = determine_gender(product)
@@ -1980,26 +1984,91 @@ __all__ = [
 # ============================================================================
 
 if __name__ == "__main__":
-    # 示例使用
-    example_product = {
-        'productId': 'C25215200',
-        'productName': '25FW メンズ ストレッチPOLOシャツ',
-        'detailUrl': 'https://www.callawaygolf.jp/mens/tops/polo/C25215200.html',
-        'priceText': '¥7,700 (税込)',
-        'colors': [
-            {'name': 'WHITE', 'code': '1000'},
-            {'name': 'NAVY', 'code': '1031'},
-            {'name': 'BLACK', 'code': '1040'}
-        ],
-        'sizes': ['S', 'M', 'L', 'LL'],
-        'description': '今シーズンのスターストレッチPOLO。ストレッチ性に優れた素材で、動きやすさ抜群。',
-        'mainImage': 'https://example.com/image.jpg'
-    }
+    import argparse
+    import json
+    from datetime import datetime
 
-    # 处理单个产品
-    print("🎯 开始示例处理...")
-    result = process_single_product(example_product)
+    parser = argparse.ArgumentParser(description='第二步：通用字段改写处理器 (所有品牌统一)')
+    parser.add_argument('--input', '-i', type=str, help='第一步抓取的JSON数据文件路径')
+    parser.add_argument('--output', '-o', type=str, help='处理后的JSON输出文件路径 (可选)')
+    parser.add_argument('--example', '-e', action='store_true', help='运行示例处理')
+    parser.add_argument('--version', '-v', action='version', version='Callaway 13-Field Processor v2.0')
 
-    print("\n📋 处理结果:")
-    for key, value in result.items():
-        print(f"{key}: {value}")
+    args = parser.parse_args()
+
+    if args.input:
+        # 从文件读取第一步抓取的数据
+        try:
+            with open(args.input, 'r', encoding='utf-8') as f:
+                step1_data = json.load(f)
+
+            print(f"📥 从文件读取数据: {args.input}")
+
+            # 处理数据
+            print("🔄 开始处理抓取数据...")
+            result = process_single_product(step1_data)
+
+            # 输出结果
+            if args.output:
+                with open(args.output, 'w', encoding='utf-8') as f:
+                    json.dump(result, f, ensure_ascii=False, indent=2)
+                print(f"💾 处理结果已保存: {args.output}")
+            else:
+                # 输出到标准输出
+                filename = f"step2_processed_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+                with open(filename, 'w', encoding='utf-8') as f:
+                    json.dump(result, f, ensure_ascii=False, indent=2)
+                print(f"💾 处理结果已保存: {filename}")
+
+            print("\n📋 处理结果:")
+            print(f"商品ID: {result.get('商品ID', 'N/A')}")
+            print(f"生成标题: {result.get('生成标题', 'N/A')}")
+            print(f"品牌: {result.get('品牌', 'N/A')}")
+            print(f"性别: {result.get('性别', 'N/A')}")
+            print(f"服装类型: {result.get('服装类型', 'N/A')}")
+
+        except FileNotFoundError:
+            print(f"❌ 文件未找到: {args.input}")
+        except json.JSONDecodeError:
+            print(f"❌ JSON格式错误: {args.input}")
+        except Exception as e:
+            print(f"❌ 处理失败: {e}")
+
+    elif args.example:
+        # 示例使用
+        example_product = {
+            'productId': 'C25215200',
+            'productName': '25FW メンズ ストレッチPOLOシャツ',
+            'detailUrl': 'https://www.callawaygolf.jp/mens/tops/polo/C25215200.html',
+            'priceText': '¥7,700 (税込)',
+            'colors': [
+                {'name': 'WHITE', 'code': '1000'},
+                {'name': 'NAVY', 'code': '1031'},
+                {'name': 'BLACK', 'code': '1040'}
+            ],
+            'sizes': ['S', 'M', 'L', 'LL'],
+            'description': '今シーズンのスターストレッチPOLO。ストレッチ性に優れた素材で、動きやすさ抜群。',
+            'mainImage': 'https://example.com/image.jpg'
+        }
+
+        print("🎯 开始示例处理...")
+        result = process_single_product(example_product)
+
+        print("\n📋 处理结果:")
+        for key, value in result.items():
+            print(f"{key}: {value}")
+
+    else:
+        print("第二步：通用字段改写处理器")
+        print("\n使用方法:")
+        print("  # 处理第一步抓取的数据")
+        print("  python3 callaway_13field_processor.py --input step1_data.json")
+        print("")
+        print("  # 指定输出文件")
+        print("  python3 callaway_13field_processor.py --input step1_data.json --output step2_processed.json")
+        print("")
+        print("  # 运行示例")
+        print("  python3 callaway_13field_processor.py --example")
+        print("")
+        print("  # 查看帮助")
+        print("  python3 callaway_13field_processor.py --help")

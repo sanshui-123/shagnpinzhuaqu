@@ -18,6 +18,61 @@ class BatchDetailProcessor {
         this.processedCount = 0;
         this.totalProducts = 0;
         this.errors = [];
+
+        // 🚀 借鉴卡拉威：添加状态管理
+        this.statusFile = './batch_status.json';
+        this.loadStatus();
+    }
+
+    // 🚀 借鉴卡拉威：状态管理
+    loadStatus() {
+        try {
+            if (fs.existsSync(this.statusFile)) {
+                const statusData = JSON.parse(fs.readFileSync(this.statusFile, 'utf8'));
+                this.processedUrls = new Set(statusData.processedUrls || []);
+                this.failedUrls = new Map(statusData.failedUrls || []);
+                console.log(`📊 加载状态: 已处理 ${this.processedUrls.size} 个URL，失败 ${this.failedUrls.size} 个`);
+            } else {
+                this.processedUrls = new Set();
+                this.failedUrls = new Map();
+            }
+        } catch (error) {
+            console.log('⚠️ 状态文件加载失败，使用全新状态');
+            this.processedUrls = new Set();
+            this.failedUrls = new Map();
+        }
+    }
+
+    saveStatus() {
+        try {
+            const statusData = {
+                processedUrls: Array.from(this.processedUrls),
+                failedUrls: Array.from(this.failedUrls.entries()),
+                lastUpdate: new Date().toISOString()
+            };
+            fs.writeFileSync(this.statusFile, JSON.stringify(statusData, null, 2));
+        } catch (error) {
+            console.warn('⚠️ 状态文件保存失败:', error.message);
+        }
+    }
+
+    // 🚀 借鉴卡拉威：检查URL是否已处理
+    isUrlProcessed(url) {
+        return this.processedUrls.has(url);
+    }
+
+    // 🚀 借鉴卡拉威：标记URL已处理
+    markUrlProcessed(url) {
+        this.processedUrls.add(url);
+        this.failedUrls.delete(url); // 从失败列表中移除
+        this.saveStatus();
+    }
+
+    // 🚀 借鉴卡拉威：标记URL失败
+    markUrlFailed(url, error) {
+        const failCount = this.failedUrls.get(url) || 0;
+        this.failedUrls.set(url, failCount + 1);
+        this.saveStatus();
     }
 
     async processAllProducts() {
@@ -37,15 +92,40 @@ class BatchDetailProcessor {
                 return;
             }
 
-            // 2. 批量处理
+            // 🚀 借鉴卡拉威：增量更新逻辑
             console.log('\n🔄 开始批量处理详情页...\n');
 
-            // 处理全部商品
-            console.log(`🚀 正式模式：处理全部 ${products.length} 个商品`);
+            // 过滤已处理的URL
+            const unprocessedProducts = products.filter(product => {
+                if (!product.url) {
+                    console.log(`⚠️ 跳过无URL的产品: ${product.title || 'Unknown'}`);
+                    return false;
+                }
 
-            for (let i = 0; i < products.length; i++) {
-                const product = products[i];
-                await this.processProduct(product, i + 1, products.length);
+                if (this.isUrlProcessed(product.url)) {
+                    console.log(`🔄 跳过已处理: ${product.productId || product.title}`);
+                    return false;
+                }
+
+                return true;
+            });
+
+            console.log(`📊 状态统计:`);
+            console.log(`   - 总产品数: ${products.length}`);
+            console.log(`   - 已处理: ${products.length - unprocessedProducts.length}`);
+            console.log(`   - 待处理: ${unprocessedProducts.length}`);
+
+            if (unprocessedProducts.length === 0) {
+                console.log('✅ 所有产品已处理完成！');
+                return;
+            }
+
+            // 处理未处理的产品
+            console.log(`🚀 开始处理 ${unprocessedProducts.length} 个新产品`);
+
+            for (let i = 0; i < unprocessedProducts.length; i++) {
+                const product = unprocessedProducts[i];
+                await this.processProduct(product, i + 1, unprocessedProducts.length);
             }
 
             // 3. 保存结果
@@ -118,6 +198,9 @@ class BatchDetailProcessor {
             this.results.push(feishuData);
             this.processedCount++;
 
+            // 🚀 借鉴卡拉威：标记URL已处理
+            this.markUrlProcessed(product.url);
+
             console.log(`✅ [${index}/${total}] 成功处理 - 商品编号: ${detailData.productCode}`);
 
             // 添加延迟避免过于频繁的请求
@@ -127,6 +210,10 @@ class BatchDetailProcessor {
 
         } catch (error) {
             console.log(`❌ [${index}/${total}] 处理失败: ${error.message}`);
+
+            // 🚀 借鉴卡拉威：标记URL失败
+            this.markUrlFailed(product.url, error.message);
+
             this.errors.push({
                 product: product,
                 error: error.message,

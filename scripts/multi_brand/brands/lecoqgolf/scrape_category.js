@@ -31,7 +31,7 @@ class LeCoqGolfScraper {
                 '/brand/le%20coq%20sportif%20golf/ds_M?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1');
 
             // 抓取女士系列
-            await this.scrapeCollection(browser, 'womens', '/brand/le%20coq%20sportif%20golf/ds_F?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1');
+            await this.scrapeCollection(browser, 'womens', this.config.urls?.womens || '/brand/le%2520coq%2520sportif%257Cle%2520coq%2520sportif%2520golf/ds_apparel_l?commercialType=0%7C2%7C3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1');
 
             return this.results;
 
@@ -84,6 +84,14 @@ class LeCoqGolfScraper {
                     break;
                 }
 
+                // 🚀 借鉴卡拉威方案：添加本地Map去重机制
+                if (currentPage === 1) {
+                    // 第一页时初始化去重Map
+                    this.productMap = new Map(); // key: productId, value: productInfo
+                    this.uniqueProductIds = new Set();
+                    console.log('🔄 初始化产品去重Map...');
+                }
+
                 // 提取当前页的产品数据
                 const products = await page.evaluate(({collectionType, currentPage}) => {
                 // 尝试多种产品容器选择器
@@ -124,6 +132,15 @@ class LeCoqGolfScraper {
 
                         const brandElement = item.querySelector('.brandName');
                         const brand = brandElement ? brandElement.textContent.trim() : 'Le Coq Sportif Golf';
+
+                        // 🚀 借鉴卡拉威：提取productId用于去重
+                        const linkElement = item.querySelector('a[href*="/commodity/"]');
+                        let productId = '';
+                        if (linkElement) {
+                            const href = linkElement.href;
+                            const match = href.match(/\/([A-Z]\d+[A-Z\d]*)\/?$/);
+                            productId = match ? match[1] : '';
+                        }
 
                         // 尝试多种价格选择器
                         let price = '';
@@ -200,6 +217,7 @@ class LeCoqGolfScraper {
 
                         return {
                             id: (currentPage - 1) * 100 + index + 1, // 基于页数计算唯一ID
+                            productId: productId, // 🚀 借鉴卡拉威：添加productId用于去重
                             title: title,
                             brand: brand,
                             price: price,
@@ -222,8 +240,32 @@ class LeCoqGolfScraper {
 
                 console.log(`✅ 第${currentPage}页提取到 ${products.length} 个产品`);
 
-                // 将当前页产品添加到总列表
-                allProducts = allProducts.concat(products);
+                // 🚀 借鉴卡拉威：去重逻辑
+                let newItems = 0;
+                let duplicateItems = 0;
+
+                for (const product of products) {
+                    if (!product.productId) {
+                        // 没有productId的产品直接添加
+                        allProducts.push(product);
+                        newItems++;
+                        continue;
+                    }
+
+                    const existingProduct = this.productMap.get(product.productId);
+                    if (!existingProduct) {
+                        // 新产品，添加到Map
+                        this.productMap.set(product.productId, product);
+                        allProducts.push(product);
+                        newItems++;
+                    } else {
+                        // 重复产品，跳过
+                        duplicateItems++;
+                        console.log(`🔄 跳过重复产品: ${product.productId} - ${product.title}`);
+                    }
+                }
+
+                console.log(`📊 第${currentPage}页统计: 新增 ${newItems} 个，重复 ${duplicateItems} 个`);
 
                 // 检查是否需要继续翻页
                 const hasNextPage = await this.checkNextPage(page, currentPage);

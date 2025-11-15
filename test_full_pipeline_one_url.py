@@ -229,7 +229,7 @@ def get_feishu_access_token(app_id: str, app_secret: str) -> str:
 
 def create_feishu_record(processed_data: dict) -> dict:
     """创建飞书记录格式"""
-    return {
+    record = {
         "fields": {
             "商品链接": processed_data.get('商品链接', ''),
             "商品ID": processed_data.get('商品ID', ''),
@@ -245,6 +245,13 @@ def create_feishu_record(processed_data: dict) -> dict:
             "尺码表": ""  # 暂时为空，后续可以添加尺码表HTML
         }
     }
+
+    # 调试：打印即将发送到飞书的数据
+    print("🔍 调试：准备发送到飞书的数据字段:")
+    for field_name, field_value in record["fields"].items():
+        print(f"   {field_name}: {field_value[:50] if field_value else '空'}{'...' if field_value and len(field_value) > 50 else ''}")
+
+    return record
 
 def write_to_feishu(access_token: str, app_token: str, table_id: str, records: list) -> bool:
     """写入数据到飞书多维表格"""
@@ -338,7 +345,7 @@ def save_processed_data(processed_data, timestamp):
 def main():
     """主函数：执行完整的三步流程"""
     print("🚀 开始完整三步流程测试")
-    print("🎯 测试URL: https://store.descente.co.jp/commodity/SDSC0140D/LE1872EM012989/")
+    print("🎯 测试URL: https://store.descente.co.jp/commodity/SDSC0140D/LE1872AM012332/")
     print("=" * 80)
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

@@ -42,7 +42,7 @@ class FeishuSync:
         self.base_url = "https://open.feishu.cn/open-apis/bitable/v1/apps"
 
         # 13个飞书字段映射（处理字段名差异）
-        # 根据飞书API错误信息调整，只使用确实存在的字段
+        # 使用正确的字段名，确保与飞书表格匹配
         self.feishu_field_mapping = {
             '商品链接': '商品链接',         # 商品链接
             '商品ID': '商品ID',             # 商品ID
@@ -51,13 +51,11 @@ class FeishuSync:
             '价格': '价格',                 # 价格
             '性别': '性别',                 # 性别
             '衣服分类': '衣服分类',         # 衣服分类 - 需要从'服装类型'字段映射
-            # 以下字段可能不存在，暂时注释
-            # '图片总数': '图片总数',         # 图片总数 - API显示不存在
-            # '图片链接': '图片链接',         # 图片链接 - API显示不存在
+            '图片URL': '图片URL',           # 图片URL - 从'图片链接'字段映射
             '颜色': '颜色',                 # 颜色
             '尺码': '尺码',                 # 尺码 - 需要从'尺寸'字段映射
-            # '详情页文字': '详情页文字',     # 详情页文字 - API显示不存在
-            # '尺码表': '尺码表'             # 尺码表 - API显示不存在
+            '详情页文字': '详情页文字',     # 详情页文字 - 从'描述翻译'字段映射
+            '尺码表': '尺码表'             # 尺码表
         }
 
         # 请求配置
@@ -133,7 +131,12 @@ class FeishuSync:
 
         # 提取产品数据
         if isinstance(data, dict):
-            products = data.get('products', [])
+            # 如果有products字段，使用products列表
+            if 'products' in data:
+                products = data.get('products', [])
+            else:
+                # 如果是单个产品对象，包装成列表
+                products = [data]
         elif isinstance(data, list):
             products = data
         else:
@@ -240,6 +243,10 @@ class FeishuSync:
                 value = product.get('尺寸', '')  # 从'尺寸'字段获取
             elif field_name == '商品标题':
                 value = product.get('商品名称', '')  # 从'商品名称'字段获取
+            elif field_name == '图片URL':
+                value = product.get('图片链接', '')  # 从'图片链接'字段获取
+            elif field_name == '详情页文字':
+                value = product.get('描述翻译', '')  # 从'描述翻译'字段获取
             else:
                 value = product.get(field_name, '')
 
