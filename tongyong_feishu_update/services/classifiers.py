@@ -5,32 +5,42 @@
 
 def determine_gender(product_data):
     """确定产品性别分类
-    
+
     Args:
         product_data: 产品数据
-        
+
     Returns:
         str: 性别分类（男性/女性/中性等）
     """
     if isinstance(product_data, dict):
         product_name = product_data.get('productName', '')
         category = product_data.get('category', '')
+        # 优先使用明确的gender字段
+        explicit_gender = product_data.get('gender', '')
     elif hasattr(product_data, 'product_name'):
         product_name = product_data.product_name
         category = getattr(product_data, 'category', '')
+        explicit_gender = getattr(product_data, 'gender', '')
     else:
         return '中性'
-    
+
+    # 1. 优先使用明确的gender字段
+    if explicit_gender:
+        if explicit_gender.lower() in ['女', '女性', 'womens', 'ladies']:
+            return '女'
+        elif explicit_gender.lower() in ['男', '男性', 'mens', 'men']:
+            return '男'
+
     # 转换为小写便于匹配
     product_name_lower = product_name.lower()
     category_lower = category.lower()
-    
+
     # 检查category字段
     if 'womens' in category_lower or 'ladies' in category_lower:
         return '女'
     elif 'mens' in category_lower:
         return '男'
-    
+
     # 检查产品名称 - 英文和日文
     if any(word in product_name_lower for word in ['women', 'ladies', 'womens', 'レディース', '女性']):
         return '女'
