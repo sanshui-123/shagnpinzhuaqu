@@ -1,0 +1,15 @@
+{
+  "products": {},
+  "total": 0,
+  "processed": 0,
+  "failed": 1,
+  "errors": [
+    {
+      "type": "batch_error",
+      "message": "ENOENT: no such file or directory, scandir './golf_content/lecoqgolf/'"
+    }
+  ],
+  "timestamp": "2025-11-15T09:50:38.087Z",
+  "brand": "lecoqgolf",
+  "batchMode": true
+}

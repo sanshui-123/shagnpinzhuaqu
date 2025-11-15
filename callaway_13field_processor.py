@@ -1986,17 +1986,125 @@ __all__ = [
 if __name__ == "__main__":
     import argparse
     import json
+    import glob
+    import os
     from datetime import datetime
 
     parser = argparse.ArgumentParser(description='第二步：通用字段改写处理器 (所有品牌统一)')
-    parser.add_argument('--input', '-i', type=str, help='第一步抓取的JSON数据文件路径')
+    parser.add_argument('--input', '-i', type=str, help='第一步抓取的JSON数据文件路径 (单个文件)')
+    parser.add_argument('--batch', '-b', action='store_true', help='批量处理所有single_url_fixed_*.json文件')
+    parser.add_argument('--dir', '-d', type=str, help='批量处理的目录路径 (默认: ./scripts/multi_brand/brands/lecoqgolf/)')
     parser.add_argument('--output', '-o', type=str, help='处理后的JSON输出文件路径 (可选)')
     parser.add_argument('--example', '-e', action='store_true', help='运行示例处理')
     parser.add_argument('--version', '-v', action='version', version='Callaway 13-Field Processor v2.0')
 
     args = parser.parse_args()
 
-    if args.input:
+    if args.batch:
+        # 批量处理模式
+        print("🚀 批量处理模式：使用完整改写规则处理所有文件")
+        print("=" * 80)
+
+        # 设置默认目录
+        if args.dir:
+            data_dir = args.dir
+        else:
+            data_dir = "./scripts/multi_brand/brands/lecoqgolf/"
+
+        if not os.path.isabs(data_dir):
+            data_dir = os.path.abspath(data_dir)
+
+        print(f"📁 数据目录: {data_dir}")
+
+        # 查找所有JSON文件
+        pattern = os.path.join(data_dir, "single_url_fixed_*.json")
+        json_files = glob.glob(pattern)
+
+        if not json_files:
+            print(f"❌ 在 {data_dir} 中未找到single_url_fixed_*.json文件")
+            sys.exit(1)
+
+        print(f"✅ 找到 {len(json_files)} 个JSON文件")
+
+        all_products = []
+        failed_files = []
+
+        # 加载所有文件
+        for json_file in json_files:
+            try:
+                with open(json_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+
+                # 转换为处理器需要的格式
+                converted_data = {
+                    'productId': data.get('商品ID', ''),
+                    'productName': data.get('商品标题', ''),
+                    'detailUrl': data.get('商品链接', ''),
+                    'priceText': data.get('价格', ''),
+                    'brand': data.get('品牌名', 'Le Coq公鸡乐卡克'),
+                    'colors': data.get('颜色', []),
+                    'imageUrls': data.get('图片链接', []),
+                    'sizes': data.get('尺码', []),
+                    'description': data.get('详情页文字', ''),
+                    'sizeChart': data.get('尺码表', {}),
+                    # 重要：包含来源数据的性别
+                    'gender': data.get('性别', ''),
+                }
+
+                all_products.append(converted_data)
+                print(f"   ✅ 加载成功: {os.path.basename(json_file)} - {converted_data['productId']}")
+
+            except Exception as e:
+                print(f"   ❌ 加载失败: {os.path.basename(json_file)} - {e}")
+                failed_files.append(json_file)
+
+        print(f"\n📊 批量加载汇总:")
+        print(f"   总文件数: {len(json_files)}")
+        print(f"   成功加载: {len(all_products)}")
+        print(f"   失败文件: {len(failed_files)}")
+
+        if not all_products:
+            print("❌ 没有成功加载任何文件，终止处理")
+            sys.exit(1)
+
+        # 批量处理（使用你的完整改写规则）
+        print(f"\n🔄 开始批量处理 (使用GLM翻译和完整改写规则)...")
+        print("=" * 60)
+
+        try:
+            processed_results = process_multiple_products(all_products)
+
+            print(f"\n📊 批量处理汇总:")
+            print(f"   输入产品数: {len(all_products)}")
+            print(f"   输出结果数: {len(processed_results)}")
+            print(f"   处理成功率: {len(processed_results)/len(all_products)*100:.1f}%")
+
+            # 保存批量结果
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+            if args.output:
+                output_file = args.output
+            else:
+                output_file = f"step2_batch_processed_with_glm_{timestamp}.json"
+
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(processed_results, f, ensure_ascii=False, indent=2)
+
+            print(f"✅ 批量处理结果已保存: {output_file}")
+
+            # 显示处理结果统计
+            success_count = sum(1 for r in processed_results if r.get('描述翻译'))
+            title_count = sum(1 for r in processed_results if r.get('生成标题'))
+
+            print(f"\n📋 处理质量统计:")
+            print(f"   GLM翻译成功: {success_count}/{len(processed_results)}")
+            print(f"   标题生成成功: {title_count}/{len(processed_results)}")
+
+        except Exception as e:
+            print(f"❌ 批量处理失败: {e}")
+            sys.exit(1)
+
+    elif args.input:
         # 从文件读取第一步抓取的数据
         try:
             with open(args.input, 'r', encoding='utf-8') as f:
@@ -2059,16 +2167,30 @@ if __name__ == "__main__":
             print(f"{key}: {value}")
 
     else:
-        print("第二步：通用字段改写处理器")
+        print("第二步：通用字段改写处理器 (支持GLM翻译和完整改写规则)")
         print("\n使用方法:")
-        print("  # 处理第一步抓取的数据")
+        print("  # 处理单个文件")
         print("  python3 callaway_13field_processor.py --input step1_data.json")
+        print("")
+        print("  # 批量处理所有文件 (推荐)")
+        print("  python3 callaway_13field_processor.py --batch")
+        print("")
+        print("  # 批量处理指定目录")
+        print("  python3 callaway_13field_processor.py --batch --dir /path/to/json/files/")
         print("")
         print("  # 指定输出文件")
         print("  python3 callaway_13field_processor.py --input step1_data.json --output step2_processed.json")
+        print("  python3 callaway_13field_processor.py --batch --output batch_results.json")
         print("")
         print("  # 运行示例")
         print("  python3 callaway_13field_processor.py --example")
         print("")
         print("  # 查看帮助")
         print("  python3 callaway_13field_processor.py --help")
+        print("")
+        print("功能说明:")
+        print("  ✅ GLM-4.6翻译：日文描述 → 中文描述")
+        print("  ✅ 智能标题生成：包含季节、品牌、性别、类型")
+        print("  ✅ 性别检测：修复版检测算法")
+        print("  ✅ 完整13字段处理")
+        print("  ✅ 批量处理：支持处理多个文件")

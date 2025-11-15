@@ -1,0 +1,42 @@
+{
+  "products": {
+    "test_lecoq_001": {
+      "productId": "test_lecoq_001",
+      "productName": "ルコックゴルフ メンズ ポロシャツ 25SS",
+      "detailUrl": "https://example.com/lecoq/polo-001",
+      "price": "￥8,800",
+      "brand": "Le Coq Sportif Golf",
+      "category": "服装",
+      "gender": "男士",
+      "description": "轻量舒适的高尔夫POLO衫",
+      "colors": [
+        {
+          "name": "ホワイト",
+          "isFirstColor": true
+        },
+        {
+          "name": "ブラック",
+          "isFirstColor": false
+        },
+        {
+          "name": "ネイビー",
+          "isFirstColor": false
+        }
+      ],
+      "sizes": ["M", "L", "XL", "2XL"],
+      "imageUrls": [
+        "https://example.com/image1.jpg",
+        "https://example.com/image2.jpg",
+        "https://example.com/image3.jpg"
+      ],
+      "sizeChart": {
+        "text": "バスト：106-114cm\n身幅：54cm\n着丈：69cm\n袖丈：84cm"
+      },
+      "scrapeInfo": {
+        "totalColors": 3,
+        "totalSizes": 4,
+        "totalImages": 12
+      }
+    }
+  }
+}
