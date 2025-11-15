@@ -1,0 +1,237 @@
+{
+  "scrapeInfo": {
+    "timestamp": "2025-10-30T08:05:50.266Z",
+    "version": "5.0.0-fixed",
+    "url": "https://www.callawaygolf.jp/womens/tops/outer/C25215200_.html?pid=C25215200_1031_S",
+    "productId": "C25215200",
+    "totalVariants": 12,
+    "totalColors": 1,
+    "totalSizes": 4,
+    "totalImages": 12,
+    "ossUploadCount": 0,
+    "processingTimeMs": 15674,
+    "dataSources": [
+      "DOM.materialInfo",
+      "DOM.descriptionText"
+    ],
+    "uploadErrors": []
+  },
+  "product": {
+    "productId": "C25215200",
+    "title": "2WAYハーフジップフーディーブルゾン (WOMENS)",
+    "productUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215200_.html?pid=C25215200_1031_S",
+    "description": "全方向に伸縮性があり、適度なハリが特徴のタフタ素材使用。トレンドのスポーツテイストを取り入れたアノラック風アウター。寒暖差に備え、袖を半袖⇔長袖のデタッチャブルでデザインしました。裾はスピンドル仕様でシルエットの調節が可能です。\n　\n\n＜やっぱり半袖スタイル＞\nこの季節にやっぱり着たい\n半袖スタイル\n\n＜8WAYストレッチ＞\n全方向に伸びる素材\n\n2WAY（半袖）\n\n素材: 本体 ポリエステル 100% 別布 ポリエステル 100%\n\nMADE IN VIETNAM\n\n洗濯表示:\n\n商品サイズ（仕上がり寸法）\nS / バスト 106cm / 着丈 58cm / 裄丈 77.5cm\n\nM / バスト 110cm / 着丈 60cm / 裄丈 79cm\n\nL / バスト 114cm / 着丈 62cm / 裄丈 80cm\n\nLL / バスト 118cm / 着丈 63cm / 裄丈 81cm\n\n※商品サイズは、製品の仕上がりサイズになります。(商品サイズ=ヌード寸法＋ゆとり分となります。)\n商品生地の特性によって、1-2cm前後の誤差が生じます。\n商品タグに記載されているサイズはヌード寸法になります。\nヌード寸法は、サイズチャートをご確認ください。",
+    "brand": "Callaway Golf",
+    "category": "",
+    "tags": [],
+    "mainImage": "",
+    "detailUrl": "https://www.callawaygolf.jp/womens/tops/outer/C25215200_.html?pid=C25215200_1031_S",
+    "sizeChart": {
+      "headers": [
+        "サイズ",
+        "バスト(cm)",
+        "着丈(cm)",
+        "裄丈(cm)"
+      ],
+      "rows": [
+        [
+          "S",
+          "106",
+          "58",
+          "77.5"
+        ],
+        [
+          "M",
+          "110",
+          "60",
+          "79"
+        ],
+        [
+          "L",
+          "114",
+          "62",
+          "80"
+        ],
+        [
+          "LL",
+          "118",
+          "63",
+          "81"
+        ]
+      ]
+    }
+  },
+  "variants": [
+    {
+      "variantId": "C25215200_1031_S",
+      "colorName": "ネイビー",
+      "colorCode": "1031",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "C25215200_1031_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_1031_M",
+      "colorName": "ネイビー",
+      "colorCode": "1031",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "C25215200_1031_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_1031_L",
+      "colorName": "ネイビー",
+      "colorCode": "1031",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "C25215200_1031_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_1031_LL",
+      "colorName": "ネイビー",
+      "colorCode": "1031",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "C25215200_1031_LL",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_0010_S",
+      "colorName": "ブラック",
+      "colorCode": "0010",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "C25215200_0010_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_0010_M",
+      "colorName": "ブラック",
+      "colorCode": "0010",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "C25215200_0010_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_0010_L",
+      "colorName": "ブラック",
+      "colorCode": "0010",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "C25215200_0010_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_0010_LL",
+      "colorName": "ブラック",
+      "colorCode": "0010",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "C25215200_0010_LL",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_0100_S",
+      "colorName": "ホワイト",
+      "colorCode": "0100",
+      "sizeName": "S",
+      "sizeCode": "S",
+      "availability": "unknown",
+      "sku": "C25215200_0100_S",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_0100_M",
+      "colorName": "ホワイト",
+      "colorCode": "0100",
+      "sizeName": "M",
+      "sizeCode": "M",
+      "availability": "unknown",
+      "sku": "C25215200_0100_M",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_0100_L",
+      "colorName": "ホワイト",
+      "colorCode": "0100",
+      "sizeName": "L",
+      "sizeCode": "L",
+      "availability": "unknown",
+      "sku": "C25215200_0100_L",
+      "priceJPY": null
+    },
+    {
+      "variantId": "C25215200_0100_LL",
+      "colorName": "ホワイト",
+      "colorCode": "0100",
+      "sizeName": "LL",
+      "sizeCode": "LL",
+      "availability": "unknown",
+      "sku": "C25215200_0100_LL",
+      "priceJPY": null
+    }
+  ],
+  "colors": [
+    "BLACK"
+  ],
+  "sizes": [
+    "S",
+    "M",
+    "L",
+    "LL"
+  ],
+  "sizeChart": {
+    "headers": [
+      "サイズ",
+      "バスト(cm)",
+      "着丈(cm)",
+      "裄丈(cm)"
+    ],
+    "rows": [
+      [
+        "S",
+        "106",
+        "58",
+        "77.5"
+      ],
+      [
+        "M",
+        "110",
+        "60",
+        "79"
+      ],
+      [
+        "L",
+        "114",
+        "62",
+        "80"
+      ],
+      [
+        "LL",
+        "118",
+        "63",
+        "81"
+      ]
+    ]
+  },
+  "images": {
+    "product": [],
+    "variants": {}
+  },
+  "ossLinks": {
+    "productImages": [],
+    "variantImages": {}
+  }
+}
