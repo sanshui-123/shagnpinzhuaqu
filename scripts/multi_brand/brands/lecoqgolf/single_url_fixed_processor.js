@@ -139,16 +139,32 @@ class SingleURLFixedProcessor {
 
                         // 从尺码表检查性别类型
                         const sizeChartText = document.body.textContent;
-                        if (sizeChartText.includes('性別タイプ：メンズ') || sizeChartText.includes('性別タイプ: メンズ')) {
-                            return '男';
-                        }
-                        if (sizeChartText.includes('性別タイプ：ウィメンズ') || sizeChartText.includes('性別タイプ: ウィメンズ') ||
+
+                        // 优先检查明确的女性标识
+                        if (sizeChartText.includes('性別タイプ：レディース') || sizeChartText.includes('性別タイプ: レディース') ||
+                            sizeChartText.includes('性別タイプ：ウィメンズ') || sizeChartText.includes('性別タイプ: ウィメンズ') ||
                             sizeChartText.includes('性別タイプ：ラブズ') || sizeChartText.includes('性別タイプ: ラブズ')) {
                             return '女';
                         }
 
-                        // 默认判断为男性（根据当前URL是在ds_M下）
-                        return '男';
+                        // 然后检查男性标识
+                        if (sizeChartText.includes('性別タイプ：メンズ') || sizeChartText.includes('性別タイプ: メンズ')) {
+                            return '男';
+                        }
+
+                        // 检查页面是否有明确的女装标识
+                        const pageText = document.body.textContent.toLowerCase();
+                        if (pageText.includes('レディース') || pageText.includes('女性') || pageText.includes('ladies')) {
+                            return '女';
+                        }
+
+                        // 检查页面是否有明确的男装标识
+                        if (pageText.includes('メンズ') || pageText.includes('男性') || pageText.includes('mens')) {
+                            return '男';
+                        }
+
+                        // 如果无法确定，返回空字符串而不是默认男
+                        return '';
                     })(),
 
                     // 颜色数据
@@ -203,20 +219,24 @@ class SingleURLFixedProcessor {
                             const sizeElements = colorSection.querySelectorAll('select[name*="size"] option, button[class*="size"], div[class*="size"]');
                             sizeElements.forEach(element => {
                                 const text = element.textContent.trim();
-                                // 匹配标准尺码格式：S, M, L, LL, 3L, XL等
-                                if (text.match(/^[SMLX][L0-9]*$/)) {
+                                // 匹配标准尺码格式：S, M, L, LL, 3L, XL, O等
+                                if (text.match(/^[SMLXOL][L0-9]*$/) && text.length <= 3) {
                                     if (!sizes.includes(text)) {
                                         sizes.push(text);
                                     }
                                 }
                             });
 
-                            // 查找包含"3L"的所有元素
+                            // 查找包含"3L"和"O"的所有元素
                             const allElements3L = colorSection.querySelectorAll('*');
                             allElements3L.forEach(element => {
                                 const text = element.textContent.trim();
                                 if (text === '3L' && !sizes.includes('3L')) {
                                     sizes.push('3L');
+                                }
+                                // 特殊检测O尺码
+                                if (text === 'O' && !sizes.includes('O')) {
+                                    sizes.push('O');
                                 }
                             });
                         }
@@ -256,18 +276,22 @@ class SingleURLFixedProcessor {
                             });
                         });
 
-                        // 方法4：查找页面中所有包含"3L"的文本
+                        // 方法4：查找页面中所有包含"3L"和"O"的文本
                         const bodyElements = document.querySelectorAll('*');
                         bodyElements.forEach(element => {
                             const text = element.textContent.trim();
                             if (text === '3L' && !sizes.includes('3L')) {
                                 sizes.push('3L');
                             }
+                            // 特殊检测O尺码
+                            if (text === 'O' && !sizes.includes('O')) {
+                                sizes.push('O');
+                            }
                         });
 
                         // 方法5：使用正则表达式查找所有可能的尺码
                         const bodyText = document.body.textContent;
-                        const sizePattern = /\b(S|M|L|LL|3L|XL|2XL|3XL|4XL)\b/g;
+                        const sizePattern = /\b(S|M|L|LL|3L|XL|2XL|3XL|4XL|O)\b/g;
                         const foundSizes = bodyText.match(sizePattern);
                         if (foundSizes) {
                             foundSizes.forEach(size => {
@@ -396,7 +420,8 @@ class SingleURLFixedProcessor {
 
 // 运行测试
 if (require.main === module) {
-    const testUrl = 'https://store.descente.co.jp/commodity/SDSC0140D/LE1872EM012989/';
+    // 从命令行参数获取URL，如果没有提供则使用默认测试URL
+    const testUrl = process.argv[2] || 'https://store.descente.co.jp/commodity/SDSC0140D/LE1872EM012989/';
     const processor = new SingleURLFixedProcessor();
 
     processor.processSingleURL(testUrl)
