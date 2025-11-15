@@ -299,10 +299,35 @@ class BatchDetailProcessor {
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
+        // 将records转换为products格式
+        const products = {};
+        this.results.forEach(product => {
+            const productId = product.商品编号 || product.productId || `product_${Math.random().toString(36).substr(2, 9)}`;
+            products[productId] = {
+                productId: product.商品编号 || product.productId,
+                productName: product.商品标题 || product.productName,
+                detailUrl: product.详情页链接 || product.detailUrl,
+                price: product.价格 || product.price,
+                brand: product.品牌 || product.brand,
+                category: product.一级分类 || product.category,
+                gender: product.性别 === "男" ? "男士" : product.性别 === "女" ? "女士" : "",
+                description: product.描述 || product.description || "",
+                colors: product.颜色选项 ? product.颜色选项.split(', ').filter(c => c.trim()) : [],
+                sizes: product.尺寸选项 ? product.尺寸选项.split(', ').filter(s => s.trim()) : [],
+                imageUrls: product.所有图片链接 ? product.所有图片链接.split('\n').filter(url => url.trim()) : [],
+                sizeChart: product.尺码表原文 ? { text: product.尺码表原文 } : {},
+                scrapeInfo: product.抓取信息 || {
+                    totalColors: product.颜色数量 || 0,
+                    totalSizes: product.尺寸数量 || 0,
+                    totalImages: product.图片总数 || 0
+                }
+            };
+        });
+
         // 保存飞书格式数据
         const feishuFile = `${this.outputDir}batch_feishu_results_${timestamp}.json`;
         const outputData = {
-            records: this.results,
+            products: products,
             total: this.results.length,
             processed: this.processedCount,
             failed: this.errors.length,
