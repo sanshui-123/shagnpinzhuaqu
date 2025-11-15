@@ -450,19 +450,49 @@ class SingleURLFixedProcessor {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const outputFile = `single_url_fixed_${timestamp}.json`;
 
-        // 🔧 添加第二部分期望的字段映射，保持原有字段不变
-        // 这样既保持原有的抓取数据，又能匹配第二部分的需求
-        const enhancedResults = { ...this.results };
+        // 🔧 完整的字段映射修复，输出Python期望的格式
+        const { convertToPythonFormat } = require('./field_mapping_fix.js');
 
-        // 第二部分期望的字段映射
-        enhancedResults['详情页链接'] = this.results['商品链接'];           // 映射商品链接
-        enhancedResults['商品编号'] = this.results['商品ID'];               // 映射商品ID
-        enhancedResults['productName'] = this.results['商品标题'];         // 映射商品标题
-        enhancedResults['productId'] = this.results['商品ID'];             // 映射商品ID
-        enhancedResults['priceText'] = this.results['价格'];               // 映射价格
-        enhancedResults['detailUrl'] = this.results['商品链接'];           // 映射商品链接
+        // 创建符合Python期望的数据格式
+        const pythonFormat = {
+            products: {
+                [this.results['商品ID']]: {
+                    // 基本信息
+                    productId: this.results['商品ID'],
+                    productName: this.results['商品标题'],
+                    detailUrl: this.results['商品链接'],
+                    price: this.results['价格'],
+                    brand: this.results['品牌名'],
+                    gender: this.results['性别'],
 
-        fs.writeFileSync(outputFile, JSON.stringify(enhancedResults, null, 2));
+                    // 产品属性
+                    colors: this.results['颜色'].map(c => c.name || c),
+                    sizes: this.results['尺码'],
+
+                    // 🔥 关键修复：图片和描述字段
+                    imageUrls: this.results['图片链接'] || [],
+                    description: this.results['详情页文字'] || '',
+
+                    // 其他字段
+                    sizeChart: this.results['尺码表'] || null,
+                    category: '',
+                    sku: '',
+                    status: '',
+
+                    // 兼容字段
+                    priceText: this.results['价格'],
+                    mainImage: (this.results['图片链接'] && this.results['图片链接'].length > 0)
+                              ? this.results['图片链接'][0] : '',
+                    originalPrice: '',
+                    currentPrice: '',
+
+                    // 原始数据保留（可选）
+                    _original_data: this.results
+                }
+            }
+        };
+
+        fs.writeFileSync(outputFile, JSON.stringify(pythonFormat, null, 2));
         console.log(`\n💾 固定规则结果已保存: ${outputFile}`);
         return outputFile;
     }
@@ -471,7 +501,7 @@ class SingleURLFixedProcessor {
 // 运行测试
 if (require.main === module) {
     // 从命令行参数获取URL，如果没有提供则使用默认测试URL
-    const testUrl = process.argv[2] || 'https://store.descente.co.jp/commodity/SDSC0140D/LE1872EM012989/';
+    const testUrl = process.argv[2] || 'https://store.descente.co.jp/commodity/SDSC0140D/LE1872EW011538/';
     const processor = new SingleURLFixedProcessor();
 
     processor.processSingleURL(testUrl)

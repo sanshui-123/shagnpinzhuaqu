@@ -44,7 +44,8 @@ class FieldAssembler:
 
         
         # 标题（支持预生成缓存）
-        gender = determine_gender(product)
+        # 直接使用原始gender数据，不做任何处理
+        gender = product.get('gender', '')
         clothing_type = determine_clothing_type(product)
 
         if pre_generated_title:
@@ -123,9 +124,10 @@ class FieldAssembler:
         if detail_url:
             fields['商品链接'] = detail_url
 
-        # 性别 / 分类
-        if gender:
-            fields['性别'] = gender
+          # 性别 - 直接使用原始数据，不做任何处理
+        original_gender = product.get('gender', '')
+        if original_gender:
+            fields['性别'] = original_gender  # 直接使用原始值
         if clothing_type:
             fields['衣服分类'] = clothing_type
 
@@ -253,21 +255,35 @@ class FieldAssembler:
         size_table_text = self.size_table_formatter.build(size_text_source, structured_chart)
         fields['尺码表'] = size_table_text if size_table_text else ''
 
-        # 描述翻译（优先使用详情数据）
+        # 描述翻译（始终尝试翻译）
         description = None
+
+        # 优先使用详情数据，否则使用原始数据
+        source_description = None
         if product_detail and product_detail.get('product', {}).get('description'):
-            detail_description = product_detail['product']['description']
-            if detail_description:
-                temp_product = product.copy()
-                temp_product['description'] = detail_description
+            source_description = product_detail['product']['description']
+        elif product.get('description'):
+            source_description = product.get('description')
+
+        # 如果有描述内容，进行翻译
+        if source_description:
+            temp_product = product.copy()
+            temp_product['description'] = source_description
+            try:
                 description = self.translator.translate_description(temp_product)
+                if description:
+                    print(f"✅ 详情页翻译成功，长度：{len(description)}字符")
+                else:
+                    print(f"⚠️ 详情页翻译返回空，使用原文")
+            except Exception as e:
+                print(f"❌ 详情页翻译失败：{e}，使用原文")
 
         # 设置详情页文字
         if description:
             fields['详情页文字'] = description
-        elif product.get('description'):
-            # 使用原始描述（如果有）
-            fields['详情页文字'] = product.get('description', '')
+        elif source_description:
+            # 翻译失败时使用原始描述
+            fields['详情页文字'] = source_description
         else:
             # 兜底：空值
             fields['详情页文字'] = ''

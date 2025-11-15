@@ -103,7 +103,7 @@ class UpdateOrchestrator:
 
         # 4. 根据 force_update/title_only 计算 target_fields 列表（与主脚本一致）
         fields_to_check = ['商品ID','商品标题','价格','性别','衣服分类','品牌名',
-                           '颜色','尺码','图片URL','图片数量','详情页文字']
+                           '颜色','尺码','图片URL','图片数量','详情页文字','商品链接','尺码表']
         if title_only:
             fields_to_check = ['商品标题']
 

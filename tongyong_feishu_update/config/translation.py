@@ -33,6 +33,30 @@ COLOR_NAME_TRANSLATION = {
     'OLIVE': '橄榄绿',
     'SILVER': '银色',
     'GOLD': '金色',
+
+    # 日文颜色名称翻译
+    'ホワイト': '白色',
+    'ブラック': '黑色',
+    'ブルー': '蓝色',
+    'ネイビー': '藏蓝色',
+    'グレー': '灰色',
+    'グレイ': '灰色',
+    'レッド': '红色',
+    'グリーン': '绿色',
+    'イエロー': '黄色',
+    'オレンジ': '橙色',
+    'ピンク': '粉色',
+    'パープル': '紫色',
+    'ブラウン': '棕色',
+    'ベージュ': '米色',
+    'カーキ': '卡其色',
+    'オリーブ': '橄榄绿',
+    'シルバー': '银色',
+    'ゴールド': '金色',
+    'エメラルド': '翡翠绿',
+    'ターコイズ': '绿松石色',
+    'ラベンダー': '薰衣草色',
+    'コーラル': '珊瑚色',
     
     # 深浅变化
     'LIGHT BLUE': '浅蓝色',
@@ -120,6 +144,7 @@ COLOR_NAME_TRANSLATION = {
     # 日文颜色映射
     'ブラック': '黑色',
     'ホワイト': '白色',
+    'エメラルド': '翡翠绿',
     'ネイビー': '藏蓝色',
     'グレー': '灰色',
     'グレイ': '灰色',
@@ -151,37 +176,55 @@ COLOR_NAME_TRANSLATION = {
 }
 
 def translate_color_name(color_name: str) -> str:
-    """将英文颜色名称翻译成中文
-    
-    支持自动大小写处理，优先级：
+    """将英文/日文颜色名称翻译成中文
+
+    支持自动大小写处理和括号内容处理，优先级：
     1. 直接匹配
-    2. 转大写匹配  
+    2. 转大写匹配
     3. 转首字母大写匹配
-    4. 找不到返回原值
-    
+    4. 提取括号前内容再匹配
+    5. 找不到返回原值
+
     Args:
-        color_name: 英文颜色名称
-        
+        color_name: 英文/日文颜色名称
+
     Returns:
         str: 中文颜色名称，找不到时返回原值
     """
     if not color_name:
         return color_name
-    
+
     # 先尝试直接匹配
     if color_name in COLOR_NAME_TRANSLATION:
         return COLOR_NAME_TRANSLATION[color_name]
-    
+
     # 尝试转大写匹配
     upper_name = color_name.upper()
     if upper_name in COLOR_NAME_TRANSLATION:
         return COLOR_NAME_TRANSLATION[upper_name]
-    
+
     # 尝试转首字母大写匹配
     title_name = color_name.title()
     if title_name in COLOR_NAME_TRANSLATION:
         return COLOR_NAME_TRANSLATION[title_name]
-    
+
+    # 尝试提取括号/圆括号前的内容（处理日文颜色+代码的情况）
+    import re
+    clean_color = re.split(r'[（(]', color_name)[0].strip()
+    if clean_color != color_name:  # 确实提取到了括号前内容
+        # 对提取的干净颜色名重新进行翻译
+        if clean_color in COLOR_NAME_TRANSLATION:
+            return COLOR_NAME_TRANSLATION[clean_color]
+
+        # 再次尝试大小写变化
+        clean_upper = clean_color.upper()
+        if clean_upper in COLOR_NAME_TRANSLATION:
+            return COLOR_NAME_TRANSLATION[clean_upper]
+
+        clean_title = clean_color.title()
+        if clean_title in COLOR_NAME_TRANSLATION:
+            return COLOR_NAME_TRANSLATION[clean_title]
+
     # 找不到就返回原值
     return color_name
 

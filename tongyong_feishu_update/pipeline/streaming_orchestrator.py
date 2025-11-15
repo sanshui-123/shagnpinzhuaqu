@@ -407,7 +407,7 @@ class StreamingUpdateOrchestrator:
     def _get_fields_to_check(self, title_only: bool) -> List[str]:
         """获取需要检查的字段列表"""
         fields_to_check = ['商品ID','商品标题','价格','性别','衣服分类','品牌名',
-                          '颜色','尺码','图片URL','图片数量','详情页文字']
+                          '颜色','尺码','图片URL','图片数量','详情页文字','商品链接','尺码表']
         if title_only:
             fields_to_check = ['商品标题']
         return fields_to_check

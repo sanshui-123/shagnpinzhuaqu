@@ -299,26 +299,44 @@ class BatchDetailProcessor {
 
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
-        // 将records转换为products格式
+        // 将records转换为products格式 - 使用正确的字段映射
         const products = {};
         this.results.forEach(product => {
-            const productId = product.商品编号 || product.productId || `product_${Math.random().toString(36).substr(2, 9)}`;
+            const productId = product.商品ID || product.productId || `product_${Math.random().toString(36).substr(2, 9)}`;
             products[productId] = {
-                productId: product.商品编号 || product.productId,
+                // 基本信息 - 使用Python期望的字段名
+                productId: product.商品ID || product.productId,
                 productName: product.商品标题 || product.productName,
-                detailUrl: product.详情页链接 || product.detailUrl,
+                detailUrl: product.商品链接 || product.detailUrl || product.详情页链接,
                 price: product.价格 || product.price,
-                brand: product.品牌 || product.brand,
-                category: product.一级分类 || product.category,
-                gender: product.性别 === "男" ? "男士" : product.性别 === "女" ? "女士" : "",
-                description: product.描述 || product.description || "",
-                colors: product.颜色选项 ? product.颜色选项.split(', ').filter(c => c.trim()) : [],
-                sizes: product.尺寸选项 ? product.尺寸选项.split(', ').filter(s => s.trim()) : [],
-                imageUrls: product.所有图片链接 ? product.所有图片链接.split('\n').filter(url => url.trim()) : [],
-                sizeChart: product.尺码表原文 ? { text: product.尺码表原文 } : {},
+                brand: 'Le Coq Sportif Golf', // 固定品牌
+                category: product.一级分类 || product.category || '',
+                gender: product.性别, // 🔥 直接使用原始性别数据
+
+                // 🔥 关键修复：图片和描述字段
+                imageUrls: product.图片链接 || (product.所有图片链接 ?
+                           product.所有图片链接.split('\n').filter(url => url.trim()) : []),
+                description: product.详情页文字 || product.描述 || '',
+
+                // 产品属性
+                colors: product.颜色 ? (Array.isArray(product.颜色)
+                           ? product.颜色.map(c => c.name || c)
+                           : (product.颜色选项 ? product.颜色选项.split(', ').filter(c => c.trim()) : [])) : [],
+                sizes: product.尺码 || (product.尺寸选项 ? product.尺寸选项.split(', ').filter(s => s.trim()) : []),
+
+                // 其他字段
+                sizeChart: product.尺码表 || (product.尺码表原文 ? { text: product.尺码表原文 } : null),
+
+                // 兼容字段
+                priceText: product.价格 || product.priceText,
+                mainImage: product.图片链接 && product.图片链接.length > 0 ? product.图片链接[0] : '',
+                originalPrice: '',
+                currentPrice: '',
+
+                // 抓取信息
                 scrapeInfo: product.抓取信息 || {
-                    totalColors: product.颜色数量 || 0,
-                    totalSizes: product.尺寸数量 || 0,
+                    totalColors: product.颜色数量 || (product.颜色 ? product.颜色.length : 0),
+                    totalSizes: product.尺寸数量 || (product.尺码 ? product.尺码.length : 0),
                     totalImages: product.图片总数 || 0
                 }
             };
