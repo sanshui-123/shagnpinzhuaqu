@@ -428,17 +428,67 @@ class UnifiedDetailScraper {
                 }
             }
 
-            // 性别判断
-            const pageText = document.body.textContent;
-            if (pageText.includes('レディース') || pageText.includes('女性')) {
-                result.gender = '女';
-            } else if (pageText.includes('メンズ') || pageText.includes('男性')) {
-                result.gender = '男';
+            // 🎯 改进的商品ID提取 - 优先使用品牌货号而非商品番号
+            // 查找表格中的商品番号和品牌货号
+            const productCodeElements = document.querySelectorAll('table tr');
+            let productItemCode = '';
+            let productNumber = '';
+
+            for (const tr of productCodeElements) {
+                const th = tr.querySelector('th');
+                const td = tr.querySelector('td');
+                if (th && td) {
+                    const thText = th.textContent.trim();
+                    const tdText = td.textContent.trim();
+
+                    if (thText.includes('商品番号')) {
+                        productNumber = tdText;
+                    } else if (thText.includes('ブランド商品番号') || thText.includes('品牌商品番号')) {
+                        productItemCode = tdText;
+                    }
+                }
             }
 
-            // 使用额外数据中的商品ID
-            if (extraData.productId) {
+            // 优先使用品牌货号，其次使用商品番号
+            if (productItemCode && productItemCode.length > 0) {
+                result.productId = productItemCode;
+            } else if (productNumber && productNumber.length > 0) {
+                result.productId = productNumber;
+            } else if (extraData.productId) {
                 result.productId = extraData.productId;
+            }
+
+            // 🎯 改进的性别判断 - 从页面的"性别类型"字段获取
+            let genderFound = false;
+            for (const tr of productCodeElements) {
+                const th = tr.querySelector('th');
+                const td = tr.querySelector('td');
+                if (th && td) {
+                    const thText = th.textContent.trim();
+                    const tdText = td.textContent.trim();
+
+                    if (thText.includes('性別タイプ') || thText.includes('性别类型')) {
+                        if (tdText.includes('レディース') || tdText.includes('レディース') || tdText.includes('女')) {
+                            result.gender = '女';
+                            genderFound = true;
+                            break;
+                        } else if (tdText.includes('メンズ') || tdText.includes('男性') || tdText.includes('男')) {
+                            result.gender = '男';
+                            genderFound = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 如果没有找到性别类型字段，回退到页面文本搜索
+            if (!genderFound) {
+                const pageText = document.body.textContent;
+                if (pageText.includes('レディース') || pageText.includes('女性')) {
+                    result.gender = '女';
+                } else if (pageText.includes('メンズ') || pageText.includes('男性')) {
+                    result.gender = '男';
+                }
             }
 
             return result;
