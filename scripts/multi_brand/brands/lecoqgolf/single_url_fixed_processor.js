@@ -33,7 +33,49 @@ class SingleURLFixedProcessor {
 
             await page.waitForTimeout(3000);
 
-            // 抓取所有数据
+            // 🔥 点击尺寸指南按钮以显示详细尺码表
+            try {
+                console.log('🔍 正在查找尺寸指南按钮...');
+
+                // 尝试点击 "サイズガイド" 按钮
+                const sizeGuideClicked = await page.evaluate(() => {
+                    // 查找包含 "サイズガイド" 文本的元素
+                    const allElements = document.querySelectorAll('*');
+                    for (const element of allElements) {
+                        const text = element.textContent.trim();
+                        if (text.includes('サイズガイド') || text.includes('サイズガイドを見る')) {
+                            try {
+                                element.click();
+                                console.log('✅ 找到并点击了尺寸指南按钮');
+                                return true;
+                            } catch (e) {
+                                console.log('⚠️ 点击尺寸指南按钮失败:', e.message);
+                            }
+                        }
+                    }
+                    return false;
+                });
+
+                if (sizeGuideClicked) {
+                    console.log('✅ 成功点击尺寸指南按钮');
+                    await page.waitForTimeout(8000); // 增加等待时间，让尺码表充分加载
+                } else {
+                    console.log('⚠️ 未找到尺寸指南按钮，尝试其他方法...');
+
+                    // 备用方法：查找可能的链接
+                    try {
+                        await page.locator('a:has-text("サイズガイド")').first().click();
+                        console.log('✅ 通过备用方法点击了尺寸指南');
+                        await page.waitForTimeout(5000);
+                    } catch (e) {
+                        console.log('⚠️ 备用方法也失败，继续基本抓取');
+                    }
+                }
+            } catch (error) {
+                console.log('⚠️ 尺寸指南点击过程出错:', error.message);
+            }
+
+            // 抓取所有数据（包括点击后可能出现的详细尺码表）
             this.results = await page.evaluate(() => {
                 return {
                     // 基础信息

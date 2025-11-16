@@ -171,13 +171,24 @@ class SizeTableFormatter:
         rows = re.findall(tr_pattern, html, re.DOTALL)
 
         extracted_lines = []
+        key_value_pairs = {}  # 用于存储key-value对
 
         for row in rows:
-            # 提取单元格内容
+            # 同时提取表头(th)和单元格(td)
+            th_pattern = r'<th[^>]*>(.*?)</th>'
             td_pattern = r'<td[^>]*>(.*?)</td>'
+
+            headers = re.findall(th_pattern, row, re.DOTALL)
             cells = re.findall(td_pattern, row, re.DOTALL)
 
             # 清理HTML标签并提取文本
+            clean_headers = []
+            for header in headers:
+                clean_text = re.sub(r'<[^>]+>', '', header).strip()
+                clean_text = re.sub(r'\s+', ' ', clean_text)  # 合并多个空格
+                if clean_text:
+                    clean_headers.append(clean_text)
+
             clean_cells = []
             for cell in cells:
                 # 移除HTML标签
@@ -186,31 +197,38 @@ class SizeTableFormatter:
                 if clean_text:
                     clean_cells.append(clean_text)
 
-            if clean_cells:
-                # 尝试识别尺码表的格式
-                if len(clean_cells) >= 2:
-                    key = clean_cells[0].strip()
-                    value = clean_cells[1].strip()
+            # 处理表头-单元格配对
+            if clean_headers and clean_cells:
+                for header, cell in zip(clean_headers, clean_cells):
+                    if header and cell:
+                        # 跳过纯商品编号和品牌信息
+                        if any(keyword in header for keyword in ['商品番号', 'ブランド商品番号', 'ブランド名']):
+                            continue
 
-                    # 只添加有用的行
-                    if any(keyword in key for keyword in ['商品番号', 'ブランド', '色', '持ち手の高さ', '重さ', '原産国', 'クロージング', 'シーズン', '性別タイプ']):
-                        continue  # 跳过元数据行
-
-                    if len(clean_cells) == 2 and key and value:
-                        # 简单的键值对
-                        translated_key = self._translate_measurement_name(key)
-                        if translated_key and translated_key != key:
-                            lines.append(f"{translated_key}: {value}")
+                        # 翻译键名
+                        translated_key = self._translate_measurement_name(header)
+                        if translated_key and translated_key != header:
+                            key_value_pairs[translated_key] = cell
                         else:
-                            lines.append(f"{key}: {value}")
+                            key_value_pairs[header] = cell
+
+            # 处理只有单元格的情况（单列数据）
+            elif len(clean_cells) == 1:
+                # 这种情况可能是简单的值，尝试与之前的表头配对
+                pass  # 暂时跳过，因为我们没有上下文
+
+        # 生成输出行
+        for key, value in key_value_pairs.items():
+            extracted_lines.append(f"{key}: {value}")
 
         return extracted_lines
 
     def _format_from_structured(self, chart: Dict) -> Tuple[List[str], List[str]]:
         # 优先处理新的 text/html 格式（我们的JSON格式）
-        text_content = chart.get('text', '') or chart.get('html', '')
-        if text_content:
-            return self._format_from_html_text(text_content)
+        # 优先使用html字段，因为它包含完整的表格结构
+        html_content = chart.get('html', '') or chart.get('text', '')
+        if html_content:
+            return self._format_from_html_text(html_content)
 
         # 兼容旧的 headers/rows 格式
         headers = chart.get('headers') or []

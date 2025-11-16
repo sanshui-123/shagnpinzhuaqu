@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "fields": {
+        "商品ID": "LG5SSW50L",
+        "品牌名": "Le Coq公鸡乐卡克",
+        "商品标题": "【30th】総柄半袖シャツ",
+        "颜色": "白色, 翡翠绿, 藏青色",
+        "尺码": "S, M, L, LL, 3L",
+        "性别": "女",
+        "价格": "￥14,300",
+        "商品链接": "https://store.descente.co.jp/commodity/SDSC0140D/LE1872EW011538/",
+        "图片URL": "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_1_l.jpg\nhttps://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_2_l.jpg\nhttps://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_3_l.jpg\nhttps://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_4_l.jpg\nhttps://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_5_l.jpg\nhttps://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_6_l.jpg",
+        "图片数量": 6,
+        "详情页文字": "【产品描述】\n这是一款无领全拉链卫衣，采用宽松廓形设计。背部设计与袖口的V形剪裁是其标志性特征。\n\n推荐在春季高尔夫场景中穿着，是一款轻盈舒适的卫衣夹克。\n\n宽松的廓形，让您尽享轻松随性的穿搭乐趣。\n\n搭载专为高尔夫运动打造的独特立体剪裁设计“Stretch Forcer”，在肩胛骨周围预留充足空间，有效减轻挥杆击球时的束缚感。\n\n前襟拉链上点缀的品牌标志，成为低调而精致的点睛之笔。\n\n弧形口袋设计，尽显女性柔美气质。\n\n背部同样饰有品牌标志，与正面设计遥相呼应。\n\n汲取品牌档案灵感的袖口V形剪裁，于细节处彰显不经意的个性。\n\n在温差较大的初春时节，这样一件实用百搭的单品，能让您轻松应对。\n\n【产品亮点】\n【宽松廓形】\n【立体剪裁】\n【V形袖口】\n【吸湿排汗】\n【UV防护】\n【高弹力】\n\n【材质信息】\n面料：凹凸纹理面料，轻薄中层\n\n【尺码说明】\n此尺寸为将衣物平铺测量的实际产品尺寸。\n可用于与您现有的衣物进行比较。\n请根据活动自如度和贴合感来选择尺码。\n详情请参阅尺码指南。",
+        "上传状态": "success",
+        "创建时间": "2025-11-15 23:39:37",
+        "最近更新时间": "2025-11-15 23:39:37"
+      }
+    }
+  ],
+  "total_products": 1,
+  "timestamp": "2025-11-15T23:39:37.618997",
+  "url_processed": "https://store.descente.co.jp/commodity/SDSC0140D/LE1872EW011538/",
+  "processing_summary": {
+    "original_title": "【30th】総柄半袖シャツ",
+    "chinese_title": "【30th】総柄半袖シャツ",
+    "original_colors": [
+      "ホワイト（WH00）",
+      "エメラルド（EM00）",
+      "ネイビー（NV00）"
+    ],
+    "translated_colors": [
+      "白色",
+      "翡翠绿",
+      "藏青色"
+    ],
+    "description_translated": true,
+    "images_processed": 6
+  }
+}

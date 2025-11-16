@@ -172,13 +172,30 @@ def call_glm_api_internal(prompt: str) -> str:
             print(f"GLM API响应状态: {response.status_code}")
             
             if 'choices' in data and len(data['choices']) > 0:
-                choice = data['choices'][0]['message']
-                content = choice.get('content', '').strip()
-                
-                print(f"提取的content: {content[:200]}...")
-                return content
+                choice = data['choices'][0]
+                print(f"GLM API choice结构: {list(choice.keys())}")
+
+                message = choice.get('message', {})
+                print(f"GLM API message结构: {list(message.keys())}")
+
+                content = message.get('content', '').strip()
+                reasoning_content = message.get('reasoning_content', '').strip()
+
+                print(f"提取的content长度: {len(content)}")
+                print(f"提取的reasoning_content长度: {len(reasoning_content)}")
+
+                # 如果content为空，尝试使用reasoning_content
+                final_content = content if content else reasoning_content
+                print(f"最终使用的内容长度: {len(final_content)}")
+
+                if final_content:
+                    print(f"最终内容完整长度: {len(final_content)}")
+                    print(f"最终内容: {final_content}")
+
+                return final_content
             else:
                 print(f"API响应格式异常: choices不存在或为空")
+                print(f"完整API响应: {data}")
                 return ""
             
         except requests.exceptions.HTTPError as e:

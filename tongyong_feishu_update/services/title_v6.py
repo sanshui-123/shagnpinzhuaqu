@@ -110,18 +110,28 @@ def build_smart_prompt(product: Dict) -> str:
     让GLM自己判断性别、类别、功能词、结尾词
     """
     name = product.get('productName', '')
+    gender = product.get('gender', '')
 
     # 提取品牌信息
     brand_key, brand_chinese, brand_short = extract_brand_from_product(product)
 
+    # 性别映射
+    gender_text = "男士"  # 默认
+    if gender:
+        if gender.lower() in ['女', '女性', 'womens', 'ladies']:
+            gender_text = "女士"
+        elif gender.lower() in ['男', '男性', 'mens', 'men']:
+            gender_text = "男士"
+
     prompt = f"""你是淘宝标题生成专家。根据日文商品名生成中文标题。
 
 商品名：{name}
+已知性别：{gender}
 
 标题格式：
 [季节][品牌]高尔夫[性别][功能词][结尾词]
 
-判断规则（你需要自己判断）：
+判断规则：
 
 1. 季节判断
 从商品名提取年份+季节代码：
@@ -129,27 +139,15 @@ def build_smart_prompt(product: Dict) -> str:
 - "25SS"、"25SP" → "25春夏"
 - "26FW"、"26AW" → "26秋冬"
 - "26SS"、"26SP" → "26春夏"
-如果没有，默认用"25秋冬"
+如果没有，根据当前时间判断
 
 2. 品牌
-根据商品名判断品牌，使用简短版品牌名（不要英文）：
-- Callaway → "卡拉威"
-- Titleist → "泰特利斯"
-- Puma → "彪马"
-- Adidas → "阿迪达斯"
-- Nike → "耐克"
-- Under Armour → "安德玛"
-- FootJoy → "FootJoy"
-- Cleveland → "Cleveland"
-- Mizuno → "美津浓"
-- Ping → "Ping"
-- TaylorMade → "泰勒梅"
-本商品的品牌是：{brand_short}
+使用简短版品牌名：{brand_short}
 
-3. 性别判断
-商品名包含"メンズ/mens/men" → "男士"
-商品名包含"レディース/womens/women/ladies" → "女士"
-没有明确标识 → 默认"男士"
+3. 性别（重要：必须使用已知性别）
+已知性别为：{gender_text}，必须在标题中使用"{gender_text}"，不要猜测或更改！
+
+4. 功能词判断（根据商品特点选择）
 
 4. 功能词判断（根据商品特点选择）
 包含"中綿/中棉/棉服" → "保暖棉服"
