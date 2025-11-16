@@ -165,6 +165,7 @@ class UpdateOrchestrator:
                     'detailUrl': product.detail_url,
                     'colors': getattr(product, 'colors', []),
                     'sizes': getattr(product, 'sizes', []),
+                    'gender': getattr(product, 'gender', ''),  # 🎯 修复：添加缺失的gender字段
                     'imageUrls': getattr(product, 'imageUrls', []),  # 新增：图片URL列表
                     'sizeChart': getattr(product, 'sizeChart', {}),  # 新增：尺码表
                     'imagesMetadata': getattr(product, 'images_metadata', []),
