@@ -3,6 +3,7 @@
 整合环境校验、缺失记录创建和业务逻辑的统一入口
 """
 
+import argparse
 import sys
 from typing import Optional
 
@@ -139,12 +140,161 @@ def main(
         sys.exit(1)
 
 
+def create_argument_parser() -> argparse.ArgumentParser:
+    """创建命令行参数解析器"""
+    parser = argparse.ArgumentParser(
+        prog='run_pipeline',
+        description='飞书更新流程 - 将产品数据同步到飞书表格',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''
+示例用法:
+  # 基本用法
+  python -m tongyong_feishu_update.run_pipeline input.json
+
+  # 详细输出
+  python -m tongyong_feishu_update.run_pipeline input.json --verbose
+
+  # 流式处理模式（推荐用于大批量数据）
+  python -m tongyong_feishu_update.run_pipeline input.json --streaming
+
+  # 仅更新标题
+  python -m tongyong_feishu_update.run_pipeline input.json --title-only
+
+  # 强制更新所有字段
+  python -m tongyong_feishu_update.run_pipeline input.json --force-update
+
+  # 干运行模式（不实际更新飞书）
+  python -m tongyong_feishu_update.run_pipeline input.json --dry-run
+        '''
+    )
+
+    # 必需参数
+    parser.add_argument(
+        'input_path',
+        help='输入的产品数据文件路径（JSON格式）'
+    )
+
+    # 处理模式选项
+    mode_group = parser.add_argument_group('处理模式')
+    mode_group.add_argument(
+        '--streaming',
+        action='store_true',
+        help='启用流式处理模式（推荐用于大批量数据，支持断点续传）'
+    )
+
+    # 更新选项
+    update_group = parser.add_argument_group('更新选项')
+    update_group.add_argument(
+        '--force-update',
+        action='store_true',
+        help='强制更新所有字段（默认仅更新空字段）'
+    )
+    update_group.add_argument(
+        '--title-only',
+        action='store_true',
+        help='仅更新标题字段'
+    )
+    update_group.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='干运行模式（不实际更新飞书，仅显示处理结果）'
+    )
+
+    # 输出选项
+    output_group = parser.add_argument_group('输出选项')
+    output_group.add_argument(
+        '--verbose', '-v',
+        action='store_true',
+        help='显示详细进度信息'
+    )
+    output_group.add_argument(
+        '--quiet', '-q',
+        action='store_true',
+        help='静默模式（仅显示错误信息）'
+    )
+
+    # 高级选项
+    advanced_group = parser.add_argument_group('高级选项')
+    advanced_group.add_argument(
+        '--no-resume',
+        action='store_true',
+        help='禁用断点续传（仅流式模式）'
+    )
+    advanced_group.add_argument(
+        '--timeout',
+        type=int,
+        default=60,
+        metavar='SECONDS',
+        help='单个产品处理超时时间（秒，默认：60）'
+    )
+    advanced_group.add_argument(
+        '--save-interval',
+        type=int,
+        default=5,
+        metavar='COUNT',
+        help='进度保存间隔（处理多少个产品保存一次，默认：5）'
+    )
+
+    return parser
+
+
 if __name__ == "__main__":
-    # 简单的命令行测试入口
-    if len(sys.argv) < 2:
-        print("用法: python -m CallawayJP.feishu_update.run_pipeline <input_path>")
+    # 创建命令行参数解析器
+    parser = create_argument_parser()
+    args = parser.parse_args()
+
+    # 验证输入文件
+    import os
+    if not os.path.exists(args.input_path):
+        print(f"❌ 输入文件不存在: {args.input_path}")
         sys.exit(1)
-    
-    input_path = sys.argv[1]
-    result = main(input_path, verbose=True)
-    print(result.to_summary(verbose=True))
+
+    if not os.path.isfile(args.input_path):
+        print(f"❌ 输入路径不是文件: {args.input_path}")
+        sys.exit(1)
+
+    # 设置详细输出
+    verbose = args.verbose and not args.quiet
+
+    # 显示使用的输入文件
+    if verbose:
+        print(f'🎯 使用的输入文件: {args.input_path}')
+
+    # 调用主函数
+    try:
+        result = main(
+            input_path=args.input_path,
+            force_update=args.force_update,
+            title_only=args.title_only,
+            dry_run=args.dry_run,
+            verbose=verbose,
+            streaming=args.streaming,
+            resume=not args.no_resume,
+            single_timeout=args.timeout,
+            save_interval=args.save_interval
+        )
+
+        # 显示结果摘要
+        if not args.quiet:
+            print(result.to_summary(verbose=verbose))
+
+        # 根据结果设置退出码 - 使用UpdateResult的实际属性判断是否有错误
+        has_errors = (
+            len(result.failed_batches) > 0 or
+            len(result.title_failed) > 0
+        )
+
+        if has_errors:
+            sys.exit(1)
+        else:
+            sys.exit(0)
+
+    except KeyboardInterrupt:
+        print("\n⚠️ 用户中断操作")
+        sys.exit(130)  # 标准的键盘中断退出码
+    except Exception as e:
+        print(f"❌ 执行过程中发生未预期的错误: {e}")
+        if args.verbose:
+            import traceback
+            traceback.print_exc()
+        sys.exit(1)

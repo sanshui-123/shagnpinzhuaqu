@@ -13,22 +13,73 @@ class BatchUnifiedProcessor {
     constructor(options = {}) {
         // 🎯 使用统一抓取器 - 后台模式，适合批量处理
         this.scraper = new UnifiedDetailScraper({
-            headless: true, // 批量处理使用后台模式
-            debug: false,   // 批量处理关闭调试输出
-            timeout: 45000,
+            headless: options.headless !== undefined ? options.headless : true, // 批量处理默认后台模式
+            debug: options.debug !== undefined ? options.debug : false,         // 批量处理默认关闭调试
+            timeout: options.timeout || 45000,
             ...options
         });
 
-        this.inputFile = './golf_content/lecoqgolf/lecoqgolf_products_2025-11-12T16-18-23-072Z.json';
-        this.outputDir = './golf_content/lecoqgolf/';
+        this.inputFile = options.inputFile || this.findLatestInputFile();
+        // 保持原有的输出目录结构
+        this.outputDir = options.outputDir || './golf_content/lecoqgolf/';
+        this.outputPath = options.outputPath;  // 完整输出文件路径（可选）
         this.results = {};
         this.processedCount = 0;
         this.totalProducts = 0;
         this.errors = [];
 
-        // 状态管理
+        // 状态管理 - 放在当前工作目录而不是输出目录
         this.statusFile = './batch_unified_status.json';
         this.loadStatus();
+    }
+
+    // 自动查找最新的输入文件
+    findLatestInputFile() {
+        const searchPaths = [
+            '/Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/lecoqgolf/golf_content/lecoqgolf/',
+            '/Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/lecoqgolf/',
+            '/Users/sanshui/Desktop/CallawayJP/'
+        ];
+
+        const possiblePatterns = [
+            /lecoqgolf_products_.*\.json$/,
+            /.*products.*\.json$/,
+            /.*batch.*\.json$/
+        ];
+
+        let latestFile = null;
+        let latestTime = new Date(0);
+
+        for (const searchPath of searchPaths) {
+            try {
+                if (!fs.existsSync(searchPath)) continue;
+
+                const files = fs.readdirSync(searchPath);
+
+                for (const file of files) {
+                    const filePath = path.join(searchPath, file);
+                    const stat = fs.statSync(filePath);
+
+                    // 检查是否匹配模式
+                    const matchesPattern = possiblePatterns.some(pattern => pattern.test(file));
+
+                    if (matchesPattern && stat.isFile() && stat.mtime > latestTime) {
+                        latestTime = stat.mtime;
+                        latestFile = filePath;
+                    }
+                }
+            } catch (error) {
+                console.log(`⚠️ 搜索路径失败: ${searchPath}, 错误: ${error.message}`);
+            }
+        }
+
+        if (latestFile) {
+            console.log(`📁 自动找到最新输入文件: ${latestFile}`);
+            return latestFile;
+        } else {
+            console.log('⚠️ 未找到合适的输入文件，请使用 --input 参数指定');
+            return null;
+        }
     }
 
     // 状态管理方法
@@ -111,7 +162,7 @@ class BatchUnifiedProcessor {
 
             if (unprocessedProducts.length === 0) {
                 console.log('✅ 所有商品都已处理完成');
-                return;
+                return null; // 返回null表示没有新文件生成
             }
 
             // 2. 批量处理
@@ -172,14 +223,17 @@ class BatchUnifiedProcessor {
             }
 
             // 3. 保存最终结果
-            await this.saveFinalResults();
+            const finalFile = await this.saveFinalResults();
 
             console.log('\n🎉 批量处理完成!');
             console.log(`📊 处理统计: 成功 ${this.processedCount}/${this.totalProducts} 个商品`);
             console.log(`❌ 失败: ${this.failedUrls.size} 个商品`);
 
+            return finalFile; // 返回实际保存的文件路径
+
         } catch (error) {
             console.error('❌ 批量处理过程出错:', error);
+            throw error; // 重新抛出错误，让主函数能正确处理异常
         }
     }
 
@@ -277,7 +331,9 @@ class BatchUnifiedProcessor {
 
     async saveFinalResults() {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const finalFile = path.join(this.outputDir, `batch_unified_final_${timestamp}.json`);
+
+        // 使用指定的输出路径或生成默认路径
+        const finalFile = this.outputPath || path.join(this.outputDir, `batch_unified_final_${timestamp}.json`);
 
         const outputData = {
             products: this.results,
@@ -290,19 +346,141 @@ class BatchUnifiedProcessor {
                 version: 'unified_v1.0',
                 processing_mode: 'batch_headless',
                 advanced_size_chart: true
-            }
+            },
+            source_file: finalFile  // 新增：记录生成的文件路径
         };
 
         fs.writeFileSync(finalFile, JSON.stringify(outputData, null, 2), 'utf8');
         console.log(`💾 最终结果已保存: ${finalFile}`);
+        return finalFile;  // 返回文件路径供主函数使用
     }
 }
 
-// 主函数
+// 主函数 - 支持CLI参数
 async function main() {
-    const processor = new BatchUnifiedProcessor();
-    await processor.processAllProducts();
-    process.exit(0);
+    // 解析命令行参数
+    const args = process.argv.slice(2);
+
+    if (args.includes('--help') || args.includes('-h')) {
+        console.log('用法: node batch_unified_processor.js [选项]');
+        console.log('');
+        console.log('选项:');
+        console.log('  --input <path>     指定输入文件路径（不指定则自动查找最新文件）');
+        console.log('  --output <path>    指定输出文件路径');
+        console.log('  --headless         使用无头模式（默认开启）');
+        console.log('  --debug            开启调试模式（默认关闭）');
+        console.log('  --timeout <ms>     设置超时时间（毫秒）');
+        console.log('  --help, -h         显示帮助信息');
+        console.log('');
+        console.log('示例:');
+        console.log('  node batch_unified_processor.js');
+        console.log('  node batch_unified_processor.js --input "/path/to/input.json"');
+        console.log('  node batch_unified_processor.js --output "/path/to/output.json" --debug');
+        console.log('  node batch_unified_processor.js --input "data.json" --output "result.json"');
+        process.exit(0);
+    }
+
+    // 提取参数
+    const options = {};
+
+    for (let i = 0; i < args.length; i++) {
+        const arg = args[i];
+
+        switch (arg) {
+            case '--input':
+                if (i + 1 < args.length) {
+                    options.inputFile = args[i + 1];
+                    i++; // 跳过下一个参数
+                } else {
+                    console.error('❌ --input 参数需要指定文件路径');
+                    process.exit(1);
+                }
+                break;
+
+            case '--output':
+                if (i + 1 < args.length) {
+                    options.outputPath = args[i + 1];
+                    i++; // 跳过下一个参数
+                } else {
+                    console.error('❌ --output 参数需要指定文件路径');
+                    process.exit(1);
+                }
+                break;
+
+            case '--headless':
+                options.headless = true;
+                break;
+
+            case '--debug':
+                options.debug = true;
+                break;
+
+            case '--timeout':
+                if (i + 1 < args.length) {
+                    const timeout = parseInt(args[i + 1]);
+                    if (isNaN(timeout) || timeout <= 0) {
+                        console.error('❌ --timeout 参数需要指定正整数（毫秒）');
+                        process.exit(1);
+                    }
+                    options.timeout = timeout;
+                    i++; // 跳过下一个参数
+                } else {
+                    console.error('❌ --timeout 参数需要指定时间（毫秒）');
+                    process.exit(1);
+                }
+                break;
+
+            default:
+                if (arg.startsWith('--')) {
+                    console.error(`❌ 未知参数: ${arg}`);
+                    console.error('使用 --help 查看可用选项');
+                    process.exit(1);
+                }
+                break;
+        }
+    }
+
+    // 创建处理器实例
+    const processor = new BatchUnifiedProcessor(options);
+
+    // 检查输入文件
+    if (!processor.inputFile) {
+        console.error('❌ 未找到输入文件，请使用 --input 参数指定或确保目录中有可用的产品文件');
+        process.exit(1);
+    }
+
+    if (!fs.existsSync(processor.inputFile)) {
+        console.error(`❌ 输入文件不存在: ${processor.inputFile}`);
+        process.exit(1);
+    }
+
+    console.log('🎯 使用的输入文件:', processor.inputFile);
+    if (options.outputPath) {
+        console.log('📁 输出路径:', options.outputPath);
+    }
+
+    try {
+        // 执行批量处理并获取实际文件路径
+        const actualOutputPath = await processor.processAllProducts();
+
+        // 如果成功处理且有输出文件，输出下一步命令
+        if (processor.processedCount > 0 && actualOutputPath) {
+            console.log('\n✅ 批量处理完成！');
+            console.log('\n🎯 接下来执行第二步：');
+            console.log(`cd "/Users/sanshui/Desktop/CallawayJP"`);
+            console.log(`python3 -m tongyong_feishu_update.run_pipeline "${actualOutputPath}" --verbose`);
+        } else if (processor.processedCount > 0) {
+            console.log('\n✅ 批量处理完成，但没有新文件生成（所有商品都已处理）');
+        } else {
+            console.log('\n⚠️ 没有商品需要处理');
+        }
+
+        process.exit(0);
+    } catch (error) {
+        console.error('\n❌ 批量处理异常退出:', error.message);
+        console.error('错误详情:', error);
+        process.exit(1);
+    }
 }
 
 if (require.main === module) {

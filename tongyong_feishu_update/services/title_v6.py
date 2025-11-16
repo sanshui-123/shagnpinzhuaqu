@@ -14,33 +14,11 @@ from itertools import combinations, product
 try:
     from ..config.title_config import *
 except ImportError:
-    # 如果无法导入配置，使用内置的基本配置
-    BRAND_KEYWORDS = {
-        'callawaygolf': ['callaway', 'callaway golf', '卡拉威'],
-        'titleist': ['titleist', '泰特利斯'],
-        'puma': ['puma', '彪马'],
-        'adidas': ['adidas', '阿迪达斯'],
-        'nike': ['nike', '耐克'],
-        'lecoqgolf': ['ルコック', 'le coq', 'lecoq', 'le coq sportif', 'sportif golf', '乐卡克', 'le coq sportif golf']
-    }
-
-    BRAND_MAP = {
-        'callawaygolf': '卡拉威Callaway',
-        'titleist': '泰特利斯Titleist',
-        'puma': '彪马Puma',
-        'adidas': '阿迪达斯Adidas',
-        'nike': '耐克Nike',
-        'lecoqgolf': 'Le Coq Sportif Golf'
-    }
-
-    BRAND_SHORT_NAME = {
-        'callawaygolf': '卡拉威',
-        'titleist': '泰特利斯',
-        'puma': '彪马',
-        'adidas': '阿迪达斯',
-        'nike': '耐克',
-        'lecoqgolf': '乐卡克'
-    }
+    # 如果无法导入配置，从新的prompt模块导入
+    from ..config.prompts import (
+        BRAND_KEYWORDS, BRAND_MAP, BRAND_SHORT_NAME,
+        SEASON_PATTERNS, FUNCTION_WORD_MAPPING, ENDING_WORD_MAPPING
+    )
 
 # 全局变量
 glm_call_lock = threading.Lock()
@@ -172,15 +150,20 @@ def extract_season_from_name(name: str, product: Dict = None) -> str:
         if table_season:
             return table_season
 
-    # 🎯 优先级2：从商品名中提取季节代码
-    season_patterns = [
-        (r'25FW|25AW', '25秋冬'),
-        (r'25SS|25SP', '25春夏'),
-        (r'26FW|26AW', '26秋冬'),
-        (r'26SS|26SP', '26春夏'),
-        (r'24FW|24AW', '24秋冬'),
-        (r'24SS|24SP', '24春夏'),
-    ]
+    # 🎯 优先级2：从商品名中提取季节代码 - 使用配置化的模式
+    try:
+        from ..config.prompts import SEASON_PATTERNS
+        season_patterns = SEASON_PATTERNS
+    except ImportError:
+        # 回退到内置模式
+        season_patterns = [
+            (r'25FW|25AW', '25秋冬'),
+            (r'25SS|25SP', '25春夏'),
+            (r'26FW|26AW', '26秋冬'),
+            (r'26SS|26SP', '26春夏'),
+            (r'24FW|24AW', '24秋冬'),
+            (r'24SS|24SP', '24春夏'),
+        ]
 
     for pattern, season in season_patterns:
         if re.search(pattern, name):
@@ -195,9 +178,11 @@ def extract_season_from_name(name: str, product: Dict = None) -> str:
 
 def build_smart_prompt(product: Dict) -> str:
     """
-    构建超完整提示词 - 包含所有规则和判断逻辑
+    构建超完整提示词 - 使用模板化的提示词配置
     让GLM自己判断性别、类别、功能词、结尾词
     """
+    from ..config.prompts import TITLE_GENERATION_PROMPT
+
     name = product.get('productName', '')
     gender = product.get('gender', '')
 
@@ -215,121 +200,14 @@ def build_smart_prompt(product: Dict) -> str:
     # 🎯 智能季节判断（从表格数据优先）
     current_season = extract_season_from_name(name, product)
 
-    prompt = f"""你是淘宝标题生成专家。根据日文商品名生成中文标题。
-
-商品名：{name}
-已知性别：{gender}
-智能判断季节：{current_season}
-
-标题格式：
-[季节][品牌]高尔夫[性别][功能词][结尾词]
-
-判断规则：
-
-1. 季节判断
-从商品名提取年份+季节代码：
-- "25FW"、"25AW" → "25秋冬"
-- "25SS"、"25SP" → "25春夏"
-- "26FW"、"26AW" → "26秋冬"
-- "26SS"、"26SP" → "26春夏"
-如果没有明确季节代码，使用智能判断：{current_season}
-（系统已智能判断为{current_season}）
-
-2. 品牌
-使用简短版品牌名：{brand_short}
-
-3. 性别（重要：必须使用已知性别）
-已知性别为：{gender_text}，必须在标题中使用"{gender_text}"，不要猜测或更改！
-
-4. 功能词判断（根据商品特点选择）
-
-4. 功能词判断（根据商品特点选择）
-包含"中綿/中棉/棉服" → "保暖棉服"
-包含"フルジップ/全拉链" → "弹力全拉链"
-包含"防寒/保暖" → "保暖"
-包含"フリース/fleece" → "抓绒"
-包含"撥水/防水" → "防泼水"
-包含"速乾/quickdry" → "速干"
-包含"軽量/轻量" → "轻量"
-包含"ストレッチ/stretch" → "弹力"
-其他普通服装 → "舒适"
-配件类 → 不需要功能词（留空或用"轻便"、"时尚"）
-
-5. 结尾词判断（根据商品类型）
-
-配件类结尾词：
-- "ベルト/belt/皮带" → "腰带"
-- "キャップ/cap/帽子" → "帽子"
-- "ハット/hat" → "帽子"
-- "ビーニー/beanie" → "帽子"
-- "グローブ/glove/手套" → "手套"
-- "ヘッドカバー/head cover/カバー" → "球杆头套"
-- "マーカー/marker/クリップ" → "标记夹"
-- "ソックス/socks/袜子" → "袜子"
-- "シューズ/shoes/球鞋" → "球鞋"
-- "傘/umbrella/雨伞" → "雨伞"
-- "バッグ/bag/包" → "高尔夫包"
-其他配件 → "配件"
-
-服装类结尾词：
-- "ジャケット/jacket/ブルゾン/blouson/アウター/outer" → "夹克"
-- "ベスト/vest" → "背心"
-- "コート/coat" → "外套"
-- "パーカー/parka" → "连帽衫"
-- "ダウン/down" → "羽绒服"
-- "ポロ/polo/シャツ/shirt/トップ/top" → "上衣"
-- "ニット/knit/セーター/sweater" → "针织衫"
-- "スウェット/sweat/卫衣" → "卫衣"
-- "パンツ/pants/ズボン/长裤" → "长裤"
-- "ショート/short/短裤" → "短裤"
-- "スカート/skirt/裙" → "半身裙"
-- "シューズ/shoes/スニーカー/sneaker" → "球鞋"
-- "レイン/rain/雨" → "雨衣"
-
-严格要求（必须遵守）：
-
-1. 长度要求
-总长度：26-30个汉字
-如果长度不够，可以在功能词前加修饰：
-- "新款"、"时尚"、"轻便"、"透气"、"运动"、"专业"、"经典"等
-
-2. 格式要求
-- 只用简体中文，不要日文假名、英文字母、繁体字
-- 不要任何符号：空格、斜杠/、破折号-、加号+、乘号×等
-- "高尔夫"必须且只能出现1次
-- 必须以完整的结尾词结束（不要"夹克外"、"上"等残缺词）
-
-3. 禁止词汇
-不要出现：官网、正品、专柜、代购、海外、进口、授权、旗舰、限量、促销、特价
-
-4. 禁止重复
-不要连续重复相同的词，如"夹克夹克"、"保暖保暖"
-
-5. 逻辑要求
-- 标题要通顺自然，符合中文表达习惯
-- 功能词要与商品特性匹配
-- 结尾词要准确反映商品类型
-
-示例参考：
-
-配件类示例：
-- 25秋冬卡拉威高尔夫男士轻便透气帽子（26字）
-- 26春夏泰特利斯高尔夫女士时尚运动腰带（27字）
-- 25秋冬彪马高尔夫男士球杆头套（24字）← 如果太短，加"轻便"或"新款"
-- 25秋冬耐克高尔夫男士专业高尔夫手套（27字）
-
-服装类示例：
-- 25秋冬卡拉威高尔夫男士保暖舒适夹克（27字）
-- 26春夏阿迪达斯高尔夫女士弹力全拉链上衣（28字）
-- 25秋冬泰勒梅高尔夫男士保暖棉服夹克（27字）
-- 26春夏Puma高尔夫女士轻便运动短裤（28字）
-
-输出要求：
-- 直接输出标题，不要任何解释、不要"好的"等应答词、不要markdown格式
-- 确保标题26-30个汉字
-- 确保格式正确
-
-现在生成标题："""
+    # 使用模板化的提示词
+    prompt = TITLE_GENERATION_PROMPT.format(
+        name=name,
+        gender=gender,
+        current_season=current_season,
+        brand_short=brand_short,
+        gender_text=gender_text
+    )
 
     return prompt
 
