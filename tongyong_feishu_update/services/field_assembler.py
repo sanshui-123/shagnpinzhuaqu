@@ -124,10 +124,9 @@ class FieldAssembler:
         if detail_url:
             fields['商品链接'] = detail_url
 
-          # 性别 - 直接使用原始数据，不做任何处理
-        original_gender = product.get('gender', '')
-        if original_gender:
-            fields['性别'] = original_gender  # 直接使用原始值
+        # 性别 - 直接使用原始数据，不做任何处理
+        if gender:
+            fields['性别'] = gender  # 直接使用原始值
         if clothing_type:
             fields['衣服分类'] = clothing_type
 

@@ -75,6 +75,7 @@ class SizeTableFormatter:
         lines: List[str] = []
         notes: List[str] = []
 
+        # 首先尝试传统格式化
         text_lines, text_notes = self._format_from_text(size_text or '')
         lines.extend(text_lines)
         notes.extend(text_notes)
@@ -83,6 +84,18 @@ class SizeTableFormatter:
             chart_lines, chart_notes = self._format_from_structured(structured_chart)
             lines.extend(chart_lines)
             notes.extend(chart_notes)
+
+        # 检查传统格式化结果是否产生HTML污染
+        traditional_result = '\n'.join(lines) if lines else ''
+
+        # 如果传统方法失败或检测到HTML污染，使用AI处理
+        if not lines or self._has_html_pollution(traditional_result):
+            ai_formatted = self._format_with_ai(size_text or '', structured_chart)
+            if ai_formatted:
+                return ai_formatted
+            # 如果AI处理也失败，但传统结果有污染，尝试清理污染
+            elif lines and self._has_html_pollution(traditional_result):
+                return self._clean_html_pollution(traditional_result)
 
         if not lines:
             return ''
@@ -326,3 +339,151 @@ class SizeTableFormatter:
 
         note_lines = '\n'.join(f"- {note}" for note in notes)
         return f"\n\n尺码说明:\n{note_lines}"
+
+    def _has_html_pollution(self, text: str) -> bool:
+        """检测文本中是否包含HTML污染"""
+        if not text:
+            return False
+        # 检查常见的HTML污染模式
+        pollution_patterns = [
+            r'【<[^>]*>】',  # 【<td>】, 【<th>】 等
+            r'【<码[^>]*>】',  # 【<码】th>, 【<码】td】 等实际污染模式
+            r'<td>.*?</td>',
+            r'<th>.*?</th>',
+            r'<tr>.*?</tr>',
+            r'<table>.*?</table>',
+            r'【.*?TD.*?】',  # 【TD】形式的污染
+            r'【.*?TH.*?】',  # 【TH】形式的污染
+            r'【TD',  # 【TD 开始
+            r'【TH',  # 【TH 开始
+        ]
+        for pattern in pollution_patterns:
+            if re.search(pattern, text, re.IGNORECASE | re.DOTALL):
+                return True
+        return False
+
+    def _format_with_ai(self, size_text: str, structured_chart: Optional[Dict]) -> str:
+        """使用AI格式化被HTML污染的尺码表"""
+        try:
+            import os
+            import requests
+            import time
+            import threading
+
+            # GLM API配置
+            api_key = os.environ.get('GLM_API_KEY', '19a8bc1b7cfe4a888c179badd7b96e1d.9S05UjRMgHnCkbCW')
+            base_url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions'
+
+            # 准备输入内容
+            input_content = size_text
+            if structured_chart:
+                if structured_chart.get('text'):
+                    input_content = structured_chart['text']
+                elif structured_chart.get('html'):
+                    input_content = structured_chart['html']
+
+            if not input_content:
+                return ''
+
+            # 构建新的尺码表处理提示词
+            prompt = f"""将以下日本服装尺码表整理成简洁易读的格式：
+
+原始数据：
+{input_content}
+
+要求：
+1. 使用中文说明各项尺寸含义
+2. 每个尺码占一行
+3. 格式：S码 | 胸围66 肩宽48 衣长104 袖长61 下摆21
+4. 去除HTML标签，只保留纯文本
+5. 添加尺码说明（成品尺寸，1-2cm误差）
+
+期望输出格式示例：
+S码 | 胸围66 肩宽48 衣长104 袖长61 下摆21
+M码 | 胸围68 肩宽49 衣长108 袖长62 下摆22
+L码 | 胸围70 肩宽50 衣长112 袖长63 下摆23
+XL码 | 胸围72 肩宽51 衣长116 袖长64 下摆24
+*成品尺寸，因面料特性可能存在1-2cm误差
+
+注意：
+- 将66转换为S码，68转换为M码，70转换为L码，72转换为XL码
+- 如果数据不足，请尽力整理可用信息
+- 保持格式整洁易读
+- 不要添加无关的解释文字
+- 直接输出格式化结果，不要开场白"""
+
+            # 调用GLM API（使用简化的限流机制）
+            with threading.Lock():
+                # 简单的限流
+                time.sleep(0.6)
+
+                response = requests.post(
+                    base_url,
+                    headers={
+                        'Authorization': f'Bearer {api_key}',
+                        'Content-Type': 'application/json'
+                    },
+                    json={
+                        'model': 'glm-4.6',
+                        'messages': [
+                            {
+                                'role': 'user',
+                                'content': prompt
+                            }
+                        ],
+                        'max_tokens': 800,
+                        'temperature': 0.3
+                    },
+                    timeout=30
+                )
+
+            if response.status_code == 200:
+                result = response.json()
+                if 'choices' in result and len(result['choices']) > 0:
+                    content = result['choices'][0]['message']['content']
+                    if content and content.strip():
+                        return content.strip()
+
+            return ''
+
+        except Exception as e:
+            print(f"⚠️ AI尺码表格式化失败: {e}")
+            return ''
+
+    def _clean_html_pollution(self, text: str) -> str:
+        """清理HTML污染，提取有效的数字数据"""
+        if not text:
+            return ''
+
+        # 提取所有数字（包括逗号分隔的数字）
+        numbers = re.findall(r'\d+(?:,\d+)*', text)
+
+        if not numbers:
+            return ''
+
+        # 尺码映射：将数字转换为用户友好的尺码
+        size_mapping = {
+            '66': 'S码',
+            '68': 'M码',
+            '70': 'L码',
+            '72': 'XL码'
+        }
+
+        # 根据数字数量推断格式
+        if len(numbers) >= 15:  # 可能是多行多列的尺码表
+            # 尝试按5列分组（常见的尺码表格式）
+            rows = []
+            for i in range(0, len(numbers), 5):
+                if i + 4 < len(numbers):  # 确保有5个数据
+                    size_num = numbers[i]
+                    # 映射为用户友好的尺码
+                    size_label = size_mapping.get(size_num, f"{size_num}码")
+                    row = f"{size_label} | 胸围{size_num} 肩宽{numbers[i+1]} 衣长{numbers[i+2]} 袖长{numbers[i+3]} 下摆{numbers[i+4]}"
+                    rows.append(row)
+
+            if rows:
+                result = '\n'.join(rows)
+                return f"{result}\n*成品尺寸，因面料特性可能存在1-2cm误差"
+
+        # 如果数据不足，返回简单的数字列表
+        return f"尺码数据: {', '.join(numbers[:10])}\n*以上为成品尺寸"
