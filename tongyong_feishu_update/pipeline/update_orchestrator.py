@@ -226,6 +226,10 @@ class UpdateOrchestrator:
             if not fields:
                 continue
 
+            # 如果字段组装成功补上了标题，从 title_failed 中移除
+            if '商品标题' in fields and pid in title_failed:
+                title_failed.remove(pid)
+
             # 调试：打印生成的字段
             print(f"\n📋 产品 {pid} 生成的字段:")
             print("=" * 60)

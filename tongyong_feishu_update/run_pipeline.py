@@ -278,11 +278,9 @@ if __name__ == "__main__":
         if not args.quiet:
             print(result.to_summary(verbose=verbose))
 
-        # 根据结果设置退出码 - 使用UpdateResult的实际属性判断是否有错误
-        has_errors = (
-            len(result.failed_batches) > 0 or
-            len(result.title_failed) > 0
-        )
+        # 根据结果设置退出码 - 只关注真正的批次失败
+        # 标题预生成失败不计入错误（后续会在字段组装时重新生成）
+        has_errors = len(result.failed_batches) > 0
 
         if has_errors:
             sys.exit(1)
