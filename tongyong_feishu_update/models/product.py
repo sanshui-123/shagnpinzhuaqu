@@ -136,6 +136,7 @@ class Product:
     # 产品属性
     sku: str = ""                      # SKU
     status: str = ""                   # 状态
+    gender: str = ""                   # 性别
     
     # URL信息
     detail_url: str = ""               # 详情页URL
@@ -188,6 +189,14 @@ class Product:
         elif self.detailUrl and not self.detail_url:
             self.detail_url = self.detailUrl
 
+        # 同步性别字段
+        if hasattr(self, 'gender') and not hasattr(self, '_synced_gender'):
+            # 新字段同步到兼容字段
+            pass  # gender字段已经存在
+        elif hasattr(self, '_synced_gender'):
+            # 兼容字段同步到新字段
+            self.gender = self._synced_gender
+
         # 同步图片信息
         if self.imageUrls and not self.images.all:
             self.images.all = self.imageUrls
@@ -201,6 +210,7 @@ class Product:
             # 基本信息映射
             'productId': 'product_id',
             'productName': 'product_name',
+            'gender': 'gender',  # 添加gender字段映射
             'detailUrl': 'detail_url',
             'currentPrice': 'current_price',
             'originalPrice': 'original_price',
@@ -272,6 +282,7 @@ class Product:
             'current_price': self.current_price,
             'sku': self.sku,
             'status': self.status,
+            'gender': self.gender,  # 添加gender字段
             'detail_url': self.detail_url,
             'variants': [v.to_dict() for v in self.variants],
             'colors': self.colors,

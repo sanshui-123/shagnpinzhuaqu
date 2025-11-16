@@ -94,10 +94,10 @@ def process_13_fields(product_data):
 
     # 5. 图片处理
     try:
-        result['图片总数'], result['图片链接'] = process_images(product_data)
+        result['图片数量'], result['图片链接'] = process_images(product_data)
     except Exception as e:
         print(f"   ⚠️ 图片处理失败: {str(e)}", file=sys.stderr)
-        result['图片总数'] = '0'
+        result['图片数量'] = '0'
         result['图片链接'] = ''
 
     # 6. 颜色处理

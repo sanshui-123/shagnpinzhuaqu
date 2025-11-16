@@ -102,7 +102,7 @@ class Feishu13FieldsAssembler {
     validate13Fields(data) {
         const requiredFields = [
             '商品链接', '商品ID', '商品标题', '品牌名', '价格',
-            '性别', '衣服分类', '图片总数', '图片链接',
+            '性别', '衣服分类', '图片数量', '图片链接',
             '颜色', '尺码', '详情页文字', '尺码表'
         ];
 

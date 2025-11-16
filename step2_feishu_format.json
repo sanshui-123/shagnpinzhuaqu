@@ -1,0 +1,51 @@
+{
+  "products": {
+    "LG5SSW50L": {
+      "productId": "LG5SSW50L",
+      "productName": "【30th】総柄半袖シャツ",
+      "detailUrl": "https://store.descente.co.jp/commodity/SDSC0140D/LE1872EW011538/",
+      "price": "￥14,300",
+      "brand": "Le Coq公鸡乐卡克",
+      "category": "",
+      "gender": "男",
+      "description": "",
+      "colors": [
+        "ホワイト（WH00）",
+        "エメラルド（EM00）",
+        "ネイビー（NV00）"
+      ],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "LL",
+        "3L"
+      ],
+      "imageUrls": [
+        "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_1_l.jpg",
+        "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_2_l.jpg",
+        "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_3_l.jpg",
+        "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_4_l.jpg",
+        "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_5_l.jpg",
+        "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_6_l.jpg",
+        "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_7_l.jpg",
+        "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_8_l.jpg",
+        "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_9_l.jpg",
+        "https://sc3.locondo.jp/contents/commodity_image/LE/LE1872EW011538_10_l.jpg"
+      ],
+      "sizeChart": {},
+      "scrapeInfo": {
+        "totalColors": 3,
+        "totalSizes": 5,
+        "totalImages": 10
+      }
+    }
+  },
+  "total": 1,
+  "processed": 1,
+  "failed": 0,
+  "errors": [],
+  "timestamp": "",
+  "brand": "lecoqgolf",
+  "batchMode": false
+}

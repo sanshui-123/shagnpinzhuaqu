@@ -1,0 +1,43 @@
+{
+  "records": [
+    {
+      "fields": {
+        "商品ID": "LE1452EW028231",
+        "品牌名": "Le Coq公鸡乐卡克",
+        "商品标题": "DESCENTE 上装 - 女款运动裤",
+        "颜色": "バリエーション ネイビー, 藏青色, 黑色",
+        "尺码": "S, M, L",
+        "性别": "女",
+        "价格": "￥11,000\n                          税込",
+        "商品链接": "https://store.descente.co.jp/commodity/SDSC0140D/LE1452EW028231/",
+        "图片URL": "https://media.aws.locondo.jp/descentestatic/common/img/brand/brand_descente.png\nhttps://media.aws.locondo.jp/descentestatic/common/img/brand/brand_le_coq_sportif.png\nhttps://media.aws.locondo.jp/descentestatic/common/img/brand/brand_arena.png\nhttps://media.aws.locondo.jp/descentestatic/common/img/brand/brand_Munsingwear.png\nhttps://media.aws.locondo.jp/descentestatic/common/img/brand/brand_umbro.png\nhttps://media.aws.locondo.jp/descentestatic/common/img/brand/brand_MOVESPORT.png",
+        "图片数量": 6,
+        "详情页文字": "●特徴・デザインポイントAIR STYLISH PANTS~日本人のために本気でつくった「きれいなシルエット」と「動きやすさ」を叶えるパンツ。自社の研究開発拠点 DISC OSAKA にて新たに開発した独自パターンを採用。裏フリース素材で肌触りも快適な防風ストレッチパンツ。●素材/着心地ストレッチ性が高く防風性・保温性に優れた3層ストレッチボンディングフリース素材を採用。ランニングやウォーキングなどのアクティブシーンのみならず普段使いにもおすすめ。●シルエットアクティブなシーンでも活躍するテーパードシルエット。ウエストは、ゴム＋紐付き仕様。左右ポケット付き。後ろポケット2つあり。#ルコックスポルティフ#le coq sportif機能：防風/保温/はっ水/ストレッチ",
+        "上传状态": "success",
+        "创建时间": "2025-11-16 10:02:16",
+        "最近更新时间": "2025-11-16 10:02:16"
+      }
+    }
+  ],
+  "total_products": 1,
+  "timestamp": "2025-11-16T10:02:16.717457",
+  "url_processed": "https://store.descente.co.jp/commodity/SDSC0140D/LE1452EW028231/",
+  "processing_summary": {
+    "original_title": "DESCENTE STORE",
+    "chinese_title": "DESCENTE 上装 - 女款运动裤",
+    "original_colors": [
+      "バリエーション\n            \n          \n          \n              \n                \n                  \n                \n                ネイビー（NV00）\n                \n                  \n              \n              \n                \n                  \n                \n                ブラック（BK00）\n                \n              \n          \n        \n                      \n          <p class=\"heading\">\n            バリエーション\n            \n          </p>\n          <ul id=\"color-selector\" class=\"color-selector\">\n            {{#each relatedCommodityStocks}}\n              <li class=\"{{imageRatioByCommodityCode commodityCode}} {{#if (eqw commodityCode ../commodityStock/commodityCode)}}currentCommodityColor{{/if}}\">\n                <a class=\"product-image\" href=\"{{../base_url}}commodity/{{shopCode}}/{{commodityCode}}/{{../catalog_param}}\">\n                  <img src=\"{{../image_url}}commodity_image/{{trimString commodityCode}}/{{commodityCode}}_thumb.jpg\" alt=\"{{colorName}}\"/>\n                </a>\n                <p class=\"colorName\">{{colorName}}</p>\n                \n                {{#if (neqw commodityCode ../commodityStock/commodityCode)}}\n                  <div class=\"popupRelatedStock\" id=\"popup_{{commodityCode}}\"></div>\n                {{/if}}\n              </li>\n            {{/each}}\n          </ul>\n        \n        \n          <p class=\"heading\">\n            <span class=\"relatedColorName\">{{colorNameString colorName}}</span>\n            の在庫\n            \n          </p>\n          <ul class=\"stockStatusList\">\n            {{#each detailList}}\n              {{#if stock__normal}}\n                <li>\n                  {{sizeLabel}}:\n                  <span class=\"stock__normal\">\n                    ○\n                  </span>\n                </li>\n              {{/if}}\n              {{#if stock__little}}\n                <li>\n                  {{sizeLabel}}:\n                  <span class=\"stock__little\">\n                    △{{availableStockQuantity}}点\n                    \n                  </span>\n                </li>\n              {{/if}}\n              {{#if stock__oos}}\n                <li>\n                  {{sizeLabel}}:\n                  <span class=\"stock__oos\">\n                    ✕\n                  </span>\n                </li>\n              {{/if}}\n            {{/each}}\n          </ul>",
+      "バリエーション\n            \n          \n          \n              \n                \n                  \n                \n                ネイビー（NV00）\n                \n                  \n              \n              \n                \n                  \n                \n                ブラック（BK00）",
+      "ネイビー（NV00）\n                \n                  \n              \n              \n                \n                  \n                \n                ブラック（BK00）",
+      "ネイビー（NV00）",
+      "ブラック（BK00）"
+    ],
+    "translated_colors": [
+      "バリエーション ネイビー",
+      "藏青色",
+      "黑色"
+    ],
+    "description_translated": true,
+    "images_processed": 6
+  }
+}
