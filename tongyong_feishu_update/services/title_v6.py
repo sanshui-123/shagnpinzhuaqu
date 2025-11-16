@@ -101,6 +101,95 @@ def extract_brand_from_product(product: Dict) -> Tuple[str, str, str]:
     )
 
 # ============================================================================
+# 智能季节判断函数
+# ============================================================================
+
+def get_season_by_date() -> str:
+    """
+    根据当前日期智能判断季节
+    Returns:
+        str: 格式为 "25春夏" 或 "25秋冬" 的季节字符串
+    """
+    import datetime
+    now = datetime.datetime.now()
+    year = str(now.year)[2:]  # 取后两位，如 2025 -> "25"
+
+    # 根据月份判断季节
+    month = now.month
+    if month in [3, 4, 5]:  # 春季：3-5月
+        return f"{year}春夏"
+    elif month in [6, 7, 8]:  # 夏季：6-8月
+        return f"{year}春夏"
+    elif month in [9, 10, 11, 12]:  # 秋冬：9-12月
+        return f"{year}秋冬"
+    else:  # 冬季：1-2月
+        # 1-2月属于上一年的秋冬系列
+        prev_year = str(now.year - 1)[2:]
+        return f"{prev_year}秋冬"
+
+def extract_season_from_tables(product: Dict) -> str:
+    """
+    从抓取的表格数据中提取季节信息（网页实际数据）
+    """
+    # 优先从原始数据的表格中查找シーズン信息
+    if '_original_data' in product:
+        original_data = product['_original_data']
+
+        # 检查尺码表中的季节信息
+        if '尺码表' in original_data and 'tables' in original_data['尺码表']:
+            tables = original_data['尺码表']['tables']
+            for table in tables:
+                if 'text' in table and 'シーズン' in table['text']:
+                    # 提取 "2025年 秋冬" 格式的季节信息
+                    text = table['text']
+                    # 使用正则表达式匹配 "年份 季节" 格式
+                    season_match = re.search(r'(\d{4})年\s*(春夏|秋冬)', text)
+                    if season_match:
+                        year = season_match.group(1)[2:]  # 取后两位，如2025->25
+                        season_text = season_match.group(2)  # 春夏或秋冬
+                        return f"{year}{season_text}"
+
+        # 也可以从html中搜索
+        if '尺码表' in original_data and 'html' in original_data['尺码表']:
+            html = original_data['尺码表']['html']
+            # 搜索HTML中的シーズン信息
+            season_match = re.search(r'<th[^>]*>シーズン[^<]*</th>\s*<td[^>]*>(\d{4})年\s*(春夏|秋冬)', html)
+            if season_match:
+                year = season_match.group(1)[2:]  # 取后两位，如2025->25
+                season_text = season_match.group(2)  # 春夏或秋冬
+                return f"{year}{season_text}"
+
+    # 如果没有找到表格中的季节信息，回退到商品名匹配
+    return None
+
+def extract_season_from_name(name: str, product: Dict = None) -> str:
+    """
+    从商品名中提取季节信息，优先使用表格数据，如果没有则根据当前时间判断
+    """
+    # 🎯 优先级1：从表格数据中提取（网页实际数据）
+    if product:
+        table_season = extract_season_from_tables(product)
+        if table_season:
+            return table_season
+
+    # 🎯 优先级2：从商品名中提取季节代码
+    season_patterns = [
+        (r'25FW|25AW', '25秋冬'),
+        (r'25SS|25SP', '25春夏'),
+        (r'26FW|26AW', '26秋冬'),
+        (r'26SS|26SP', '26春夏'),
+        (r'24FW|24AW', '24秋冬'),
+        (r'24SS|24SP', '24春夏'),
+    ]
+
+    for pattern, season in season_patterns:
+        if re.search(pattern, name):
+            return season
+
+    # 🎯 优先级3：如果都没有，根据当前时间判断
+    return get_season_by_date()
+
+# ============================================================================
 # 第一步：构建超完整提示词（包含所有规则）
 # ============================================================================
 
@@ -123,10 +212,14 @@ def build_smart_prompt(product: Dict) -> str:
         elif gender.lower() in ['男', '男性', 'mens', 'men']:
             gender_text = "男士"
 
+    # 🎯 智能季节判断（从表格数据优先）
+    current_season = extract_season_from_name(name, product)
+
     prompt = f"""你是淘宝标题生成专家。根据日文商品名生成中文标题。
 
 商品名：{name}
 已知性别：{gender}
+智能判断季节：{current_season}
 
 标题格式：
 [季节][品牌]高尔夫[性别][功能词][结尾词]
@@ -139,7 +232,8 @@ def build_smart_prompt(product: Dict) -> str:
 - "25SS"、"25SP" → "25春夏"
 - "26FW"、"26AW" → "26秋冬"
 - "26SS"、"26SP" → "26春夏"
-如果没有，根据当前时间判断
+如果没有明确季节代码，使用智能判断：{current_season}
+（系统已智能判断为{current_season}）
 
 2. 品牌
 使用简短版品牌名：{brand_short}
