@@ -11,7 +11,7 @@ const fs = require('fs');
 class SingleUnifiedProcessor {
     constructor(options = {}) {
         this.scraper = new UnifiedDetailScraper({
-            headless: options.headless !== undefined ? options.headless : false, // 显示浏览器，便于调试
+            headless: options.headless !== undefined ? options.headless : true, // 默认后台运行，可传 --headless=false 显示浏览器
             debug: options.debug !== undefined ? options.debug : true,
             timeout: options.timeout || 60000
         });
@@ -20,7 +20,7 @@ class SingleUnifiedProcessor {
 
     async processSingleUrl(url, productId = '') {
         console.log('🚀 开始单个URL统一处理...');
-        console.log('🌐 运行模式：调试模式（显示浏览器）');
+        console.log(`🌐 运行模式：${this.scraper.options.headless ? '后台运行（headless）' : '显示浏览器'}`);
 
         const extraData = productId ? { productId } : {};
 

@@ -1,6 +1,12 @@
 """
 导入基础产品信息到飞书工具
 从 scrape_category 输出中提取基础信息，批量创建飞书记录
+
+⚠️ 重要说明：去重逻辑
+- Stage1 导入时使用「商品链接」（URL）作为去重依据
+- 即使 productId 不同，只要 URL 相同就会跳过
+- 导入时会将 URL 编号写入「商品ID」字段
+- Stage2 会抓取详情页并将「商品ID」覆盖为品牌货号
 """
 
 import argparse
@@ -72,14 +78,28 @@ def import_basic_products(
     if verbose:
         print(f"✅ 已获取 {len(existing_records)} 条现有记录", file=sys.stderr)
 
-    # 4. 过滤掉已存在的记录
+    # 4. 构建已存在的 URL 集合（用于去重）
+    # ⚠️ 去重逻辑已改为基于 URL 而非 productId
+    existing_urls = set()
+    for record_data in existing_records.values():
+        fields = record_data.get('fields', {})
+        url = fields.get('商品链接', '')
+        if url:
+            existing_urls.add(url)
+
+    if verbose:
+        print(f"📊 已提取 {len(existing_urls)} 个已存在的商品链接", file=sys.stderr)
+
+    # 5. 过滤掉已存在的记录（基于 URL 去重）
     new_products = []
     skip_count = 0
 
     for product in products_to_import:
-        product_id = product['product_id']
-        if product_id in existing_records:
+        url = product.get('url', '')
+        if url in existing_urls:
             skip_count += 1
+            if verbose:
+                print(f"⏭️ 跳过已存在的 URL: {url}", file=sys.stderr)
         else:
             new_products.append(product)
 
@@ -87,10 +107,10 @@ def import_basic_products(
         print(f"📊 新增: {len(new_products)} 个，跳过: {skip_count} 个", file=sys.stderr)
 
     if not new_products:
-        print("✅ 所有产品记录已存在，无需创建", file=sys.stderr)
+        print("✅ 所有产品 URL 已存在，无需创建新记录", file=sys.stderr)
         return {'success_count': 0, 'skip_count': skip_count, 'error_count': 0}
 
-    # 5. 批量创建新记录
+    # 6. 批量创建新记录
     create_records = []
     for product in new_products:
         create_records.append({
