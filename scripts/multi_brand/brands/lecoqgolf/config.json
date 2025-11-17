@@ -43,8 +43,8 @@
     "accessories"
   ],
   "urls": {
-    "main": "/brand/le%20coq%20sportif%20golf/ds_M?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1",
-    "womens": "/brand/le%2520coq%2520sportif%257Cle%2520coq%2520sportif%2520golf/ds_apparel_l?commercialType=0%7C2%7C3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1"
+    "main": "/brand/le%2520coq%2520sportif%2520golf/ds_apparel_m?commercialType=0%7C2%7C3&groupByModel=1&currentPage=1&alignmentSequence=recommend_commodity_rank+asc",
+    "womens": "/brand/le%2520coq%2520sportif%2520golf/ds_apparel_l?commercialType=0%7C2%7C3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1"
   },
   "pagination": {
     "enabled": true,

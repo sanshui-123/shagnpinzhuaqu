@@ -26,12 +26,21 @@ class LeCoqGolfScraper {
         });
 
         try {
-            // 抓取男士系列
-            await this.scrapeCollection(browser, 'mens', this.config.urls?.main ||
-                '/brand/le%20coq%20sportif%20golf/ds_M?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1');
+            // 抓取男士系列（写死为 ds_apparel_m 路径）
+            await this.scrapeCollection(
+                browser,
+                'mens',
+                this.config.urls?.main ||
+                    '/brand/le%2520coq%2520sportif%2520golf/ds_apparel_m?commercialType=0%7C2%7C3&groupByModel=1&currentPage=1&alignmentSequence=recommend_commodity_rank+asc'
+            );
 
-            // 抓取女士系列
-            await this.scrapeCollection(browser, 'womens', this.config.urls?.womens || '/brand/le%2520coq%2520sportif%257Cle%2520coq%2520sportif%2520golf/ds_apparel_l?commercialType=0%7C2%7C3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1');
+            // 抓取女士系列（写死为 ds_apparel_l 路径）
+            await this.scrapeCollection(
+                browser,
+                'womens',
+                this.config.urls?.womens ||
+                    '/brand/le%2520coq%2520sportif%2520golf/ds_apparel_l?commercialType=0%7C2%7C3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1'
+            );
 
             return this.results;
 
