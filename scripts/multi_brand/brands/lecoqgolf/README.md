@@ -35,18 +35,60 @@
 
 ## 使用方法
 
-### 1. 测试抓取器
+### 完整的三阶段流程（推荐）
+
+#### Stage 1: 抓取商品列表（scrape_category.js）
 ```bash
 node scrape_category.js
 ```
+- 输出文件：`golf_content/lecoqgolf/lecoqgolf_products_[时间戳].json`
+- 包含：productId、url、brand 等基础信息
+- 支持男士和女士系列分类抓取
 
-### 2. 通过主CLI运行
+#### Stage 1.5: 导入基础记录到飞书
+```bash
+cd /Users/sanshui/Desktop/CallawayJP
+python3 -m tongyong_feishu_update.tools.import_basic_products \
+  --source "scripts/multi_brand/brands/lecoqgolf/golf_content/lecoqgolf/lecoqgolf_products_xxx.json"
+```
+- 从 scrape_category.js 输出中提取 productId + url + brand
+- 批量创建飞书基础记录（只填充品牌、商品ID、商品链接）
+- 为后续详情补充做好准备
+
+#### Stage 2: 顺序同步处理（sequential_sync.js）
+```bash
+node sequential_sync.js \
+  --source "golf_content/lecoqgolf/lecoqgolf_products_xxx.json" \
+  --limit 10
+```
+- 自动查询飞书中待处理的产品（通过 Python 工具）
+- 逐个处理：抓取详情 → 立即同步到飞书
+- 支持断点续传（自动保存进度到 `sequential_sync_status.json`）
+- 支持限制处理数量（`--limit N`）
+- 流程：
+  1. 读取源文件，构建 productId → {url, name} 映射
+  2. 调用 Python 工具获取待处理的 product_id 列表
+  3. 对每个产品：
+     - 运行 `single_unified_processor.js` 抓取详情
+     - 调用 `python3 -m tongyong_feishu_update.run_pipeline` 同步飞书
+     - 清理临时文件
+  4. 自动保存进度
+
+#### 测试单个产品
+```bash
+# 测试抓取单个产品
+node sequential_sync.js \
+  --source "golf_content/lecoqgolf/lecoqgolf_products_xxx.json" \
+  --limit 1
+```
+
+#### 旧方法：通过主CLI运行
 ```bash
 # 在 multi_brand 目录下
 node core/cli.js run --brand lecoqgolf
 ```
 
-### 3. 更新配置
+### 更新配置
 编辑 `config.json` 文件后重新运行
 
 ## 调试说明

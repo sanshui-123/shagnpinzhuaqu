@@ -18,7 +18,8 @@ from tongyong_feishu_update.loaders.factory import LoaderFactory
 def get_pending_products(
     feishu_records: dict,
     source_products: list = None,
-    check_field: str = "商品标题"
+    check_field: str = "商品标题",
+    brand_filter: str = None
 ) -> list:
     """
     获取待处理的产品ID列表
@@ -27,6 +28,7 @@ def get_pending_products(
         feishu_records: 飞书现有记录 {product_id: {record_id, fields}}
         source_products: 源文件中的产品列表（可选）
         check_field: 要检查的字段名称
+        brand_filter: 品牌过滤（仅返回该品牌的产品）
 
     Returns:
         待处理的 product_id 列表
@@ -46,13 +48,31 @@ def get_pending_products(
             if product_id not in feishu_records:
                 pending_ids.append(product_id)
             else:
-                field_value = feishu_records[product_id]['fields'].get(check_field, '').strip()
+                record_fields = feishu_records[product_id]['fields']
+
+                # 品牌过滤
+                if brand_filter:
+                    record_brand = record_fields.get('品牌名', '').strip()
+                    if record_brand != brand_filter:
+                        continue
+
+                # 检查指定字段是否为空
+                field_value = record_fields.get(check_field, '').strip()
                 if not field_value:
                     pending_ids.append(product_id)
     else:
         # 没有源文件，检查所有飞书记录
         for product_id, record_info in feishu_records.items():
-            field_value = record_info['fields'].get(check_field, '').strip()
+            record_fields = record_info['fields']
+
+            # 品牌过滤
+            if brand_filter:
+                record_brand = record_fields.get('品牌名', '').strip()
+                if record_brand != brand_filter:
+                    continue
+
+            # 检查指定字段是否为空
+            field_value = record_fields.get(check_field, '').strip()
             if not field_value:
                 pending_ids.append(product_id)
 
@@ -90,6 +110,12 @@ def main():
         '--verbose', '-v',
         action='store_true',
         help='显示详细信息'
+    )
+
+    parser.add_argument(
+        '--brand',
+        default=None,
+        help='品牌过滤（仅返回该品牌的产品）'
     )
 
     args = parser.parse_args()
@@ -142,7 +168,8 @@ def main():
         pending_ids = get_pending_products(
             feishu_records=feishu_records,
             source_products=source_products,
-            check_field=args.field
+            check_field=args.field,
+            brand_filter=args.brand
         )
 
         if args.verbose:
