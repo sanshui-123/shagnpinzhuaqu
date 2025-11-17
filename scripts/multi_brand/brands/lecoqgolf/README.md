@@ -35,7 +35,38 @@
 
 ## 使用方法
 
-### 完整的三阶段流程（推荐）
+### 🚀 快速开始：一键运行（最简单）
+
+使用自动化脚本 `run_full_sync.sh` 可以一次性完成所有三个阶段：
+
+```bash
+# 进入 lecoqgolf 目录
+cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/lecoqgolf
+
+# 运行完整流程（从抓取到同步）
+./run_full_sync.sh
+
+# 或者只处理部分产品（测试用）
+./run_full_sync.sh --limit 10
+
+# 或者跳过抓取，使用已有的最新文件
+./run_full_sync.sh --skip-step1
+```
+
+**脚本自动完成：**
+1. ✅ 抓取商品列表
+2. ✅ 自动找到最新的 JSON 文件
+3. ✅ 导入基础记录到飞书
+4. ✅ 顺序抓详情并同步
+
+**参数说明：**
+- `--skip-step1`: 跳过抓取步骤，使用已有的最新文件
+- `--limit N`: 限制 Step 2 只处理 N 个产品（测试用）
+- `--help`: 显示帮助信息
+
+---
+
+### 📋 完整的三阶段流程（手动执行）
 
 #### Stage 1: 抓取商品列表（scrape_category.js）
 ```bash
