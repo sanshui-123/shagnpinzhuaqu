@@ -74,8 +74,8 @@ class LeCoqGolfScraper {
                 timeout: 30000
             });
 
-            // 等待内容加载
-            await page.waitForTimeout(5000);
+            // 等待内容加载（增加到15秒以确保 Boost 组件完全加载）
+            await page.waitForTimeout(15000);
 
             // 循环处理每一页
             while (currentPage <= maxPages) {
@@ -85,13 +85,33 @@ class LeCoqGolfScraper {
                 const pageTitle = await page.title();
                 console.log(`📄 页面标题: ${pageTitle}`);
 
+                // 🐛 调试：输出页面主要结构
+                const bodyClasses = await page.evaluate(() => {
+                    const body = document.body;
+                    const mainDiv = document.querySelector('main, #main, .main, [role="main"]');
+                    return {
+                        bodyClasses: body ? body.className : 'no body',
+                        bodyId: body ? body.id : '',
+                        mainClasses: mainDiv ? mainDiv.className : 'no main',
+                        mainId: mainDiv ? mainDiv.id : '',
+                        firstDivClasses: document.querySelector('div') ? document.querySelector('div').className : 'no div'
+                    };
+                });
+                console.log(`🐛 页面结构:`, bodyClasses);
+
                 // 检查页面是否有产品列表（支持 Boost 和通用选择器）
                 const productSelectors = [
                     '.boost-sd__grid-item',
+                    '.product-card-wrapper',
                     '.product-grid-item',
                     '.collection-grid-item',
                     'li.grid__item',
-                    '.product-card'
+                    '.grid-product',
+                    '.product-item',
+                    '.product-card',
+                    '[data-product-id]',
+                    '.product',
+                    'article.product'
                 ];
 
                 let hasProducts = 0;
@@ -121,13 +141,20 @@ class LeCoqGolfScraper {
                 const products = await page.evaluate(({collectionType, currentPage}) => {
                 // PEARLY GATES (Shopify + Boost) 产品容器选择器
                 const containerSelectors = [
-                    '.boost-sd__grid-item',      // Boost搜索网格（最优先）
-                    '.product-grid-item',         // 通用产品网格
-                    '.collection-grid-item',      // 集合网格
-                    'li.grid__item',              // Shopify标准网格项
-                    '.product-grid li',           // 产品网格中的列表项
-                    '.card',                      // 卡片容器
-                    '.product-card'               // 产品卡片
+                    '.boost-sd__grid-item',           // Boost搜索网格（最优先）
+                    '.product-card-wrapper',          // Shopify产品卡片包装器
+                    '.product-grid-item',             // 通用产品网格
+                    '.collection-grid-item',          // 集合网格
+                    'li.grid__item',                  // Shopify标准网格项
+                    '.grid-product',                  // 网格产品
+                    '.product-item',                  // 产品项
+                    '.product-grid li',               // 产品网格中的列表项
+                    '.card',                          // 卡片容器
+                    '.product-card',                  // 产品卡片
+                    '[data-product-id]',              // 带产品ID属性的元素
+                    '.product',                       // 通用产品类
+                    'article.product',                // article标签的产品
+                    'div[class*="product"]'           // 类名包含product的div
                 ];
 
                 let items = [];
