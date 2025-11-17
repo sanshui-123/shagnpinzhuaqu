@@ -274,7 +274,20 @@ class BatchUnifiedProcessor {
         const products = [];
 
         // 支持多种数据格式
-        if (productData.products && typeof productData.products === 'object') {
+        if (productData.results && Array.isArray(productData.results)) {
+            // scrape_category.js 格式: { "results": [{ "collection": "...", "products": [...] }] }
+            productData.results.forEach(result => {
+                if (result.products && Array.isArray(result.products)) {
+                    result.products.forEach(item => {
+                        products.push({
+                            productId: item.productId || item.id,
+                            url: item.url || item.detailUrl,
+                            name: item.title || item.name || item.productName
+                        });
+                    });
+                }
+            });
+        } else if (productData.products && typeof productData.products === 'object') {
             // 对象格式: { "product_id": { ... } }
             Object.entries(productData.products).forEach(([productId, info]) => {
                 products.push({

@@ -147,7 +147,8 @@ class LeCoqGolfScraper {
                         let productId = '';
                         if (linkElement) {
                             const href = linkElement.href;
-                            const match = href.match(/\/([A-Z]\d+[A-Z\d]*)\/?$/);
+                            // 修复正则：匹配 LE1872EM011353 这种格式（字母数字混合）
+                            const match = href.match(/\/([A-Z]+\d+[A-Z]*\d*)\/?$/);
                             productId = match ? match[1] : '';
                         }
 
@@ -208,7 +209,7 @@ class LeCoqGolfScraper {
                             }
                         }
 
-                        const linkElement = item.querySelector('a[href]');
+                        // 使用已有的 linkElement 获取 URL
                         const url = linkElement ? linkElement.href : '';
 
                         // 提取徽章
