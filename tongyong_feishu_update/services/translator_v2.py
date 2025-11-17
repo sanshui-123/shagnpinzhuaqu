@@ -61,7 +61,7 @@ def clean_description_text(description: str) -> str:
 
 def build_enhanced_translation_prompt(description: str) -> str:
     """构建增强的商品描述翻译提示词
-    
+
     按照用户要求的"更详细的提示词版本"格式实现
     """
     return f"""请将以下日文服装产品描述翻译成中文，具体要求：
@@ -85,7 +85,9 @@ def build_enhanced_translation_prompt(description: str) -> str:
 | M    | 110cm| 60cm | 79cm|
 
 【期望输出格式】
-注意：只输出指定结构内容，禁止写开场白、致谢、解释等额外文字，直接从【产品描述】开头输出。
+⚠️ 重要：直接输出翻译内容，不要输出任何分析、思考过程、步骤说明或元信息。
+禁止写开场白、致谢、解释等额外文字，直接从【产品描述】开头输出。
+不要使用"First," "Second," "Let me" "I will"等英文表述。
 
 【产品描述】
 采用塔夫塔面料，具有全方向弹力和适度挺括感。融入运动风格设计的茄克式外套。为应对温差变化，袖子采用可拆卸设计，可在短袖⇔长袖之间切换。下摆配有抽绳，可调节版型。
@@ -184,13 +186,13 @@ def call_glm_api_internal(prompt: str) -> str:
                 print(f"提取的content长度: {len(content)}")
                 print(f"提取的reasoning_content长度: {len(reasoning_content)}")
 
-                # 如果content为空，尝试使用reasoning_content
+                # ⚠️ 优先使用 content，如果为空则尝试 reasoning_content
+                # （外层会用 contains_valid_translation 验证）
                 final_content = content if content else reasoning_content
-                print(f"最终使用的内容长度: {len(final_content)}")
 
+                print(f"最终使用的内容长度: {len(final_content)}")
                 if final_content:
-                    print(f"最终内容完整长度: {len(final_content)}")
-                    print(f"最终内容: {final_content}")
+                    print(f"最终内容（前200字符）: {final_content[:200]}")
 
                 return final_content
             else:
@@ -249,6 +251,47 @@ def call_glm_api_internal(prompt: str) -> str:
     
     return ""
 
+def contains_valid_translation(text: str) -> bool:
+    """验证翻译结果是否有效
+
+    检查：
+    1. 是否为空
+    2. 是否包含足够的中文字符
+    3. 是否包含模板关键词（英文分析文本）
+    """
+    if not text:
+        print("验证失败：翻译结果为空")
+        return False
+
+    # 检查是否包含中文字符
+    import re
+    chinese_chars = re.findall(r'[\u4e00-\u9fff]', text)
+    if len(chinese_chars) < 50:  # 至少50个中文字符
+        print(f"验证失败：中文字符不足（{len(chinese_chars)}个）")
+        return False
+
+    # 检查是否包含模板关键词
+    template_patterns = [
+        'Deconstruct the Request',
+        '## Step',
+        '**Analysis**',
+        '**Thinking**',
+        '**Task:**',
+        'Let me',
+        'I will',
+        'The user',
+        'This request'
+    ]
+
+    for pattern in template_patterns:
+        if pattern in text:
+            print(f"验证失败：检测到模板关键词 '{pattern}'")
+            return False
+
+    print(f"✅ 翻译验证通过（{len(chinese_chars)}个中文字符）")
+    return True
+
+
 def validate_translation_format(translated: str) -> bool:
     """验证翻译结果是否符合预期格式
 
@@ -302,34 +345,79 @@ def extract_source_description(product: Dict) -> str:
     return cleaned_description
 
 
+def fallback_translate(description: str) -> str:
+    """截断重试翻译
+
+    当首次翻译失败时，截断描述到2500字符重新翻译
+    不进行模板检测，直接返回结果
+    """
+    print("⚠️ 首次翻译失败，使用截断重试...")
+
+    # 截断到2500字符
+    truncated = description[:2500]
+    print(f"截断后长度: {len(truncated)} 字符")
+
+    # 使用相同的提示词
+    prompt = build_enhanced_translation_prompt(truncated)
+
+    try:
+        translated = call_glm_api_internal(prompt)
+        print(f"截断重试结果长度: {len(translated) if translated else 0}")
+
+        if not translated:
+            print("截断重试仍返回空结果")
+            return ""
+
+        # 第二次重试不检测模板，直接返回
+        print("✅ 截断重试完成，直接返回结果")
+        return translated.strip()
+
+    except Exception as e:
+        print(f"截断重试异常：{e}")
+        return ""
+
+
 def translate_description(product: Dict) -> str:
-    """将商品描述翻译成结构化中文格式"""
+    """将商品描述翻译成结构化中文格式
+
+    流程：
+    1. 首次翻译
+    2. 验证翻译结果（contains_valid_translation）
+    3. 失败则截断到2500字符重试
+    4. 返回结果
+    """
     cleaned_description = extract_source_description(product)
     if not cleaned_description:
         return ""
 
     print(f"清理后的描述内容（前100字符）：{cleaned_description[:100]}...")
-    
+    print(f"原文总长度: {len(cleaned_description)} 字符")
+
+    # 第一次翻译
     prompt = build_enhanced_translation_prompt(cleaned_description)
     print(f"准备调用 GLM 翻译，提示词长度：{len(prompt)}")
-    
+
     try:
         translated = call_glm_api_internal(prompt)
         print(f"GLM 翻译返回结果长度：{len(translated) if translated else 0}")
-        print(f"翻译结果（前100字符）：{translated[:100] if translated else 'None'}...")
-        
-        if not translated:
-            print("GLM 翻译返回空结果")
-            return ""
-        
-        # 4. 验证翻译结果格式
-        if not validate_translation_format(translated):
-            print("翻译结果格式验证失败，返回空字符串")
-            return ""
-        
-        print("翻译成功完成")
-        return translated.strip()
-            
+
+        # 验证翻译结果
+        if contains_valid_translation(translated):
+            # 首次翻译成功
+            print("✅ 首次翻译成功")
+            return translated.strip()
+        else:
+            # 首次翻译失败，尝试截断重试
+            print("❌ 首次翻译验证失败")
+            fallback_result = fallback_translate(cleaned_description)
+
+            if fallback_result:
+                print("✅ 截断重试成功")
+                return fallback_result
+            else:
+                print("❌ 截断重试也失败，返回空字符串")
+                return ""
+
     except Exception as e:
         print(f"翻译过程出现异常：{e}")
         return ""
