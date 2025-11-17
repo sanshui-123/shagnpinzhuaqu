@@ -7,6 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const UnifiedDetailScraper = require('./unified_detail_scraper');
 
 class BatchUnifiedProcessor {
@@ -23,6 +24,7 @@ class BatchUnifiedProcessor {
         // 保持原有的输出目录结构
         this.outputDir = options.outputDir || './golf_content/lecoqgolf/';
         this.outputPath = options.outputPath;  // 完整输出文件路径（可选）
+        this.feishuFilter = options.feishuFilter !== undefined ? options.feishuFilter : true; // 默认启用飞书过滤
         this.results = {};
         this.processedCount = 0;
         this.totalProducts = 0;
@@ -149,8 +151,29 @@ class BatchUnifiedProcessor {
                 return;
             }
 
+            // 飞书过滤：只处理标题为空或记录缺失的商品
+            let filteredProducts = products;
+            if (this.feishuFilter) {
+                console.log('🔍 正在查询飞书，筛选待处理商品...');
+                try {
+                    const cmd = `cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.tools.export_pending_products --field "商品标题" --source "${this.inputFile}" --stdout`;
+                    const stdout = execSync(cmd, { encoding: 'utf8' });
+                    const pendingIds = new Set(JSON.parse(stdout || '[]'));
+
+                    if (pendingIds.size === 0) {
+                        console.log('✅ 飞书无待处理记录（所有商品标题都已填写）');
+                        return null;
+                    }
+
+                    filteredProducts = products.filter(p => pendingIds.has(p.productId));
+                    console.log(`📊 飞书过滤结果: ${filteredProducts.length}/${products.length} 个商品需要处理`);
+                } catch (error) {
+                    console.log(`⚠️ 飞书过滤失败: ${error.message}，将处理所有商品`);
+                }
+            }
+
             // 过滤已处理的URL
-            const unprocessedProducts = products.filter(product => {
+            const unprocessedProducts = filteredProducts.filter(product => {
                 if (!product.url) {
                     console.log('⚠️ 商品缺少URL:', product.productId || product.name);
                     return false;
@@ -365,12 +388,13 @@ async function main() {
         console.log('用法: node batch_unified_processor.js [选项]');
         console.log('');
         console.log('选项:');
-        console.log('  --input <path>     指定输入文件路径（不指定则自动查找最新文件）');
-        console.log('  --output <path>    指定输出文件路径');
-        console.log('  --headless         使用无头模式（默认开启）');
-        console.log('  --debug            开启调试模式（默认关闭）');
-        console.log('  --timeout <ms>     设置超时时间（毫秒）');
-        console.log('  --help, -h         显示帮助信息');
+        console.log('  --input <path>        指定输入文件路径（不指定则自动查找最新文件）');
+        console.log('  --output <path>       指定输出文件路径');
+        console.log('  --headless            使用无头模式（默认开启）');
+        console.log('  --debug               开启调试模式（默认关闭）');
+        console.log('  --timeout <ms>        设置超时时间（毫秒）');
+        console.log('  --no-feishu-filter    禁用飞书过滤（默认只抓标题为空的商品）');
+        console.log('  --help, -h            显示帮助信息');
         console.log('');
         console.log('示例:');
         console.log('  node batch_unified_processor.js');
@@ -428,6 +452,10 @@ async function main() {
                     console.error('❌ --timeout 参数需要指定时间（毫秒）');
                     process.exit(1);
                 }
+                break;
+
+            case '--no-feishu-filter':
+                options.feishuFilter = false;
                 break;
 
             default:
