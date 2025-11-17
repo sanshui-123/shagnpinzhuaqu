@@ -50,7 +50,10 @@ class FeishuClient(FeishuClientInterface):
         # Token缓存
         self._cached_token: Optional[str] = None
         self._token_expires_at: float = 0.0
-        
+
+        # 记录映射缓存
+        self.records_by_url: Dict[str, Dict] = {}  # 按商品链接映射
+
         # API端点
         self.auth_url = 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal'
         self.records_url = f'https://open.feishu.cn/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/records'
@@ -70,8 +73,9 @@ class FeishuClient(FeishuClientInterface):
         }
         
         existing_records = {}
+        records_by_url = {}  # 新增：按商品链接映射
         page_token = None
-        
+
         while True:
             params = {
                 'page_size': 500,
@@ -79,50 +83,71 @@ class FeishuClient(FeishuClientInterface):
             }
             if page_token:
                 params['page_token'] = page_token
-            
+
             # 使用重试机制
             for attempt in range(self.max_retries):
                 try:
                     resp = requests.get(
-                        self.records_url, 
-                        headers=headers, 
-                        params=params, 
+                        self.records_url,
+                        headers=headers,
+                        params=params,
                         timeout=30
                     )
                     resp.raise_for_status()
                     data = resp.json()
-                    
+
                     if data.get('code') != 0:
                         print(f"飞书API返回错误: {data}")
                         break
-                    
+
                     # 提取记录信息
                     items = data.get('data', {}).get('items', [])
                     for item in items:
                         fields = item.get('fields', {})
-                        product_id = fields.get('商品ID')
+                        record_info = {
+                            'record_id': item.get('record_id'),
+                            'fields': fields
+                        }
+
+                        # 按商品ID映射
+                        product_id = fields.get('商品ID', '').strip()
                         if product_id:
-                            existing_records[product_id] = {
-                                'record_id': item.get('record_id'),
-                                'fields': fields
-                            }
-                    
+                            existing_records[product_id] = record_info
+
+                        # 按商品链接映射（去掉末尾斜杠）
+                        product_url = fields.get('商品链接', '').strip().rstrip('/')
+                        if product_url:
+                            records_by_url[product_url] = record_info
+
                     page_token = data.get('data', {}).get('page_token')
                     break
-                    
+
                 except Exception as e:
                     print(f"获取飞书记录失败 (尝试{attempt+1}/{self.max_retries}): {e}")
                     if attempt == self.max_retries - 1:
                         raise e
                     time.sleep(2 ** attempt)  # 指数退避
-            
+
             if not page_token:
                 break
-            
+
             time.sleep(0.2)  # 分页间隔
-        
+
+        # 保存URL映射到实例变量
+        self.records_by_url = records_by_url
+
         return existing_records
-    
+
+    def get_records_by_url(self) -> Dict[str, Dict]:
+        """获取按商品链接映射的记录
+
+        注意：必须先调用 get_records() 才能使用此方法
+
+        Returns:
+            Dict[str, Dict]: 记录映射，key为商品链接（去掉末尾斜杠），value为包含record_id和fields的字典
+        """
+        return self.records_by_url
+
     def batch_update(self, records: List[Dict], batch_size: int = 30) -> Dict[str, Any]:
         """批量更新记录
         

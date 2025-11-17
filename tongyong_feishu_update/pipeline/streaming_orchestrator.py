@@ -92,9 +92,24 @@ class StreamingUpdateOrchestrator:
         # 2. 获取飞书现有记录
         print("🔍 获取飞书现有记录...")
         existing_records = self.feishu_client.get_records()
-        
+        existing_records_by_url = self.feishu_client.get_records_by_url()
+
         # 3. 确保记录存在
-        missing_ids = [pid for pid in products.keys() if pid not in existing_records]
+        # 3.1 先尝试通过URL匹配找到现有记录
+        missing_ids = []
+        for pid in products.keys():
+            if pid not in existing_records:
+                # 尝试通过URL查找
+                product = products[pid]
+                detail_url = (getattr(product, 'detail_url', None) or
+                             getattr(product, 'detailUrl', None) or '').strip().rstrip('/')
+                if detail_url and detail_url in existing_records_by_url:
+                    # 找到了！使用URL匹配到的记录
+                    existing_records[pid] = existing_records_by_url[detail_url]
+                    print(f"🔁 使用商品链接匹配到现有记录: {pid} -> {detail_url}")
+                else:
+                    # 确实没找到
+                    missing_ids.append(pid)
         if missing_ids:
             print(f"发现 {len(missing_ids)} 个缺失的product_id，正在批量创建...")
             self._create_missing_records(missing_ids, products, dry_run)
