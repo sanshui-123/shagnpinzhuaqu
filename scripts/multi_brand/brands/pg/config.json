@@ -1,0 +1,72 @@
+{
+  "name": "PEARLY GATES",
+  "domain": "mix.tokyo",
+  "baseUrl": "https://mix.tokyo",
+  "enabled": true,
+  "schedule": {
+    "interval": "10-days",
+    "dayOfMonth": 6
+  },
+  "scraper": {
+    "type": "playwright",
+    "timeout": 45000,
+    "retries": 3,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "headless": true,
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "waitStrategy": {
+      "waitForNetworkIdle": true,
+      "minWaitTime": 3000,
+      "maxWaitTime": 15000
+    }
+  },
+  "selectors": {
+    "productGrid": ".boost-sd__grid-item, .product-grid-item, .collection-grid-item, .product-grid li, li.grid__item, .card, .product-card",
+    "productName": ".product-title, .boost-sd__product-title, .card__title, .product-item__title, h3, h2",
+    "productUrl": "a[href*='/products/'], a[href]",
+    "productImage": "img[alt][src]:not([src='']), img[data-src], img[data-original], img[data-lazy], img",
+    "productPrice": ".product-price, .price, .boost-sd__product-price, .card__price, [class*='price'], [data-price]",
+    "productCategory": ".product-type, .collection-tag, .category",
+    "productBrand": ".vendor, .brand-name, [data-vendor]",
+    "badgeSale": ".badge--sale, .product-badge--sale, [class*='sale'], .on-sale",
+    "badgeNew": ".badge--new, .product-badge--new, [class*='new']"
+  },
+  "categories": [
+    "mens",
+    "womens",
+    "tops",
+    "bottoms",
+    "outerwear",
+    "accessories"
+  ],
+  "urls": {
+    "main": "/collections/pg-men-golf?pf_st_zai_ku_zhuang_kuang=in-stock",
+    "womens": "/collections/pg-women-golf?pf_st_zai_ku_zhuang_kuang=in-stock"
+  },
+  "pagination": {
+    "enabled": true,
+    "nextSelector": ".boost-sd__pagination-button--next",
+    "pageParam": "page",
+    "maxPages": 15,
+    "itemsPerPage": 50
+  },
+  "constraints": {
+    "minProductsPerPage": 5,
+    "maxPagesPerCategory": 3,
+    "requestDelay": 3000,
+    "maxConcurrentPages": 1
+  },
+  "output": {
+    "format": "json",
+    "path": "golf_content/pg",
+    "filename": "pg_products.json"
+  },
+  "antiDetection": {
+    "randomDelays": true,
+    "rotateUserAgents": true,
+    "simulateHumanBehavior": true
+  }
+}

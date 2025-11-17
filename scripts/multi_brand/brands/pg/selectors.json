@@ -1,0 +1,119 @@
+{
+  "pages": {
+    "mens": {
+      "url": "/brand/le%20coq%20sportif%20golf/ds_M?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1",
+      "name": "男士高尔夫系列",
+      "selectors": {
+        "productContainer": ".catalogList_item",
+        "productItems": ".catalogList_item",
+        "productTitle": ".commodityName",
+        "productPrice": ".price",
+        "productImage": ".catalogList_image img",
+        "productLink": ".catalogList_item a"
+      }
+    },
+    "womens": {
+      "url": "/brand/le%20coq%20sportif%20golf/ds_F?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1",
+      "name": "女士高尔夫系列",
+      "selectors": {
+        "productContainer": ".catalogList_item",
+        "productItems": ".catalogList_item",
+        "productTitle": ".commodityName",
+        "productPrice": ".price",
+        "productImage": ".catalogList_image img",
+        "productLink": ".catalogList_item a"
+      }
+    }
+  },
+  "pagination": {
+    "nextButton": ".pager_next a",
+    "prevButton": ".pager_prev a",
+    "currentPage": ".pager_current",
+    "pageNumbers": ".pager_number a",
+    "totalPages": ".pager_number:last-child",
+    "itemSelector": ".catalogList_item",
+    "maxPages": 5
+  },
+  "productDetails": {
+    "title": ".commodityName",
+    "brand": ".brandName",
+    "price": ".price",
+    "originalPrice": ".price_original",
+    "salePrice": ".price_sale",
+    "images": ".catalogList_image img",
+    "mainImage": ".catalogList_image img:first-child",
+    "productCode": ".commodity_code",
+    "category": ".breadcrumb a",
+    "badges": {
+      "sale": ".badgeSale",
+      "new": ".badgeNew",
+      "recommend": ".badgeRecommend"
+    }
+  },
+  "waitFor": {
+    "productGrid": ".catalogList_item",
+    "productImage": ".catalogList_image img[src]",
+    "productPrice": ".price",
+    "mainContent": ".catalogList"
+  },
+  "extractionRules": {
+    "title": {
+      "selector": ".commodityName",
+      "attribute": "textContent",
+      "clean": true,
+      "maxLength": 200
+    },
+    "price": {
+      "selector": ".price",
+      "attribute": "textContent",
+      "clean": true,
+      "extractNumber": true,
+      "currency": "JPY"
+    },
+    "image": {
+      "selector": ".catalogList_image img",
+      "attribute": "src",
+      "ensureAbsolute": true,
+      "baseUrl": "https://store.descente.co.jp"
+    },
+    "url": {
+      "selector": ".catalogList_item a",
+      "attribute": "href",
+      "ensureAbsolute": true,
+      "baseUrl": "https://store.descente.co.jp"
+    },
+    "brand": {
+      "selector": ".brandName",
+      "attribute": "textContent",
+      "defaultValue": "Le Coq Sportif Golf",
+      "clean": true
+    },
+    "category": {
+      "selector": ".brandName",
+      "attribute": "textContent",
+      "mapValues": {
+        "Le Coq Sportif": "Unisex",
+        "MENS": "男性",
+        "WOMENS": "女性"
+      }
+    },
+    "badges": {
+      "sale": {
+        "selector": ".badgeSale",
+        "attribute": "textContent",
+        "exists": true
+      },
+      "new": {
+        "selector": ".badgeNew",
+        "attribute": "textContent",
+        "exists": true
+      }
+    }
+  },
+  "dataCleaning": {
+    "removeHtmlTags": true,
+    "trimWhitespace": true,
+    "normalizeSpaces": true,
+    "removeEmptyFields": true
+  }
+}

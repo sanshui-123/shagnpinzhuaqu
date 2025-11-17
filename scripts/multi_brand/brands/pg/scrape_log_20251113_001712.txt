@@ -1,0 +1,59 @@
+🚀 开始抓取 Le Coq Sportif Golf 数据...
+🌐 目标网站: https://store.descente.co.jp
+
+👕 抓取男士系列...
+📄 访问页面: https://store.descente.co.jp/brand/le%20coq%20sportif%20golf/ds_M?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1
+
+📖 正在处理第 1 页...
+📄 页面标题: le coq sportif golf ルコックスポルティフ ゴルフ - メンズ -デサントストア-DESCENTE STORE-
+🔍 第1页发现产品数量: 120
+✅ 第1页提取到 120 个产品
+🔍 发现第 2 页链接
+✅ 成功点击第 2 页 (选择器: a[href*="currentPage=2"])
+
+📖 正在处理第 2 页...
+📄 页面标题: le coq sportif golf ルコックスポルティフ ゴルフ - メンズ -デサントストア-DESCENTE STORE-
+🔍 第2页发现产品数量: 120
+✅ 第2页提取到 120 个产品
+🔍 发现第 3 页链接
+✅ 成功点击第 3 页 (选择器: a[href*="currentPage=3"])
+
+📖 正在处理第 3 页...
+📄 页面标题: le coq sportif golf ルコックスポルティフ ゴルフ - メンズ -デサントストア-DESCENTE STORE-
+🔍 第3页发现产品数量: 90
+✅ 第3页提取到 90 个产品
+🔍 发现第 4 页链接
+⚠️ 点击下一页时出错: locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for locator('[class*="next"]')[22m
+[2m    - locator resolved to <div class="nextPrevBtnGroup">…</div>[22m
+[2m  - attempting click action[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not visible[22m
+[2m    - retrying click action[22m
+[2m    - waiting 20ms[22m
+[2m    2 × waiting for element to be visible, enabled and stable[22m
+[2m      - element is not visible[22m
+[2m    - retrying click action[22m
+[2m      - waiting 100ms[22m
+[2m    54 × waiting for element to be visible, enabled and stable[22m
+[2m       - element is not visible[22m
+[2m     - retrying click action[22m
+[2m       - waiting 500ms[22m
+
+❌ 无法翻转到第 4 页，停止抓取
+
+🎉 男士系列总计提取到 330 个产品
+
+👕 抓取女士系列...
+📄 访问页面: https://store.descente.co.jp/brand/le%20coq%20sportif%20golf/ds_F?commercialType=0|2|3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1
+
+📖 正在处理第 1 页...
+📄 页面标题: le coq sportif golf ルコックスポルティフ ゴルフ -デサントストア-DESCENTE STORE-
+🔍 第1页发现产品数量: 0
+⚠️ 第1页没有产品，停止抓取
+
+🎉 女士系列总计提取到 0 个产品
+💾 结果已保存: golf_content/lecoqgolf/lecoqgolf_products_2025-11-12T16-18-23-072Z.json
+📊 总计抓取: 330 个产品
+✅ Le Coq Sportif Golf 抓取完成
