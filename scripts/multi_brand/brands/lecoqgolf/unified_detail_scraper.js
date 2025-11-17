@@ -546,8 +546,18 @@ class UnifiedDetailScraper {
                 }
             }
 
-            // 去重并返回，增加数量限制
-            return [...new Set(images)].slice(0, 20);
+            // 去重并按优先级筛选图片：1100×1100 > _l.jpg > 前20张
+            const uniqueImages = [...new Set(images)];
+            const highResPattern = /(1100x1100|_1100x1100|_1100\.|\/1100\/)/;
+            const highResImages = uniqueImages.filter(url => highResPattern.test(url));
+            const largeFallback = uniqueImages.filter(url => url.endsWith('_l.jpg'));
+            if (highResImages.length > 0) {
+                return highResImages;
+            }
+            if (largeFallback.length > 0) {
+                return largeFallback;
+            }
+            return uniqueImages.slice(0, 20);
         });
     }
 
