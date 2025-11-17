@@ -114,8 +114,26 @@ def main():
             with open(args.source, 'r', encoding='utf-8') as f:
                 data = json.load(f)
 
-            loader = LoaderFactory.create(data)
-            source_products = loader.parse(data)
+            # 检查是否是 scrape_category.js 格式
+            if 'results' in data and isinstance(data['results'], list):
+                # 直接从 results 中提取产品
+                from tongyong_feishu_update.models.product import Product
+                source_products = []
+                for result in data['results']:
+                    if 'products' in result and isinstance(result['products'], list):
+                        for item in result['products']:
+                            product = Product(
+                                product_id=item.get('productId', ''),
+                                detail_url=item.get('url', ''),
+                                product_name=item.get('title', ''),
+                                brand=item.get('brand', '')
+                            )
+                            if product.product_id:  # 只添加有 productId 的商品
+                                source_products.append(product)
+            else:
+                # 使用 LoaderFactory
+                loader = LoaderFactory.create(data)
+                source_products = loader.parse(data)
 
             if args.verbose:
                 print(f"✅ 已加载 {len(source_products)} 个源产品", file=sys.stderr)
