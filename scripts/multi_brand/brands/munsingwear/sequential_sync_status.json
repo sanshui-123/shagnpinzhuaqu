@@ -1,0 +1,46 @@
+{
+  "processedIds": [
+    "LE1872EW011337",
+    "LE1872EW008774",
+    "LE1872EW011482",
+    "LE1872EW009873",
+    "LE1872EM012758",
+    "LE1872EM011037",
+    "LE1872EW011404",
+    "LE1872EM011257",
+    "LE1872EM012724",
+    "LE1872EW009284",
+    "LE1872EW012702",
+    "LE1872EW009632",
+    "LE1872EW012717",
+    "LE1872EW011395",
+    "LE1872EW012631",
+    "LE1872EW013025",
+    "LE1872EW009652",
+    "LE1872EW012592",
+    "LE1872EW011317",
+    "LE1872EM013062",
+    "LE1872EM009427",
+    "LE1872EM011238",
+    "AN2931EM000829"
+  ],
+  "failedIds": [
+    [
+      "LE1872EM010696",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EM010696.json\" --verbose"
+    ],
+    [
+      "LE1872EM011629",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EM011629.json\" --verbose"
+    ],
+    [
+      "LE1872EW009637",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/lecoqgolf && node single_unified_processor.js \"https://store.descente.co.jp/commodity/SDSC0140D/LE1872EW009637/\" \"LE1872EW009637\" --output \"/tmp/pending_LE1872EW009637.json\""
+    ],
+    [
+      "LE1872EM011009",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EM011009.json\" --verbose"
+    ]
+  ],
+  "lastUpdate": "2025-11-17T11:52:56.196Z"
+}

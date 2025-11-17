@@ -1,0 +1,15 @@
+{
+  "products": {},
+  "total": 0,
+  "processed": 0,
+  "failed": 1,
+  "errors": [
+    {
+      "type": "batch_error",
+      "message": "未找到商品列表文件"
+    }
+  ],
+  "timestamp": "2025-11-15T14:37:16.029Z",
+  "brand": "lecoqgolf",
+  "batchMode": true
+}

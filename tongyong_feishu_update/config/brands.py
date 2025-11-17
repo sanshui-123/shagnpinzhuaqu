@@ -57,7 +57,8 @@ BRAND_MAP = {
     'lagolf': 'LA高尔夫LA Golf',
     'toulon': '图伦Toulon',
     'lecoqsportif': 'Le Coq公鸡乐卡克',  # 新增Le Coq品牌
-    'lecoqsportifgolf': 'Le Coq公鸡乐卡克高尔夫',  # 新增Le Coq Golf
+    'lecoqsportifgolf': 'Le Coq公鸡乐卡克',  # 新增Le Coq Golf
+    'munsingwear': '万星威Munsingwear',  # 新增Munsingwear品牌
 }
 
 # 品牌简短名（用于飞书"品牌名"字段）
@@ -103,6 +104,7 @@ BRAND_SHORT_NAME = {
     'toulon': '图伦',
     'lecoqsportif': 'Le Coq公鸡乐卡克',  # 新增Le Coq品牌
     'lecoqsportifgolf': 'Le Coq公鸡乐卡克',  # 新增Le Coq Golf
+    'munsingwear': '万星威',  # 新增Munsingwear品牌
 }
 
 # 品牌别名映射 - 用于识别各种拼写变体和多语言名称
@@ -284,7 +286,15 @@ BRAND_ALIASES = {
     # Toulon 别名
     'toulon': 'toulon',
     'toulondesign': 'toulon',
-    
+
+    # Munsingwear 别名
+    'munsingwear': 'munsingwear',
+    'マンシングウェア': 'munsingwear',
+    'penguin by munsingwear': 'munsingwear',
+    'ペンギン バイ マンシングウェア': 'munsingwear',
+    'penguin': 'munsingwear',
+    '万星威': 'munsingwear',
+
     # 添加缺失的原始清单别名和规范化变体
     'titleist': 'titleist',  # title ist 规范化后
     'ping': 'ping',  # p i n g 规范化后
