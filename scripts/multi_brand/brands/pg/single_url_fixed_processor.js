@@ -133,7 +133,7 @@ class SingleURLFixedProcessor {
                         return title;
                     })(),
 
-                    "品牌名": "PEARLY GATES",
+                    "品牌名": "Le Coq公鸡乐卡克",
 
                     "价格": (() => {
                         const selectors = ['.price', '.price-current', '[class*="price"]'];
@@ -262,177 +262,38 @@ class SingleURLFixedProcessor {
                     // 颜色数据
                     "颜色": (() => {
                         const colors = [];
+                        const colorElements = document.querySelectorAll('#color-selector .colorName, .colorName, [class*="color-option"], [data-color]');
 
-                        // 🔥 mix.tokyo 网站：从 Schema.json 或变体数据提取颜色
-                        if (window.location.hostname.includes('mix.tokyo')) {
-                            // 方法1：从页面的 JSON-LD schema 提取
-                            const schemaScripts = document.querySelectorAll('script[type="application/ld+json"]');
-                            schemaScripts.forEach(script => {
-                                try {
-                                    const data = JSON.parse(script.textContent);
-                                    if (data.offers && Array.isArray(data.offers)) {
-                                        const colorSet = new Set();
-                                        data.offers.forEach(offer => {
-                                            if (offer.name) {
-                                                // 提取颜色名（格式如 "グレー / 3"）
-                                                const colorMatch = offer.name.match(/^([^\/]+)/);
-                                                if (colorMatch) {
-                                                    colorSet.add(colorMatch[1].trim());
-                                                }
-                                            }
-                                        });
-                                        colorSet.forEach((color, index) => {
-                                            // 排除包含尺码的变体名（如 "グレー / 3"）
-                                            if (!color.includes('/')) {
-                                                colors.push({
-                                                    name: color,
-                                                    isFirstColor: index === 0
-                                                });
-                                            }
-                                        });
-                                    }
-                                } catch (e) {}
-                            });
-
-                            // 方法2：从变体选择器提取（Shopify 结构）
-                            if (colors.length === 0) {
-                                // 查找颜色选择按钮
-                                const colorButtons = document.querySelectorAll('input[type="radio"][name*="Color"], input[type="radio"][name*="color"], [data-option-name="Color"] input, [data-option-name="カラー"] input');
-                                const colorSet = new Set();
-                                colorButtons.forEach(btn => {
-                                    const value = btn.value || btn.getAttribute('data-value');
-                                    if (value) colorSet.add(value);
-                                });
-
-                                // 或从label提取
-                                if (colorSet.size === 0) {
-                                    const labels = document.querySelectorAll('label[for*="color"], label[for*="Color"], .color-swatch, [class*="color-option"]');
-                                    labels.forEach(label => {
-                                        const text = label.textContent.trim();
-                                        if (text && text.length < 15 && !text.includes('カート')) {
-                                            colorSet.add(text);
-                                        }
-                                    });
-                                }
-
-                                colorSet.forEach((color, index) => {
-                                    colors.push({
-                                        name: color,
-                                        isFirstColor: index === 0
-                                    });
+                        colorElements.forEach((element, index) => {
+                            const colorName = element.textContent.trim();
+                            if (colorName && !colors.find(c => c.name === colorName)) {
+                                colors.push({
+                                    name: colorName,
+                                    isFirstColor: index === 0
                                 });
                             }
-
-                            // 方法3：从select选项提取
-                            if (colors.length === 0) {
-                                const selects = document.querySelectorAll('select');
-                                selects.forEach(select => {
-                                    const options = select.querySelectorAll('option');
-                                    const colorSet = new Set();
-                                    options.forEach(opt => {
-                                        const text = opt.textContent.trim();
-                                        // 日语颜色关键词
-                                        if (text && (text.includes('グレー') || text.includes('ホワイト') || text.includes('ブルー') || text.includes('ネイビー') || text.includes('ブラック') || text.includes('レッド'))) {
-                                            colorSet.add(text);
-                                        }
-                                    });
-                                    colorSet.forEach((color, index) => {
-                                        if (!colors.find(c => c.name === color)) {
-                                            colors.push({
-                                                name: color,
-                                                isFirstColor: colors.length === 0
-                                            });
-                                        }
-                                    });
-                                });
-                            }
-                        }
-
-                        // Descente 网站原有逻辑
-                        if (colors.length === 0) {
-                            const colorElements = document.querySelectorAll('#color-selector .colorName, .colorName, [class*="color-option"], [data-color]');
-                            colorElements.forEach((element, index) => {
-                                const colorName = element.textContent.trim();
-                                if (colorName && !colors.find(c => c.name === colorName)) {
-                                    colors.push({
-                                        name: colorName,
-                                        isFirstColor: index === 0
-                                    });
-                                }
-                            });
-                        }
+                        });
 
                         return colors;
                     })(),
 
                     // 图片数据 - 只抓取第一个颜色，1100*1100尺寸
                     "图片链接": (() => {
+                        const imgElements = document.querySelectorAll('img[src*="LE/LE"], img[src*="commodity_image"]');
                         const firstColorImages = [];
 
-                        // 🔥 mix.tokyo 网站：从多个来源提取图片
-                        if (window.location.hostname.includes('mix.tokyo')) {
-                            // 方法1：从 JSON-LD schema 提取图片
-                            const schemaScripts = document.querySelectorAll('script[type="application/ld+json"]');
-                            schemaScripts.forEach(script => {
-                                try {
-                                    const data = JSON.parse(script.textContent);
-                                    // 提取主图片
-                                    if (data.image && Array.isArray(data.image)) {
-                                        data.image.forEach(img => {
-                                            if (img && !firstColorImages.includes(img)) {
-                                                firstColorImages.push(img);
-                                            }
-                                        });
-                                    } else if (data.image && typeof data.image === 'string') {
-                                        if (!firstColorImages.includes(data.image)) {
-                                            firstColorImages.push(data.image);
-                                        }
-                                    }
-                                    // 从 offers 提取图片
-                                    if (data.offers && Array.isArray(data.offers)) {
-                                        data.offers.forEach(offer => {
-                                            if (offer.image && !firstColorImages.includes(offer.image)) {
-                                                firstColorImages.push(offer.image);
-                                            }
-                                        });
-                                    }
-                                } catch (e) {}
-                            });
-
-                            // 方法2：从页面图片元素提取
-                            if (firstColorImages.length === 0) {
-                                const imgElements = document.querySelectorAll('img[src*="mix.tokyo/cdn"], img[src*="shopify"]');
-                                imgElements.forEach(el => {
-                                    if (el.src && el.src.includes('files/') && !el.src.includes('icon') && !el.src.includes('logo')) {
-                                        // 获取高分辨率版本
-                                        let imgUrl = el.src;
-                                        if (!imgUrl.includes('width=')) {
-                                            imgUrl = imgUrl.includes('?') ? imgUrl + '&width=1920' : imgUrl + '?width=1920';
-                                        }
-                                        if (!firstColorImages.includes(imgUrl)) {
-                                            firstColorImages.push(imgUrl);
-                                        }
-                                    }
-                                });
-                            }
-                        }
-
-                        // Descente 网站原有逻辑
-                        if (firstColorImages.length === 0) {
-                            const imgElements = document.querySelectorAll('img[src*="LE/LE"], img[src*="commodity_image"]');
-                            imgElements.forEach(el => {
-                                if (el.src) {
-                                    // 检查是否是1100尺寸的图片
-                                    if (el.src.includes('_1100.') || el.src.includes('1100')) {
-                                        firstColorImages.push(el.src);
-                                    }
-                                    // 如果没有1100，使用大图 (_l.)
-                                    else if (el.src.includes('_l.') && !el.src.includes('_thumbM')) {
-                                        firstColorImages.push(el.src);
-                                    }
+                        imgElements.forEach(el => {
+                            if (el.src) {
+                                // 检查是否是1100尺寸的图片
+                                if (el.src.includes('_1100.') || el.src.includes('1100')) {
+                                    firstColorImages.push(el.src);
                                 }
-                            });
-                        }
+                                // 如果没有1100，使用大图 (_l.)
+                                else if (el.src.includes('_l.') && !el.src.includes('_thumbM')) {
+                                    firstColorImages.push(el.src);
+                                }
+                            }
+                        });
 
                         // 去重并排序
                         const uniqueImages = [...new Set(firstColorImages)];
