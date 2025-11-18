@@ -115,6 +115,7 @@ class DetailedProductLoader(BaseProductLoader):
             current_price=product_info.get('price', ''),
             sku=product_info.get('sku', ''),
             status=product_info.get('status', ''),
+            gender=product_info.get('gender', ''),  # 🔥 添加性别字段
             detail_url=scrape_info.get('url', ''),
             variants=variants,
             colors=colors,
@@ -164,6 +165,7 @@ class DetailedProductLoader(BaseProductLoader):
             current_price=product_info.get('price', ''),
             sku=product_info.get('sku', ''),
             status=product_info.get('status', ''),
+            gender=product_info.get('gender', ''),  # 🔥 添加性别字段
             detail_url=product_info.get('detailUrl', ''),
             variants=variants,
             colors=colors,

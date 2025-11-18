@@ -276,6 +276,8 @@ class StreamingUpdateOrchestrator:
                     'priceText': getattr(product, 'price', ''),
                     'currentPrice': getattr(product, 'current_price', ''),
                     'description': getattr(product, 'description', ''),
+                    'gender': getattr(product, 'gender', ''),  # 🔥 添加性别字段
+                    'category': getattr(product, 'category', ''),  # 🔥 添加分类字段
                     # 从 extra 中透传 _detail_data 和其他原始数据
                     **extra
                 }

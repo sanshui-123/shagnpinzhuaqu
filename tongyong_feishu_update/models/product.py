@@ -169,7 +169,7 @@ class Product:
     detailUrl: str = ""                 # 详情页URL（兼容字段）
     imageUrls: List[str] = field(default_factory=list)  # 图片URL列表（兼容字段）
     scrapeInfo: Dict[str, Any] = field(default_factory=dict)  # 抓取信息（兼容字段）
-    gender: str = ""                   # 性别（兼容字段）
+    # 🔥 gender字段已在第139行定义，移除此重复定义
 
     def __post_init__(self):
         """后处理，同步兼容字段"""
