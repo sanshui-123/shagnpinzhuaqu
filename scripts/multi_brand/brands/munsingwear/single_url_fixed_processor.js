@@ -81,35 +81,46 @@ class SingleURLFixedProcessor {
                     // 基础信息
                     "商品链接": window.location.href,
                     "商品ID": (() => {
-                        // 优先从尺码表中提取品牌商品编号
+                        // 🔥 优先从详情表格中提取"ブランド商品番号"对应的值
+                        const tables = document.querySelectorAll('table');
+                        for (const table of tables) {
+                            const rows = table.querySelectorAll('tr');
+                            for (const row of rows) {
+                                const th = row.querySelector('th');
+                                const td = row.querySelector('td');
+                                if (th && td) {
+                                    const thText = th.textContent.trim();
+                                    // 🔥 只匹配"ブランド商品番号"，排除普通的"商品番号"
+                                    if (thText.includes('ブランド商品番号')) {
+                                        const brandCode = td.textContent.trim();
+                                        // 清洗：去除空格和特殊字符，提取产品编号
+                                        const cleanCode = brandCode.replace(/\s+/g, '').match(/([A-Z0-9]{6,})/i);
+                                        if (cleanCode) {
+                                            return cleanCode[1];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 备用方法：从尺码表文本中提取
                         const sizeChartArea = document.querySelector('table, [class*="size-table"], [class*="chart"]');
                         if (sizeChartArea) {
                             const chartText = sizeChartArea.textContent;
-                            const afterBrandCodeText = chartText.split('ブランド商品番号※店舗お問い合わせ用')[1];
+                            const afterBrandCodeText = chartText.split('ブランド商品番号')[1];
                             if (afterBrandCodeText) {
-                                const brandCodeMatch = afterBrandCodeText.match(/\b([A-Z]{2,}\d{4,})\b/);
-                                if (brandCodeMatch) return brandCodeMatch[1];
-                            }
-
-                            const lgCodeMatch = chartText.match(/\b(LG[A-Z0-9]{6,})\b/);
-                            if (lgCodeMatch) return lgCodeMatch[1];
-
-                            const brandCodeMatch = chartText.match(/\b([A-Z]{2,}\d{4,})\b/);
-                            if (brandCodeMatch && brandCodeMatch[1].length >= 6) {
-                                return brandCodeMatch[1];
+                                const brandCodeMatch = afterBrandCodeText.match(/([A-Z]{2,}[A-Z0-9]{4,})/i);
+                                if (brandCodeMatch) {
+                                    console.log('✅ 从尺码表文本提取品牌商品番号:', brandCodeMatch[1]);
+                                    return brandCodeMatch[1];
+                                }
                             }
                         }
 
-                        const elementsWithNames = document.querySelectorAll('[name]');
-                        for (const element of elementsWithNames) {
-                            const nameValue = element.getAttribute('name');
-                            if (nameValue && nameValue.match(/^[A-Z]{2,}\d{4,}$/)) {
-                                return nameValue;
-                            }
-                        }
-
+                        // 最后回退到URL中的ID
                         const urlMatch = window.location.pathname.match(/\/([A-Z0-9]+)\/?$/);
                         if (urlMatch) {
+                            console.log('⚠️ 使用URL中的ID作为回退:', urlMatch[1]);
                             return urlMatch[1];
                         }
 
@@ -133,7 +144,7 @@ class SingleURLFixedProcessor {
                         return title;
                     })(),
 
-                    "品牌名": "Le Coq公鸡乐卡克",
+                    "品牌名": "Penguin by Munsingwear",
 
                     "价格": (() => {
                         const selectors = ['.price', '.price-current', '[class*="price"]'];

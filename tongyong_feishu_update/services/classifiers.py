@@ -178,21 +178,21 @@ def determine_clothing_type(product_data):
     ]):
         return '针织衫/毛衣'
 
-    # 10. 长裤类
+    # 10. 短裤类（必须在长裤之前检测，避免被pant误匹配）
+    elif any(word in product_name_lower for word in [
+        'short', 'shorts', 'short pant', 'half pant',
+        'ショーツ', 'ショートパンツ', 'ハーフパンツ', 'バギーショーツ', 'ゲームパンツ',
+        '短裤', 'shorts', 'short pant', 'half pants'
+    ]):
+        return '短裤'
+
+    # 11. 长裤类
     elif any(word in product_name_lower for word in [
         'pant', 'trouser', 'long pant', 'full length',
         'ズボン', 'ロングパンツ', 'フルレングス', 'トラウザー', 'ゴルフパンツ',
         '长裤', '长裤', '全长的', 'trouser', 'long pant', 'trousers'
     ]):
         return '长裤'
-
-    # 11. 短裤类
-    elif any(word in product_name_lower for word in [
-        'short', 'shorts', 'short pant',
-        'ショーツ', 'ショートパンツ',
-        '短裤', 'shorts', 'short pant'
-    ]):
-        return '短裤'
 
     # 12. 裙装类
     elif any(word in product_name_lower for word in [
