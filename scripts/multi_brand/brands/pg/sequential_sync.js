@@ -108,7 +108,7 @@ class SequentialSyncProcessor {
                 const tempFile = path.join(this.tempDir, `pending_${productId}.json`);
                 console.log('📥 抓取详情...');
 
-                const scrapeCmd = `cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/lecoqgolf && node single_unified_processor.js "${product.url}" "${productId}" --output "${tempFile}"`;
+                const scrapeCmd = `cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/pg && node single_unified_processor.js "${product.url}" "${productId}" --output "${tempFile}"`;
                 execSync(scrapeCmd, { encoding: 'utf8', stdio: 'inherit' });
 
                 console.log('✅ 抓取成功');

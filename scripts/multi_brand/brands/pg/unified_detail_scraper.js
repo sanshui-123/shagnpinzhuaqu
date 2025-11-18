@@ -95,6 +95,41 @@ class UnifiedDetailScraper {
                 }
             };
 
+            // 🔄 尺码 fallback - 如果sizes为空，尝试从sizeChart提取
+            if ((!result.sizes || result.sizes.length === 0) && sizeChartData.text) {
+                const sizeChartText = sizeChartData.text;
+                const extractedSizes = new Set();
+
+                // 匹配 FR、FREE、ONE SIZE、フリー 等关键字
+                const frPatterns = [
+                    /\bFR\b/gi,
+                    /\bFREE\b/gi,
+                    /\bONE\s*SIZE\b/gi,
+                    /フリー/g
+                ];
+
+                for (const pattern of frPatterns) {
+                    const matches = sizeChartText.match(pattern);
+                    if (matches) {
+                        // 标准化为 "FR"
+                        extractedSizes.add('FR');
+                        break;
+                    }
+                }
+
+                // 也尝试匹配常规尺码 S/M/L 等
+                const sizePattern = /\b(XS|S|M|L|XL|LL|3L|4L|5L)\b/g;
+                const sizeMatches = sizeChartText.match(sizePattern);
+                if (sizeMatches) {
+                    sizeMatches.forEach(s => extractedSizes.add(s.toUpperCase()));
+                }
+
+                if (extractedSizes.size > 0) {
+                    result.sizes = Array.from(extractedSizes);
+                    console.log('📏 从尺码表提取尺码:', result.sizes);
+                }
+            }
+
             console.log('✅ 详情页抓取完成');
             return result;
 
@@ -350,145 +385,127 @@ class UnifiedDetailScraper {
                 brand: brandName
             };
 
-            // 🎯 改进的商品标题选择器 - 优先选择具体产品名
+            // 🎯 商品标题选择器 - Shopify (mix.tokyo)
             const titleSelectors = [
-                '.product-name .name',
-                '.item-detail .name',
-                '.product-title',
-                'h1.product-name',
-                '.commodity-name',
-                '.product-detail h1',
-                '.item-info h1',
+                '.product__title h1',
+                'h1.product__title',
+                '.product-single__title',
+                '.product__info h1',
+                'h1[class*="product"]',
+                '.product-meta h1',
                 'h1:not(:empty)'
             ];
 
-            // 过滤掉通用标题
             for (const selector of titleSelectors) {
                 const element = document.querySelector(selector);
                 if (element && element.textContent.trim()) {
                     const title = element.textContent.trim();
-                    // 过滤掉通用或过于简短的标题
                     if (title &&
-                        title.length > 5 &&
-                        !title.includes('DESCENTE STORE') &&
-                        !title.includes('DESCENTE') &&
-                        !title.includes('ストア') &&
-                        !title === 'TOP' &&
-                        !title === 'HOME') {
+                        title.length > 3 &&
+                        !title.includes('mix.tokyo') &&
+                        !title.includes('PEARLY GATES STORE')) {
                         result.productName = title;
                         break;
                     }
                 }
             }
 
-            // 如果没找到合适的标题，尝试从h1中提取具体产品名
+            // 从h1中提取
             if (!result.productName) {
                 const h1Elements = document.querySelectorAll('h1');
                 for (const h1 of h1Elements) {
                     const text = h1.textContent.trim();
-                    if (text &&
-                        text.length > 5 &&
-                        !text.includes('DESCENTE STORE') &&
-                        !text.includes('DESCENTE')) {
+                    if (text && text.length > 3 && !text.includes('mix.tokyo')) {
                         result.productName = text;
                         break;
                     }
                 }
             }
 
-            // 价格
+            // 🎯 标题规范化 - 确保以 PEARLY GATES 品牌开头
+            if (result.productName) {
+                // 移除原有的PG前缀（如 "PG is PG"）
+                let normalizedTitle = result.productName
+                    .replace(/^PG\s+is\s+PG\s*/i, '')
+                    .replace(/^PEARLY\s*GATES\s*/i, '')
+                    .trim();
+                // 添加标准品牌前缀
+                result.productName = 'PEARLY GATES ' + normalizedTitle;
+            }
+
+            // 价格 - Shopify（提取数字价格）
             const priceSelectors = [
-                '.price',
-                '[class*="price"]',
-                '.amount',
-                '[class*="amount"]'
+                '.product__price .money',
+                '.price .money',
+                '.product-price .money',
+                '.price-item--regular',
+                '[class*="price"] .money',
+                '.price'
             ];
 
             for (const selector of priceSelectors) {
                 const element = document.querySelector(selector);
                 if (element && element.textContent.trim()) {
-                    result.price = element.textContent.trim();
+                    const priceText = element.textContent.trim();
+                    // 提取数字价格（如 "¥70,400" -> "70400"）
+                    const match = priceText.match(/[\d,]+/);
+                    if (match) {
+                        result.price = match[0].replace(/,/g, '');
+                    } else {
+                        result.price = priceText;
+                    }
                     break;
                 }
             }
 
-            // 描述
+            // 描述 - Shopify
             const descSelectors = [
-                '.description',
+                '.product__description',
+                '.product-description',
+                '.product__info-description',
                 '[class*="description"]',
-                '.detail',
-                '[class*="detail"]'
+                '.rte'
             ];
 
             for (const selector of descSelectors) {
                 const element = document.querySelector(selector);
-                if (element && element.textContent.trim().length > 50) {
+                if (element && element.textContent.trim().length > 30) {
                     result.description = element.textContent.trim();
                     break;
                 }
             }
 
-            // 🎯 改进的商品ID提取 - 优先使用品牌货号而非商品番号
-            // 查找表格中的商品番号和品牌货号
-            const productCodeElements = document.querySelectorAll('table tr');
-            let productItemCode = '';
-            let productNumber = '';
-
-            for (const tr of productCodeElements) {
-                const th = tr.querySelector('th');
-                const td = tr.querySelector('td');
-                if (th && td) {
-                    const thText = th.textContent.trim();
-                    const tdText = td.textContent.trim();
-
-                    if (thText.includes('商品番号')) {
-                        productNumber = tdText;
-                    } else if (thText.includes('ブランド商品番号') || thText.includes('品牌商品番号')) {
-                        productItemCode = tdText;
-                    }
+            // 🎯 商品ID从URL提取 - PG规则：10位数字截断为8位
+            const urlMatch = url.match(/\/products\/(\d+)/);
+            if (urlMatch && urlMatch[1]) {
+                const rawId = urlMatch[1];
+                // 如果是10位数字，去掉后两位
+                if (rawId.length >= 10) {
+                    result.productId = rawId.slice(0, -2);
+                } else {
+                    result.productId = rawId;
                 }
-            }
-
-            // 优先使用品牌货号，其次使用商品番号
-            if (productItemCode && productItemCode.length > 0) {
-                result.productId = productItemCode;
-            } else if (productNumber && productNumber.length > 0) {
-                result.productId = productNumber;
             } else if (extraData.productId) {
                 result.productId = extraData.productId;
             }
 
-            // 🎯 改进的性别判断 - 从页面的"性别类型"字段获取
-            let genderFound = false;
-            for (const tr of productCodeElements) {
-                const th = tr.querySelector('th');
-                const td = tr.querySelector('td');
-                if (th && td) {
-                    const thText = th.textContent.trim();
-                    const tdText = td.textContent.trim();
+            // 🎯 性别判断 - 优先从商品标题判断，然后从页面内容和URL
+            const pageText = document.body.textContent;
+            const urlLower = url.toLowerCase();
 
-                    if (thText.includes('性別タイプ') || thText.includes('性别类型')) {
-                        if (tdText.includes('レディース') || tdText.includes('レディース') || tdText.includes('女')) {
-                            result.gender = '女';
-                            genderFound = true;
-                            break;
-                        } else if (tdText.includes('メンズ') || tdText.includes('男性') || tdText.includes('男')) {
-                            result.gender = '男';
-                            genderFound = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // 如果没有找到性别类型字段，回退到页面文本搜索
-            if (!genderFound) {
-                const pageText = document.body.textContent;
-                if (pageText.includes('レディース') || pageText.includes('女性')) {
-                    result.gender = '女';
-                } else if (pageText.includes('メンズ') || pageText.includes('男性')) {
-                    result.gender = '男';
-                }
+            // 优先检测UNISEX（因为UNISEX商品页面可能也包含"女"字）
+            if (result.productName.includes('UNISEX') ||
+                pageText.includes('UNISEX') ||
+                pageText.includes('ユニセックス')) {
+                result.gender = '中性';
+            } else if (urlLower.includes('women') || urlLower.includes('ladies') ||
+                pageText.includes('レディース') || pageText.includes('女性') ||
+                pageText.includes('WOMEN')) {
+                result.gender = '女';
+            } else if (urlLower.includes('men') ||
+                pageText.includes('メンズ') || pageText.includes('男性') ||
+                pageText.includes('MEN')) {
+                result.gender = '男';
             }
 
             return result;
@@ -496,7 +513,7 @@ class UnifiedDetailScraper {
     }
 
     /**
-     * 抓取商品图片 - 改进版本，过滤品牌Logo和无关图片
+     * 抓取商品图片 - 只收集1280宽度的Shopify CDN图片
      */
     async extractProductImages(page) {
         return await page.evaluate(() => {
@@ -504,59 +521,61 @@ class UnifiedDetailScraper {
             const imgElements = document.querySelectorAll('img');
 
             for (const img of imgElements) {
-                const src = img.getAttribute('src');
-                const alt = img.getAttribute('alt') || '';
-                const className = img.className || '';
+                let src = img.getAttribute('src') || img.getAttribute('data-src') || '';
 
-                // 过滤掉明显的品牌Logo和无关图片
-                if (src &&
-                    !src.includes('logo') &&
-                    !src.includes('brand') &&
-                    !src.includes('header') &&
-                    !src.includes('footer') &&
-                    !src.includes('banner') &&
-                    !alt.includes('logo') &&
-                    !alt.includes('brand') &&
-                    !alt.includes('DESCENTE') &&
-                    !className.includes('logo') &&
-                    !className.includes('brand') &&
-                    (src.includes('locondo') ||
-                     src.includes('product') ||
-                     src.includes('item') ||
-                     src.includes('commodity') ||
-                     src.includes('jpg') ||
-                     src.includes('png'))) {
+                // 只处理 mix.tokyo/cdn/shop/files 的图片
+                if (!src.includes('mix.tokyo/cdn/shop/files')) continue;
 
-                    // 获取高质量图片链接
-                    let highQualitySrc = src;
-                    if (src.includes('_thumb.jpg')) {
-                        highQualitySrc = src.replace('_thumb.jpg', '.jpg');
-                    } else if (src.includes('_s.jpg')) {
-                        highQualitySrc = src.replace('_s.jpg', '.jpg');
-                    } else if (src.includes('_m.jpg')) {
-                        highQualitySrc = src.replace('_m.jpg', '.jpg');
-                    }
+                // 过滤掉 _MAIN.jpg 图片
+                if (src.includes('_MAIN.jpg')) continue;
 
-                    // 只添加商品相关图片（通过尺寸和内容判断）
-                    if (highQualitySrc &&
-                        !highQualitySrc.includes('logo') &&
-                        !images.includes(highQualitySrc)) {
-                        images.push(highQualitySrc);
-                    }
+                // 过滤掉 logo、banner、应用商店等无关图片
+                if (src.includes('logo') || src.includes('banner') || src.includes('icon') ||
+                    src.includes('appstore') || src.includes('googleplay') ||
+                    src.includes('pearlygates.jpg') || src.includes('.png')) continue;
+
+                // 只收集产品图片（包含产品ID的文件名）
+                const productIdPattern = /\d{10}-\d{3}_[A-Z]\.jpg/i;
+                if (!productIdPattern.test(src)) continue;
+
+                // 确保是1280宽度的图片
+                // 如果没有width参数，添加width=1280
+                if (!src.includes('width=')) {
+                    src = src + (src.includes('?') ? '&' : '?') + 'width=1280';
+                } else {
+                    // 替换为1280宽度
+                    src = src.replace(/width=\d+/, 'width=1280');
+                }
+
+                // 确保URL有协议前缀
+                if (src.startsWith('//')) {
+                    src = 'https:' + src;
+                }
+
+                // 收集所有非_MAIN的CDN图片
+                if (!images.includes(src)) {
+                    images.push(src);
                 }
             }
 
-            // 去重并按优先级筛选图片：1100×1100 > _l.jpg > 前20张
-            const uniqueImages = [...new Set(images)];
-            const highResPattern = /(1100x1100|_1100x1100|_1100\.|\/1100\/)/;
-            const highResImages = uniqueImages.filter(url => highResPattern.test(url));
-            const largeFallback = uniqueImages.filter(url => url.endsWith('_l.jpg'));
-            if (highResImages.length > 0) {
-                return highResImages;
+            // 🔄 图片去重 - 使用文件名作为唯一标识
+            const uniqueImages = [];
+            const seenFiles = new Set();
+
+            for (const imgUrl of images) {
+                // 提取文件名部分作为唯一标识 (如 0536980121-130_A.jpg)
+                const fileMatch = imgUrl.match(/\/([^\/]+\.jpg)/i);
+                if (fileMatch) {
+                    const fileName = fileMatch[1].split('?')[0]; // 去掉query参数
+                    if (!seenFiles.has(fileName)) {
+                        seenFiles.add(fileName);
+                        uniqueImages.push(imgUrl);
+                    }
+                } else if (!uniqueImages.includes(imgUrl)) {
+                    uniqueImages.push(imgUrl);
+                }
             }
-            if (largeFallback.length > 0) {
-                return largeFallback;
-            }
+
             return uniqueImages.slice(0, 20);
         });
     }
@@ -614,29 +633,57 @@ class UnifiedDetailScraper {
                 // 转换为数组并去重
                 result.colors = Array.from(uniqueColors);
 
-                // 📏 提取尺码信息 - 过滤无效值
+                // 📏 提取尺码信息 - 从Shopify变体数据获取
                 const uniqueSizes = new Set();
 
-                // 从尺码选择器提取
-                const sizeElements = document.querySelectorAll('select[name*="size"] option, .size-selector option, .size-option, [class*="size"]');
-                sizeElements.forEach(el => {
-                    const text = el.textContent.trim();
-                    if (text &&
-                        text.length < 10 &&
-                        text.trim().length > 0 &&
-                        (/[SMLXL]/.test(text) || /^[0-9]+$/.test(text)) &&
-                        !text.includes('選択') &&
-                        !text.includes('サイズ') &&
-                        !text.includes('--') &&
-                        !text.includes('MLLL3L') && // 过滤无效组合
-                        text !== 'MLLL3L') {
-                        uniqueSizes.add(text);
-                    }
+                // 方法1: 从Shopify变体input/label提取
+                const variantSelectors = [
+                    'input[name*="Size"]',
+                    'input[name*="size"]',
+                    'label[for*="Size"]',
+                    'label[for*="size"]',
+                    '.variant-input input',
+                    'select[name*="size"] option',
+                    '.size-selector option'
+                ];
+
+                for (const selector of variantSelectors) {
+                    const elements = document.querySelectorAll(selector);
+                    elements.forEach(el => {
+                        let value = el.getAttribute('value') || el.textContent.trim();
+                        if (value &&
+                            value.length < 10 &&
+                            (value === 'FR' || /^[SMLXL]+$/.test(value) || /^\d+$/.test(value) ||
+                             value === 'XS' || value === 'LL' || value === '3L' || value === '4L' || value === '5L') &&
+                            !value.includes('選択')) {
+                            uniqueSizes.add(value.trim());
+                        }
+                    });
+                }
+
+                // 方法2: 从页面JSON数据提取（Shopify常用）
+                const scripts = document.querySelectorAll('script[type="application/json"]');
+                scripts.forEach(script => {
+                    try {
+                        const data = JSON.parse(script.textContent);
+                        if (data.variants) {
+                            data.variants.forEach(v => {
+                                if (v.option1) uniqueSizes.add(v.option1);
+                                if (v.option2) uniqueSizes.add(v.option2);
+                            });
+                        }
+                    } catch (e) {}
                 });
 
+                // 方法3: 检查页面文本中的尺码信息
+                const pageText = document.body.textContent;
+                const frMatch = pageText.match(/サイズ[：:]\s*(FR|S|M|L|LL|3L)/);
+                if (frMatch) {
+                    uniqueSizes.add(frMatch[1]);
+                }
+
                 result.sizes = Array.from(uniqueSizes).sort((a, b) => {
-                    // 自定义排序：S M L LL 3L 4L 5L...
-                    const order = {'XS': 0, 'S': 1, 'M': 2, 'L': 3, 'XL': 4, 'LL': 5, '3L': 6, '4L': 7, '5L': 8};
+                    const order = {'XS': 0, 'S': 1, 'M': 2, 'L': 3, 'XL': 4, 'LL': 5, '3L': 6, '4L': 7, '5L': 8, 'FR': 9};
                     return (order[a] || 99) - (order[b] || 99);
                 });
 
