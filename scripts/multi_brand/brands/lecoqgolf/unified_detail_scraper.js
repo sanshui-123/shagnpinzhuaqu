@@ -629,7 +629,11 @@ class UnifiedDetailScraper {
                         !text.includes('サイズ') &&
                         !text.includes('--') &&
                         !text.includes('MLLL3L') && // 过滤无效组合
-                        text !== 'MLLL3L') {
+                        text !== 'MLLL3L' &&
+                        text !== 'SMLLL' && // 🔥 过滤连接的尺码
+                        text !== 'SML' &&
+                        text !== 'SMLL' &&
+                        !/^[SMLX]{3,}$/.test(text)) { // 🔥 过滤任何3个以上连续的SMLX字符
                         uniqueSizes.add(text);
                     }
                 });
