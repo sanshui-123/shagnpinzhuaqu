@@ -43,7 +43,7 @@
     "accessories"
   ],
   "urls": {
-    "main": "/collections/pg-men-golf?pf_st_zai_ku_zhuang_kuang=in-stock",
+    "main": "/collections/pg-men-golf?pf_m_%3A%3Acustom%3A%3Aproduct-gender=MEN&pf_st_zai_ku_zhuang_kuang=in-stock",
     "womens": "/collections/pg-women-golf?pf_st_zai_ku_zhuang_kuang=in-stock"
   },
   "pagination": {

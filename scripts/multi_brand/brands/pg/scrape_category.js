@@ -71,7 +71,7 @@ class LeCoqGolfScraper {
             // 访问第一页
             await page.goto(fullUrl, {
                 waitUntil: 'domcontentloaded',
-                timeout: 30000
+                timeout: 60000
             });
 
             // 等待内容加载（增加到15秒以确保 Boost 组件完全加载）
@@ -192,7 +192,15 @@ class LeCoqGolfScraper {
                         let productId = '';
                         if (url) {
                             const match = url.match(/\/products\/([^/?#]+)/);
-                            productId = match ? match[1] : '';  // 例如: "polo-shirt-white"
+                            if (match && match[1]) {
+                                let rawId = match[1];
+                                // PG规则：如果是数字ID且长度>=10位，去掉后两位（例如：0536980121 -> 05369801）
+                                if (/^\d+$/.test(rawId) && rawId.length >= 10) {
+                                    productId = rawId.slice(0, -2);  // 去掉后两位
+                                } else {
+                                    productId = rawId;
+                                }
+                            }
                         }
 
                         // === 商品标题 ===
@@ -308,22 +316,25 @@ class LeCoqGolfScraper {
 
                 console.log(`✅ 第${currentPage}页提取到 ${products.length} 个产品`);
 
-                // 🚀 借鉴卡拉威：去重逻辑
+                // 🚀 借鉴卡拉威：去重逻辑（使用URL作为去重key，因为productId截断后可能重复）
                 let newItems = 0;
                 let duplicateItems = 0;
 
                 for (const product of products) {
-                    if (!product.productId) {
-                        // 没有productId的产品直接添加
+                    // 使用URL作为去重key（URL包含完整的10位ID）
+                    const dedupeKey = product.url || product.productId;
+
+                    if (!dedupeKey) {
+                        // 没有去重key的产品直接添加
                         allProducts.push(product);
                         newItems++;
                         continue;
                     }
 
-                    const existingProduct = this.productMap.get(product.productId);
+                    const existingProduct = this.productMap.get(dedupeKey);
                     if (!existingProduct) {
                         // 新产品，添加到Map
-                        this.productMap.set(product.productId, product);
+                        this.productMap.set(dedupeKey, product);
                         allProducts.push(product);
                         newItems++;
                     } else {
@@ -343,17 +354,39 @@ class LeCoqGolfScraper {
                     break;
                 }
 
-                // 点击下一页
-                const success = await this.clickNextPage(page, currentPage + 1);
-                if (!success) {
-                    console.log(`❌ 无法翻转到第 ${currentPage + 1} 页，停止抓取`);
-                    break;
-                }
-
+                // 🔧 使用URL参数导航而不是点击按钮（解决筛选参数丢失问题）
                 currentPage++;
 
-                // 等待新页面加载
-                await page.waitForTimeout(3000);
+                // 构建带页码参数的URL
+                const separator = fullUrl.includes('?') ? '&' : '?';
+                const nextPageUrl = `${fullUrl}${separator}page=${currentPage}`;
+
+                console.log(`📄 使用URL导航到第 ${currentPage} 页: ${nextPageUrl}`);
+
+                try {
+                    await page.goto(nextPageUrl, {
+                        waitUntil: 'domcontentloaded',
+                        timeout: 60000
+                    });
+
+                    // 等待Boost网格加载完成
+                    await page.waitForTimeout(5000);
+
+                    // 等待产品容器出现
+                    try {
+                        await page.waitForSelector('[data-product-id], .boost-sd__grid-item', {
+                            timeout: 15000
+                        });
+                        console.log(`✅ 成功导航到第 ${currentPage} 页，产品已加载`);
+                    } catch (selectorError) {
+                        // 如果超时，再等一下
+                        await page.waitForTimeout(5000);
+                        console.log(`⏳ 第 ${currentPage} 页加载较慢，额外等待...`);
+                    }
+                } catch (navError) {
+                    console.log(`❌ 无法导航到第 ${currentPage} 页: ${navError.message}`);
+                    break;
+                }
             }
 
             console.log(`\n🎉 ${collectionType === 'mens' ? '男士' : '女士'}系列总计提取到 ${allProducts.length} 个产品`);
@@ -486,6 +519,15 @@ class LeCoqGolfScraper {
      */
     async clickNextPage(page, targetPage) {
         try {
+            // 🔧 移除阻挡点击的第三方插件覆盖层
+            await page.evaluate(() => {
+                const blocker = document.querySelector('#zigzag-worldshopping-checkout');
+                if (blocker) {
+                    blocker.remove();
+                    console.log('已移除 zigzag-worldshopping-checkout 覆盖层');
+                }
+            });
+
             // 🎯 优先尝试 Boost 分页组件
             const boostPaginationExists = await page.locator('.boost-sd__pagination').count() > 0;
 
