@@ -143,6 +143,68 @@ class UnifiedDetailScraper {
                 }
             }
 
+            // 🎯 基于尺码体系的性别检测（核心信号）
+            if (result._genderScores) {
+                let menSizeScore = 0;
+                let womenSizeScore = 0;
+                const scores = result._genderScores;
+
+                // 🔥 PG品牌尺码体系（强信号）：
+                // - 男性尺码: 4, 5, 6, 7 (数字码系统)
+                // - 女性尺码: 00, 0, 1, 2 (数字码系统)
+                // - 共用: S, M, L, XL 等字母码
+                if (result.sizes && result.sizes.length > 0) {
+                    const menSizes = ['4', '5', '6', '7'];
+                    const womenSizes = ['00', '0', '1', '2'];
+
+                    let hasMenSize = false;
+                    let hasWomenSize = false;
+
+                    for (const size of result.sizes) {
+                        const sizeStr = String(size).trim();
+                        if (menSizes.includes(sizeStr)) {
+                            hasMenSize = true;
+                        }
+                        if (womenSizes.includes(sizeStr)) {
+                            hasWomenSize = true;
+                        }
+                    }
+
+                    // 尺码体系是强信号
+                    if (hasMenSize && !hasWomenSize) {
+                        menSizeScore += 60; // 纯男性尺码体系
+                    }
+                    if (hasWomenSize && !hasMenSize) {
+                        womenSizeScore += 60; // 纯女性尺码体系
+                    }
+                    if (hasMenSize && hasWomenSize) {
+                        // 混合尺码，可能是中性或特殊情况
+                        // 不加分，依赖其他信号
+                    }
+                }
+
+                // 更新分数
+                scores.men += menSizeScore;
+                scores.women += womenSizeScore;
+
+                // 最终决策
+                if (scores.unisex >= 50) {
+                    result.gender = '中性';
+                } else if (scores.men > scores.women) {
+                    result.gender = '男';
+                } else if (scores.women > scores.men) {
+                    result.gender = '女';
+                } else if (scores.men === scores.women && scores.men > 0) {
+                    // 平局时默认为中性
+                    result.gender = '中性';
+                }
+
+                console.log(`👤 性别检测分数: 男=${scores.men}, 女=${scores.women}, 中性=${scores.unisex} -> ${result.gender}`);
+            }
+
+            // 清理临时数据
+            delete result._genderScores;
+
             // 📦 分类检测 - 根据商品名称判断类别（按特异性排序，更具体的在前）
             if (result.productName) {
                 const name = result.productName;
@@ -551,24 +613,148 @@ class UnifiedDetailScraper {
                 result.productId = extraData.productId;
             }
 
-            // 🎯 性别判断 - 优先从商品标题判断，然后从页面内容和URL
+            // 🎯 性别判断 - 多信号评分算法
             const pageText = document.body.textContent;
             const urlLower = url.toLowerCase();
 
-            // 优先检测UNISEX（因为UNISEX商品页面可能也包含"女"字）
-            if (result.productName.includes('UNISEX') ||
-                pageText.includes('UNISEX') ||
-                pageText.includes('ユニセックス')) {
-                result.gender = '中性';
-            } else if (urlLower.includes('women') || urlLower.includes('ladies') ||
-                pageText.includes('レディース') || pageText.includes('女性') ||
-                pageText.includes('WOMEN')) {
-                result.gender = '女';
-            } else if (urlLower.includes('men') ||
-                pageText.includes('メンズ') || pageText.includes('男性') ||
-                pageText.includes('MEN')) {
-                result.gender = '男';
+            // 评分系统
+            let menScore = 0;
+            let womenScore = 0;
+            let unisexScore = 0;
+
+            // ========== 强规则 (直接决定) ==========
+
+            // 1. 商品标题中的性别标签 (最高优先级)
+            const titleUpper = result.productName.toUpperCase();
+            if (titleUpper.includes('(UNISEX)') || titleUpper.includes('（UNISEX）') ||
+                titleUpper.includes('UNISEX') || result.productName.includes('ユニセックス')) {
+                unisexScore += 100;
             }
+            if (titleUpper.includes('(MENS)') || titleUpper.includes('（MENS）') ||
+                titleUpper.includes('(MEN)') || titleUpper.includes('（MEN）')) {
+                menScore += 100;
+            }
+            if (titleUpper.includes('(LADIES)') || titleUpper.includes('（LADIES）') ||
+                titleUpper.includes('(WOMEN)') || titleUpper.includes('（WOMEN）')) {
+                womenScore += 100;
+            }
+
+            // 2. 导航/面包屑路径检测
+            const breadcrumbs = document.querySelectorAll('nav a, .breadcrumb a, [class*="breadcrumb"] a, .nav-link');
+            for (const crumb of breadcrumbs) {
+                const text = crumb.textContent.toUpperCase().trim();
+                if (text === 'MEN' || text === 'MENS' || text === 'メンズ') {
+                    menScore += 50;
+                }
+                if (text === 'WOMEN' || text === 'LADIES' || text === 'レディース') {
+                    womenScore += 50;
+                }
+                if (text === 'UNISEX' || text === 'ユニセックス') {
+                    unisexScore += 50;
+                }
+            }
+
+            // 3. URL路径检测
+            if (urlLower.includes('/men/') || urlLower.includes('/mens/')) {
+                menScore += 40;
+            }
+            if (urlLower.includes('/women/') || urlLower.includes('/ladies/')) {
+                womenScore += 40;
+            }
+            if (urlLower.includes('/unisex/')) {
+                unisexScore += 40;
+            }
+
+            // ========== 中规则 (信心增强) ==========
+
+            // 4. 产品区域关键词检测 - 只检测产品信息区域，避免导航/页脚噪音
+            const productArea = document.querySelector('.product__info, .product-info, [class*="product"], main') || document.body;
+            const productText = productArea.textContent;
+
+            // 男性关键词 - 限制最大加分
+            const menKeywords = ['メンズ', '男性', '紳士'];
+            let menKeywordScore = 0;
+            for (const kw of menKeywords) {
+                const regex = new RegExp(kw, 'gi');
+                const matches = productText.match(regex);
+                if (matches) {
+                    menKeywordScore += Math.min(matches.length * 5, 15); // 每个关键词最多15分
+                }
+            }
+            menScore += Math.min(menKeywordScore, 30); // 关键词总分最多30分
+
+            // 女性关键词 - 限制最大加分
+            const womenKeywords = ['レディース', '女性', '婦人'];
+            let womenKeywordScore = 0;
+            for (const kw of womenKeywords) {
+                const regex = new RegExp(kw, 'gi');
+                const matches = productText.match(regex);
+                if (matches) {
+                    womenKeywordScore += Math.min(matches.length * 5, 15);
+                }
+            }
+            womenScore += Math.min(womenKeywordScore, 30);
+
+            // 中性关键词 - 限制最大加分
+            const unisexKeywords = ['UNISEX', 'ユニセックス', '男女兼用'];
+            let unisexKeywordScore = 0;
+            for (const kw of unisexKeywords) {
+                const regex = new RegExp(kw, 'gi');
+                const matches = productText.match(regex);
+                if (matches) {
+                    unisexKeywordScore += Math.min(matches.length * 10, 30);
+                }
+            }
+            unisexScore += Math.min(unisexKeywordScore, 50);
+
+            // 5. 相关商品标签检测
+            const relatedProducts = document.querySelectorAll('.related-products a, .product-recommendations a, [class*="related"] a, [class*="recommend"] a');
+            let relatedMen = 0, relatedWomen = 0, relatedUnisex = 0;
+            for (const link of relatedProducts) {
+                const text = link.textContent.toUpperCase();
+                if (text.includes('(MENS)') || text.includes('（MENS）')) relatedMen++;
+                if (text.includes('(LADIES)') || text.includes('（LADIES）')) relatedWomen++;
+                if (text.includes('(UNISEX)') || text.includes('（UNISEX）')) relatedUnisex++;
+            }
+            if (relatedMen > relatedWomen && relatedMen > relatedUnisex) {
+                menScore += 20;
+            }
+            if (relatedWomen > relatedMen && relatedWomen > relatedUnisex) {
+                womenScore += 20;
+            }
+            if (relatedUnisex > relatedMen && relatedUnisex > relatedWomen) {
+                unisexScore += 20;
+            }
+
+            // ========== 弱规则 (尺码模式) ==========
+
+            // 6. 尺码模式检测 - 需要结合后面提取的尺码信息
+            // 男性尺码模式: 4, 5, 6, 7
+            // 女性尺码模式: 00, 0, 1, 2
+            // 这个会在尺码提取后再做一次检测
+
+            // ========== 决策 ==========
+
+            // 如果有强信号(>=50分)，直接使用
+            if (unisexScore >= 50) {
+                result.gender = '中性';
+            } else if (menScore >= 50 && menScore > womenScore) {
+                result.gender = '男';
+            } else if (womenScore >= 50 && womenScore > menScore) {
+                result.gender = '女';
+            } else if (menScore > 0 || womenScore > 0 || unisexScore > 0) {
+                // 使用分数最高的
+                if (unisexScore > menScore && unisexScore > womenScore) {
+                    result.gender = '中性';
+                } else if (menScore > womenScore) {
+                    result.gender = '男';
+                } else if (womenScore > menScore) {
+                    result.gender = '女';
+                }
+            }
+
+            // 保存分数供后续尺码检测使用
+            result._genderScores = { men: menScore, women: womenScore, unisex: unisexScore };
 
             return result;
         }, { url, extraData, brandName: this.brandName });
