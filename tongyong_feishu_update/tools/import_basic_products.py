@@ -20,6 +20,28 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from tongyong_feishu_update.clients import create_feishu_client
 
 
+def normalize_url(url: str) -> str:
+    """
+    规范化URL，用于去重比较
+
+    处理：
+    - 去除首尾空格
+    - 统一协议为 https
+    - 去除末尾斜杠
+
+    Args:
+        url: 原始URL
+
+    Returns:
+        规范化后的URL
+    """
+    if not url:
+        return ''
+    cleaned = url.strip()
+    cleaned = cleaned.replace('http://', 'https://')  # 统一协议
+    return cleaned.rstrip('/')  # 去掉末尾斜杠
+
+
 def import_basic_products(
     source_file: str,
     brand: str = "",
@@ -80,23 +102,26 @@ def import_basic_products(
 
     # 4. 构建已存在的 URL 集合（用于去重）
     # ⚠️ 去重逻辑已改为基于 URL 而非 productId
+    # 🔥 使用 normalize_url 规范化，避免因协议/末尾斜杠不同导致重复
     existing_urls = set()
     for record_data in existing_records.values():
         fields = record_data.get('fields', {})
         url = fields.get('商品链接', '')
         if url:
-            existing_urls.add(url)
+            existing_urls.add(normalize_url(url))
 
     if verbose:
         print(f"📊 已提取 {len(existing_urls)} 个已存在的商品链接", file=sys.stderr)
 
     # 5. 过滤掉已存在的记录（基于 URL 去重）
+    # 🔥 使用 normalize_url 规范化后进行比较
     new_products = []
     skip_count = 0
 
     for product in products_to_import:
         url = product.get('url', '')
-        if url in existing_urls:
+        normalized = normalize_url(url)
+        if normalized in existing_urls:
             skip_count += 1
             if verbose:
                 print(f"⏭️ 跳过已存在的 URL: {url}", file=sys.stderr)
