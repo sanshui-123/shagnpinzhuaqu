@@ -127,6 +127,7 @@ def import_basic_products(
                 print(f"⏭️ 跳过已存在的 URL: {url}", file=sys.stderr)
         else:
             new_products.append(product)
+            existing_urls.add(normalized)  # 防止同一批次内重复
 
     if verbose:
         print(f"📊 新增: {len(new_products)} 个，跳过: {skip_count} 个", file=sys.stderr)
