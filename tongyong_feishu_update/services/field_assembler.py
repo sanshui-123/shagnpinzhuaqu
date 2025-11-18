@@ -181,20 +181,26 @@ class FieldAssembler:
             sizes_list = product.get('sizes')
 
         # 尺码映射（日本数字尺码转标准尺码）
+        # 🔥 无论性别都执行映射，支持中性/UNISEX商品
         if sizes_list:
             mapped_sizes = []
+            # 女性尺码映射: 00/0/1/2 -> XXS/XS/S/M
+            women_mapping = {'00': 'XXS', '0': 'XS', '1': 'S', '2': 'M'}
+            # 男性尺码映射: 3/4/5/6/7 -> S/M/L/XL/XXL
+            men_mapping = {'3': 'S', '4': 'M', '5': 'L', '6': 'XL', '7': 'XXL'}
+
             for size in sizes_list:
                 size_str = str(size).strip()
-                # 女性尺码映射: 00/0/1/2 -> XXS/XS/S/M
-                if gender in ('女', '女性', 'womens', 'women'):
-                    women_mapping = {'00': 'XXS', '0': 'XS', '1': 'S', '2': 'M'}
-                    mapped_sizes.append(women_mapping.get(size_str, size_str))
-                # 男性尺码映射: 4/5/6/7 -> M/L/XL/XXL
-                elif gender in ('男', '男性', 'mens', 'men'):
-                    men_mapping = {'4': 'M', '5': 'L', '6': 'XL', '7': 'XXL'}
-                    mapped_sizes.append(men_mapping.get(size_str, size_str))
+                size_key = size_str.upper()
+
+                # 先尝试女性尺码映射
+                if size_key in women_mapping:
+                    mapped_sizes.append(women_mapping[size_key])
+                # 再尝试男性尺码映射
+                elif size_key in men_mapping:
+                    mapped_sizes.append(men_mapping[size_key])
                 else:
-                    # 其他性别保持原值
+                    # 无法映射时保持原值
                     mapped_sizes.append(size_str)
             sizes_list = mapped_sizes
 
