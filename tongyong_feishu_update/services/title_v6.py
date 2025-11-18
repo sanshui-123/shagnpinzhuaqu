@@ -37,7 +37,8 @@ def extract_brand_from_product(product: Dict) -> Tuple[str, str, str]:
         例如：('callawaygolf', '卡拉威Callaway', '卡拉威')
     """
     # 优先使用JSON中的品牌信息进行匹配
-    brand_from_json = product.get('brand', '')
+    # 🔥 确保所有字段都是字符串类型
+    brand_from_json = str(product.get('brand', '') or '')
     if brand_from_json:
         # 尝试通过品牌名进行匹配
         for brand_key, keywords in BRAND_KEYWORDS.items():
@@ -49,8 +50,9 @@ def extract_brand_from_product(product: Dict) -> Tuple[str, str, str]:
                         BRAND_SHORT_NAME[brand_key]
                     )
 
-    name = product.get('productName', '').lower()
-    url = product.get('detailUrl', '').lower()
+    # 🔥 确保 name 和 url 都是字符串
+    name = str(product.get('productName', '') or '').lower()
+    url = str(product.get('detailUrl', '') or '').lower()
 
     # 从商品名匹配
     for brand_key, keywords in BRAND_KEYWORDS.items():
@@ -110,26 +112,30 @@ def extract_season_from_tables(product: Dict) -> str:
     从抓取的表格数据中提取季节信息（网页实际数据）
     """
     # 优先从原始数据的表格中查找シーズン信息
-    if '_original_data' in product:
-        original_data = product['_original_data']
+    # 🔥 使用 get 方法安全获取 _original_data
+    original_data = product.get('_original_data', None)
+    if original_data:
 
         # 检查尺码表中的季节信息
-        if '尺码表' in original_data and 'tables' in original_data['尺码表']:
-            tables = original_data['尺码表']['tables']
+        size_chart = original_data.get('尺码表', {}) if isinstance(original_data, dict) else {}
+        if isinstance(size_chart, dict) and 'tables' in size_chart:
+            tables = size_chart.get('tables', [])
             for table in tables:
-                if 'text' in table and 'シーズン' in table['text']:
+                # 🔥 确保 text 字段是字符串类型
+                table_text = str(table.get('text', '') or '') if isinstance(table, dict) else ''
+                if table_text and 'シーズン' in table_text:
                     # 提取 "2025年 秋冬" 格式的季节信息
-                    text = table['text']
                     # 使用正则表达式匹配 "年份 季节" 格式
-                    season_match = re.search(r'(\d{4})年\s*(春夏|秋冬)', text)
+                    season_match = re.search(r'(\d{4})年\s*(春夏|秋冬)', table_text)
                     if season_match:
                         year = season_match.group(1)[2:]  # 取后两位，如2025->25
                         season_text = season_match.group(2)  # 春夏或秋冬
                         return f"{year}{season_text}"
 
         # 也可以从html中搜索
-        if '尺码表' in original_data and 'html' in original_data['尺码表']:
-            html = original_data['尺码表']['html']
+        # 🔥 确保 html 字段是字符串类型
+        html = str(size_chart.get('html', '') or '') if isinstance(size_chart, dict) else ''
+        if html:
             # 搜索HTML中的シーズン信息
             season_match = re.search(r'<th[^>]*>シーズン[^<]*</th>\s*<td[^>]*>(\d{4})年\s*(春夏|秋冬)', html)
             if season_match:
@@ -183,8 +189,9 @@ def build_smart_prompt(product: Dict) -> str:
     """
     from ..config.prompts import TITLE_GENERATION_PROMPT
 
-    name = product.get('productName', '')
-    gender = product.get('gender', '')
+    # 🔥 确保所有字段都是字符串类型
+    name = str(product.get('productName', '') or '')
+    gender = str(product.get('gender', '') or '')
 
     # 提取品牌信息
     brand_key, brand_chinese, brand_short = extract_brand_from_product(product)
