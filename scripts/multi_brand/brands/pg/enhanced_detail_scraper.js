@@ -11,7 +11,7 @@ class EnhancedDetailScraper {
     constructor() {
         this.url = '';
         this.results = {};
-        this.brandName = 'Le Coq公鸡乐卡克'; // 根据用户要求写死品牌名
+        this.brandName = 'PEARLY GATES'; // PG品牌名
     }
 
     async scrapeDetailPage(url) {
