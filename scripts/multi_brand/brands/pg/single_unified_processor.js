@@ -114,7 +114,7 @@ class SingleUnifiedProcessor {
                 html: result.sizeChart.html || '',
                 text: result.sizeChart.text || ''
             } : {},
-            category: "",
+            category: result.category || "",
             sku: "",
             status: "",
             priceText: result.price,

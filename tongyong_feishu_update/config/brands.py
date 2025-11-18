@@ -59,6 +59,7 @@ BRAND_MAP = {
     'lecoqsportif': 'Le Coq公鸡乐卡克',  # 新增Le Coq品牌
     'lecoqsportifgolf': 'Le Coq公鸡乐卡克',  # 新增Le Coq Golf
     'munsingwear': '万星威Munsingwear',  # 新增Munsingwear品牌
+    'pearlygates': 'PEARLY GATES',  # 新增PEARLY GATES品牌
 }
 
 # 品牌简短名（用于飞书"品牌名"字段）
@@ -105,6 +106,7 @@ BRAND_SHORT_NAME = {
     'lecoqsportif': 'Le Coq公鸡乐卡克',  # 新增Le Coq品牌
     'lecoqsportifgolf': 'Le Coq公鸡乐卡克',  # 新增Le Coq Golf
     'munsingwear': '万星威',  # 新增Munsingwear品牌
+    'pearlygates': 'PEARLY GATES',  # 新增PEARLY GATES品牌
 }
 
 # 品牌别名映射 - 用于识别各种拼写变体和多语言名称
@@ -294,6 +296,12 @@ BRAND_ALIASES = {
     'ペンギン バイ マンシングウェア': 'munsingwear',
     'penguin': 'munsingwear',
     '万星威': 'munsingwear',
+
+    # PEARLY GATES 别名
+    'pearly gates': 'pearlygates',
+    'pearlygates': 'pearlygates',
+    'pg is pg': 'pearlygates',
+    'パーリーゲイツ': 'pearlygates',
 
     # 添加缺失的原始清单别名和规范化变体
     'titleist': 'titleist',  # title ist 规范化后

@@ -46,7 +46,8 @@ class FieldAssembler:
         # 标题（支持预生成缓存）
         # 直接使用原始gender数据，不做任何处理
         gender = product.get('gender', '')
-        clothing_type = determine_clothing_type(product)
+        # 优先使用产品的category字段（从抓取器获取），否则使用determine_clothing_type
+        clothing_type = product.get('category') or determine_clothing_type(product)
 
         if pre_generated_title:
             fields['商品标题'] = pre_generated_title
@@ -178,7 +179,25 @@ class FieldAssembler:
         else:
             # 回退到原始数据
             sizes_list = product.get('sizes')
-        
+
+        # 尺码映射（日本数字尺码转标准尺码）
+        if sizes_list:
+            mapped_sizes = []
+            for size in sizes_list:
+                size_str = str(size).strip()
+                # 女性尺码映射: 00/0/1/2 -> XXS/XS/S/M
+                if gender in ('女', '女性', 'womens', 'women'):
+                    women_mapping = {'00': 'XXS', '0': 'XS', '1': 'S', '2': 'M'}
+                    mapped_sizes.append(women_mapping.get(size_str, size_str))
+                # 男性尺码映射: 4/5/6/7 -> M/L/XL/XXL
+                elif gender in ('男', '男性', 'mens', 'men'):
+                    men_mapping = {'4': 'M', '5': 'L', '6': 'XL', '7': 'XXL'}
+                    mapped_sizes.append(men_mapping.get(size_str, size_str))
+                else:
+                    # 其他性别保持原值
+                    mapped_sizes.append(size_str)
+            sizes_list = mapped_sizes
+
         if sizes_list:
             size_multiline = sizes.build_size_multiline(sizes_list, gender)
             fields['尺码'] = size_multiline if size_multiline else ''

@@ -189,6 +189,7 @@ class UpdateOrchestrator:
                     'priceText': getattr(product, 'price', ''),  # 修正：使用price字段
                     'currentPrice': getattr(product, 'current_price', ''),
                     'description': getattr(product, 'description', ''),
+                    'category': getattr(product, 'category', ''),  # 🎯 添加category字段
                     # 从 extra 中透传 _detail_data 和其他原始数据
                     **extra
                 }

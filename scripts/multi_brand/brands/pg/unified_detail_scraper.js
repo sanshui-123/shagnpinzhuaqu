@@ -124,9 +124,71 @@ class UnifiedDetailScraper {
                     sizeMatches.forEach(s => extractedSizes.add(s.toUpperCase()));
                 }
 
+                // 匹配日本数字尺码 (00/0/1/2 for women, 4/5/6/7 for men)
+                // 在表格行开头匹配数字尺码
+                const numericSizePattern = /(?:^|\s|>)(00|0|1|2|3|4|5|6|7)(?:\s|<|$)/gm;
+                const numericMatches = sizeChartText.match(numericSizePattern);
+                if (numericMatches) {
+                    numericMatches.forEach(m => {
+                        const size = m.trim().replace(/[<>]/g, '');
+                        if (['00', '0', '1', '2', '3', '4', '5', '6', '7'].includes(size)) {
+                            extractedSizes.add(size);
+                        }
+                    });
+                }
+
                 if (extractedSizes.size > 0) {
                     result.sizes = Array.from(extractedSizes);
                     console.log('📏 从尺码表提取尺码:', result.sizes);
+                }
+            }
+
+            // 📦 分类检测 - 根据商品名称判断类别（按特异性排序，更具体的在前）
+            if (result.productName) {
+                const name = result.productName;
+                if (name.includes('キャディバッグ') || name.includes('カート') || name.includes('スタンド')) {
+                    result.category = '球包/球袋';
+                } else if (name.includes('ポロ') || name.includes('POLO')) {
+                    if (name.includes('長袖') || name.includes('ロングスリーブ')) {
+                        result.category = '长袖POLO';
+                    } else {
+                        result.category = '短袖POLO';
+                    }
+                } else if (name.includes('ハイネック') || name.includes('タートル') || name.includes('モック')) {
+                    // 高领在T恤之前检测，因为"ハイネックカットソー"应该是高领
+                    if (name.includes('長袖')) {
+                        result.category = '长袖高领';
+                    } else {
+                        result.category = '短袖高领';
+                    }
+                } else if (name.includes('カットソー') || name.includes('Tシャツ') || name.includes('T-shirt')) {
+                    if (name.includes('長袖') || name.includes('ロングスリーブ')) {
+                        result.category = '长袖T恤';
+                    } else {
+                        result.category = '短袖T恤';
+                    }
+                } else if (name.includes('ニット') || name.includes('セーター') || name.includes('プルオーバー')) {
+                    result.category = '毛衣/针织衫';
+                } else if (name.includes('ベスト')) {
+                    result.category = '马甲/背心';
+                } else if (name.includes('ブルゾン') || name.includes('ジャケット') || name.includes('アウター')) {
+                    result.category = '外套/夹克';
+                } else if (name.includes('パンツ') || name.includes('スカート')) {
+                    if (name.includes('スカート')) {
+                        result.category = '裙子';
+                    } else {
+                        result.category = '裤子';
+                    }
+                } else if (name.includes('キャップ') || name.includes('ハット') || name.includes('バイザー')) {
+                    result.category = '帽子';
+                } else if (name.includes('グローブ') || name.includes('手袋')) {
+                    result.category = '手套';
+                } else if (name.includes('シューズ') || name.includes('靴')) {
+                    result.category = '球鞋';
+                } else if (name.includes('ヘッドカバー')) {
+                    result.category = '杆头套';
+                } else if (name.includes('ボール')) {
+                    result.category = '高尔夫球';
                 }
             }
 
