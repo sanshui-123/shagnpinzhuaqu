@@ -13,6 +13,9 @@ BRAND_KEYWORDS = {
     'callawaygolf': ['callaway', 'キャロウェイ', 'calaway'],
     'titleist': ['titleist', 'タイトリスト'],
     'taylormade': ['taylormade', 'テーラーメイド', 'taylor made'],
+    'pearlygates': ['pearly gates', 'パーリーゲイツ', 'pg is pg', 'pearlygates'],
+    'lecoqsportif': ['le coq', 'ルコック', 'lecoq'],
+    'munsingwear': ['munsingwear', 'マンシングウェア', 'penguin'],
 }
 
 # 品牌完整中文名（用于标题）

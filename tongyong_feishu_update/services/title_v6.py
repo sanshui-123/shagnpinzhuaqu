@@ -386,8 +386,26 @@ def optimize_title(title: str) -> str:
 
     # 去除特殊符号（不包括空格）
     title = re.sub(r'[/／\\|｜×＋\+\-\*•·]+', '', title)
-    # 去除英文字母（保留数字，用于年份）
+
+    # 去除英文字母，但保留品牌名中的英文
+    # 定义需要保留的英文品牌名
+    english_brands = ['PEARLY GATES', 'FootJoy', 'Cleveland', 'Ping']
+
+    # 先用占位符替换品牌名（使用中文占位符避免被正则删除）
+    placeholders = {}
+    for i, brand in enumerate(english_brands):
+        placeholder = f'【品牌占位{i}】'
+        if brand in title:
+            title = title.replace(brand, placeholder)
+            placeholders[placeholder] = brand
+
+    # 去除其他英文字母（保留数字，用于年份）
     title = re.sub(r'[a-zA-Z]+', '', title)
+
+    # 恢复品牌名
+    for placeholder, brand in placeholders.items():
+        title = title.replace(placeholder, brand)
+
     # 去除空格
     title = re.sub(r'\s+', '', title)
 
@@ -501,8 +519,9 @@ def validate_title(title: str, product: Dict) -> bool:
 
     # 3. 必须包含对应品牌
     brand_key, brand_chinese, brand_short = extract_brand_from_product(product)
-    # 检查品牌简称
-    if brand_short not in title:
+    # 检查品牌简称（去除空格后比较，因为标题中空格已被删除）
+    brand_short_nospace = brand_short.replace(' ', '')
+    if brand_short_nospace not in title:
         return False
 
     # 4. 不能包含禁止词汇

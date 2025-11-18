@@ -95,19 +95,19 @@ TITLE_GENERATION_PROMPT = """你是淘宝标题生成专家。根据日文商品
 - 功能词要与商品特性匹配
 - 结尾词要准确反映商品类型
 
-示例参考：
+示例参考（注意：品牌名必须使用提供的{brand_short}值）：
 
 配件类示例：
 - 25秋冬卡拉威高尔夫男士轻便透气帽子（26字）
 - 26春夏泰特利斯高尔夫女士时尚运动腰带（27字）
-- 25秋冬彪马高尔夫男士球杆头套（24字）← 如果太短，加"轻便"或"新款"
-- 25秋冬耐克高尔夫男士专业高尔夫手套（27字）
+- 25秋冬PEARLY GATES高尔夫男士时尚球杆头套（29字）
+- 25秋冬万星威高尔夫男士专业高尔夫手套（27字）
 
 服装类示例：
 - 25秋冬卡拉威高尔夫男士保暖舒适夹克（27字）
-- 26春夏阿迪达斯高尔夫女士弹力全拉链上衣（28字）
+- 26春夏PEARLY GATES高尔夫女士弹力全拉链上衣（30字）
 - 25秋冬泰勒梅高尔夫男士保暖棉服夹克（27字）
-- 26春夏Puma高尔夫女士轻便运动短裤（28字）
+- 26春夏乐卡克高尔夫女士轻便运动短裤（27字）
 
 输出要求：
 - 直接输出标题，不要任何解释、不要"好的"等应答词、不要markdown格式
@@ -133,7 +133,9 @@ BRAND_KEYWORDS = {
     'puma': ['puma', '彪马'],
     'adidas': ['adidas', '阿迪达斯'],
     'nike': ['nike', '耐克'],
-    'lecoqgolf': ['ルコック', 'le coq', 'lecoq', 'le coq sportif', 'sportif golf', '乐卡克', 'le coq sportif golf']
+    'lecoqgolf': ['ルコック', 'le coq', 'lecoq', 'le coq sportif', 'sportif golf', '乐卡克', 'le coq sportif golf'],
+    'pearlygates': ['pearly gates', 'パーリーゲイツ', 'pg is pg', 'pearlygates', 'mix.tokyo'],
+    'munsingwear': ['munsingwear', 'マンシングウェア', 'penguin', '万星威']
 }
 
 BRAND_MAP = {
@@ -142,7 +144,9 @@ BRAND_MAP = {
     'puma': '彪马Puma',
     'adidas': '阿迪达斯Adidas',
     'nike': '耐克Nike',
-    'lecoqgolf': 'Le Coq Sportif Golf'
+    'lecoqgolf': 'Le Coq Sportif Golf',
+    'pearlygates': 'PEARLY GATES',
+    'munsingwear': '万星威Munsingwear'
 }
 
 BRAND_SHORT_NAME = {
@@ -151,7 +155,9 @@ BRAND_SHORT_NAME = {
     'puma': '彪马',
     'adidas': '阿迪达斯',
     'nike': '耐克',
-    'lecoqgolf': '乐卡克'
+    'lecoqgolf': '乐卡克',
+    'pearlygates': 'PEARLY GATES',
+    'munsingwear': '万星威'
 }
 
 # 功能词映射

@@ -30,13 +30,19 @@ def calculate_final_price(product_data):
     
     if not price_text:
         return ''
-    
+
     # 从价格文本中提取数字 (例如: "￥27,500 (税込)" -> 27500)
-    # 匹配 ￥ 符号后的数字，包括逗号
+    # 首先尝试匹配 ￥ 符号后的数字
     price_match = re.search(r'￥([0-9,]+)', str(price_text))
+
+    # 如果没有 ￥ 符号，尝试匹配纯数字
+    if not price_match:
+        # 匹配纯数字（可能有逗号）
+        price_match = re.search(r'^([0-9,]+)$', str(price_text).strip())
+
     if not price_match:
         return ''
-    
+
     try:
         # 移除逗号并转换为数字
         yen_price = int(price_match.group(1).replace(',', ''))

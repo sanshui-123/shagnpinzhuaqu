@@ -146,18 +146,28 @@ def build_size_multiline(sizes: List[str], gender: str) -> str:
     if not sizes:
         return ""
     lines = []
+
+    # 标准尺码列表（保持原样，不转换）
+    standard_sizes = {'XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL'}
+    # 需要转换为均码的特殊尺码
+    free_sizes = {'FREE', 'ONE SIZE', 'ONESIZE', 'OS', 'F', 'FR', 'UNI', 'UNISEX', 'NA', 'フリー'}
+
     for size in sizes:
         clean = str(size).strip()
         if not clean:
             continue
 
-        # 先检查是否是特殊尺码（FR, FREE, ONE SIZE等）
         upper = clean.upper()
-        if upper in SPECIAL_SIZE_MAPPING:
-            converted = SPECIAL_SIZE_MAPPING[upper]
+
+        # 标准尺码直接使用
+        if upper in standard_sizes:
+            converted = upper
+        # 特殊尺码转为均码
+        elif upper in free_sizes:
+            converted = '均码'
         else:
-            # 使用 convert_size_to_cn 获取纯英文尺码
-            converted = convert_size_to_cn(clean, gender)
+            # 其他尺码保持原样
+            converted = clean
 
         if converted and converted not in lines:
             lines.append(converted)

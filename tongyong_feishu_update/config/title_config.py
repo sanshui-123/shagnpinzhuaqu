@@ -22,7 +22,9 @@ BRAND_KEYWORDS = {
     'cleveland': ['cleveland', 'cleveland golf'],
     'mizuno': ['mizuno', '美津濃', '美津浓'],
     'ping': ['ping', 'ping golf'],
-    'taylormade': ['taylor made', 'taylormade', 'tm', '泰勒梅']
+    'taylormade': ['taylor made', 'taylormade', 'tm', '泰勒梅'],
+    'pearlygates': ['pearly gates', 'パーリーゲイツ', 'pg is pg', 'pearlygates', 'mix.tokyo'],
+    'munsingwear': ['munsingwear', 'マンシングウェア', 'penguin', '万星威']
 }
 
 # 品牌中文名映射
@@ -38,7 +40,9 @@ BRAND_MAP = {
     'cleveland': 'Cleveland',
     'mizuno': '美津浓Mizuno',
     'ping': 'Ping',
-    'taylormade': '泰勒梅TaylorMade'
+    'taylormade': '泰勒梅TaylorMade',
+    'pearlygates': 'PEARLY GATES',
+    'munsingwear': '万星威Munsingwear'
 }
 
 # 品牌简称
@@ -54,7 +58,9 @@ BRAND_SHORT_NAME = {
     'cleveland': 'Cleveland',
     'mizuno': '美津浓',
     'ping': 'Ping',
-    'taylormade': '泰勒梅'
+    'taylormade': '泰勒梅',
+    'pearlygates': 'PEARLY GATES',
+    'munsingwear': '万星威'
 }
 
 # ============================================================================
