@@ -149,6 +149,8 @@ def build_size_multiline(sizes: List[str], gender: str) -> str:
 
     # 标准尺码列表（保持原样，不转换）
     standard_sizes = {'XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL'}
+    # 日本尺码到国际尺码的映射
+    japan_mapping = {'LL': 'XL', '3L': 'XXL', '4L': 'XXXL', '5L': 'XXXXL'}
     # 需要转换为均码的特殊尺码
     free_sizes = {'FREE', 'ONE SIZE', 'ONESIZE', 'OS', 'F', 'FR', 'UNI', 'UNISEX', 'NA', 'フリー'}
 
@@ -162,6 +164,9 @@ def build_size_multiline(sizes: List[str], gender: str) -> str:
         # 标准尺码直接使用
         if upper in standard_sizes:
             converted = upper
+        # 日本尺码映射为国际尺码
+        elif upper in japan_mapping:
+            converted = japan_mapping[upper]
         # 特殊尺码转为均码
         elif upper in free_sizes:
             converted = '均码'
