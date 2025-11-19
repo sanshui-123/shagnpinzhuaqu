@@ -15,6 +15,23 @@ from tongyong_feishu_update.clients import create_feishu_client
 from tongyong_feishu_update.loaders.factory import LoaderFactory
 
 
+def normalize_url(url: str) -> str:
+    """
+    标准化URL用于匹配比较
+
+    处理：
+    - 移除末尾斜杠
+    - 转换为小写
+    - 移除查询参数
+    """
+    if not url:
+        return ''
+    # 移除查询参数
+    url = url.split('?')[0]
+    # 移除末尾斜杠并转小写
+    return url.rstrip('/').lower()
+
+
 def get_pending_products(
     feishu_records: dict,
     source_products: list = None,
@@ -23,6 +40,9 @@ def get_pending_products(
 ) -> list:
     """
     获取待处理的产品ID列表
+
+    支持 URL 回退匹配：当 product_id 在飞书中找不到时，
+    会尝试通过 URL 匹配找到对应的飞书记录。
 
     Args:
         feishu_records: 飞书现有记录 {product_id: {record_id, fields}}
@@ -35,20 +55,50 @@ def get_pending_products(
     """
     pending_ids = []
 
+    # 构建 URL → 飞书 product_id 的映射（用于回退匹配）
+    url_to_feishu_id = {}
+    for feishu_pid, record_info in feishu_records.items():
+        record_fields = record_info['fields']
+        url_field = record_fields.get('商品链接', '')
+        # 处理链接字段可能是列表的情况
+        if isinstance(url_field, list) and url_field:
+            url = url_field[0].get('link', '') if isinstance(url_field[0], dict) else str(url_field[0])
+        else:
+            url = str(url_field) if url_field else ''
+
+        if url:
+            normalized = normalize_url(url)
+            if normalized:
+                url_to_feishu_id[normalized] = feishu_pid
+
     # 如果提供了源文件，只检查源文件中的产品
     if source_products:
-        source_ids = {p.product_id for p in source_products if p.product_id}
+        # 构建 source_id → product 的映射
+        source_map = {p.product_id: p for p in source_products if p.product_id}
+        source_ids = set(source_map.keys())
     else:
         source_ids = None
+        source_map = {}
 
     # 检查每个产品
     if source_ids:
         for product_id in source_ids:
-            # 记录不存在 或 指定字段为空
-            if product_id not in feishu_records:
-                pending_ids.append(product_id)
+            product = source_map.get(product_id)
+
+            # 首先尝试直接匹配 product_id
+            feishu_pid = None
+            if product_id in feishu_records:
+                feishu_pid = product_id
             else:
-                record_fields = feishu_records[product_id]['fields']
+                # 回退：通过 URL 匹配
+                if product and hasattr(product, 'detail_url') and product.detail_url:
+                    source_url = normalize_url(product.detail_url)
+                    if source_url in url_to_feishu_id:
+                        feishu_pid = url_to_feishu_id[source_url]
+
+            # 如果找到了飞书记录
+            if feishu_pid:
+                record_fields = feishu_records[feishu_pid]['fields']
 
                 # 品牌过滤
                 if brand_filter:
@@ -60,6 +110,9 @@ def get_pending_products(
                 field_value = record_fields.get(check_field, '').strip()
                 if not field_value:
                     pending_ids.append(product_id)
+            else:
+                # 记录不存在于飞书中
+                pending_ids.append(product_id)
     else:
         # 没有源文件，检查所有飞书记录
         for product_id, record_info in feishu_records.items():
