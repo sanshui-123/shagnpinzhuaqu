@@ -174,6 +174,8 @@ COLOR_NAME_TRANSLATION = {
     'ティール': '深青色',
     'アイボリー': '象牙色',
     'クリーム': '奶油色',
+    'サックス': '浅蓝色',      # Sax 蓝
+    'ライトグリーン': '浅绿色',  # Light Green
 }
 
 def translate_color_name(color_name: str) -> str:
