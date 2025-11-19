@@ -58,7 +58,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo -e "${BLUE}=======================================================${NC}"
-echo -e "${BLUE}  LeCoq Golf 完整同步流程${NC}"
+echo -e "${BLUE}  PEARLY GATES 完整同步流程${NC}"
 echo -e "${BLUE}=======================================================${NC}"
 echo ""
 
@@ -76,7 +76,7 @@ fi
 
 # 查找最新的产品文件
 echo -e "${YELLOW}🔍 查找最新的产品文件...${NC}"
-LATEST_FILE=$(ls -t "$OUTPUT_DIR"/lecoqgolf_products_*.json 2>/dev/null | head -1)
+LATEST_FILE=$(ls -t "$OUTPUT_DIR"/pg_products_*.json 2>/dev/null | head -1)
 
 if [ -z "$LATEST_FILE" ]; then
     echo -e "${RED}❌ 错误: 未找到产品文件${NC}"
@@ -85,7 +85,7 @@ if [ -z "$LATEST_FILE" ]; then
 fi
 
 FILENAME=$(basename "$LATEST_FILE")
-RELATIVE_PATH="scripts/multi_brand/brands/lecoqgolf/golf_content/lecoqgolf/$FILENAME"
+RELATIVE_PATH="scripts/multi_brand/brands/pg/golf_content/pg/$FILENAME"
 
 echo -e "${GREEN}✅ 找到文件: $FILENAME${NC}"
 echo ""
@@ -107,15 +107,22 @@ echo ""
 
 # Step 2: 顺序抓详情并同步
 echo -e "${YELLOW}[Step 2] 顺序抓详情并同步到飞书...${NC}"
-echo -e "${BLUE}源文件: golf_content/lecoqgolf/$FILENAME${NC}"
+echo -e "${BLUE}源文件: golf_content/pg/$FILENAME${NC}"
 if [ -n "$LIMIT" ]; then
     echo -e "${BLUE}限制: $LIMIT${NC}"
 fi
 echo ""
 
+# 检测断点续传状态文件
 cd "$PG_DIR"
+if [ -f "sequential_sync_status.json" ]; then
+    echo -e "${YELLOW}⚠️  检测到断点续传状态文件 (sequential_sync_status.json)${NC}"
+    echo -e "${YELLOW}   已处理的 product_id 会被跳过；如需对所有记录重跑，${NC}"
+    echo -e "${YELLOW}   请删除该文件或运行时带 --no-resume 参数。${NC}"
+    echo ""
+fi
 node sequential_sync.js \
-    --source "golf_content/lecoqgolf/$FILENAME" \
+    --source "golf_content/pg/$FILENAME" \
     $LIMIT
 
 echo ""
