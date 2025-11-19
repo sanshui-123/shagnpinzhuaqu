@@ -178,6 +178,7 @@ COLOR_NAME_TRANSLATION = {
     'ライトグリーン': '浅绿色',  # Light Green
     'ネイビーベース': '深蓝底色',  # Navy Base
     'ライト杢グレー': '浅麻灰',   # Light Heather Gray
+    'サックス×ホワイト': '浅蓝/白',  # Sax × White
 }
 
 def translate_color_name(color_name: str) -> str:
