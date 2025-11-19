@@ -21,6 +21,7 @@ class SequentialSyncProcessor {
         this.tempDir = '/tmp';
         this.processedIds = new Set();
         this.failedIds = new Map();
+        this.skippedOutOfStock = new Set();  // 📦 跳过的缺货商品
 
         this.loadStatus();
     }
@@ -113,13 +114,35 @@ class SequentialSyncProcessor {
 
                 console.log('✅ 抓取成功');
 
-                // 3.2 同步到飞书
-                console.log('📤 同步到飞书...');
+                // 📦 检查库存状态
+                let shouldSync = true;
+                if (fs.existsSync(tempFile)) {
+                    try {
+                        const scrapedData = JSON.parse(fs.readFileSync(tempFile, 'utf8'));
+                        // 检查产品数据中的 stockStatus
+                        const products = scrapedData.products || [scrapedData];
+                        for (const prod of products) {
+                            if (prod.stockStatus === 'out_of_stock') {
+                                console.log('⚠️ 商品全部缺货，跳过同步到飞书');
+                                shouldSync = false;
+                                this.skippedOutOfStock.add(productId);
+                                break;
+                            }
+                        }
+                    } catch (parseError) {
+                        console.log(`⚠️ 无法解析抓取数据: ${parseError.message}`);
+                    }
+                }
 
-                const syncCmd = `cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline "${tempFile}" --verbose`;
-                execSync(syncCmd, { encoding: 'utf8', stdio: 'inherit' });
+                // 3.2 同步到飞书（仅当有库存时）
+                if (shouldSync) {
+                    console.log('📤 同步到飞书...');
 
-                console.log('✅ 同步成功');
+                    const syncCmd = `cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline "${tempFile}" --verbose`;
+                    execSync(syncCmd, { encoding: 'utf8', stdio: 'inherit' });
+
+                    console.log('✅ 同步成功');
+                }
 
                 // 清理临时文件
                 if (fs.existsSync(tempFile)) {
@@ -148,9 +171,17 @@ class SequentialSyncProcessor {
         console.log('=' .repeat(60));
         console.log(`📊 处理统计:`);
         console.log(`  ✅ 成功: ${successCount}`);
+        console.log(`  ⚠️ 跳过缺货: ${this.skippedOutOfStock.size}`);
         console.log(`  ❌ 失败: ${errorCount}`);
         console.log(`  📦 总计: ${toProcess.length}`);
         console.log('=' .repeat(60));
+
+        if (this.skippedOutOfStock.size > 0) {
+            console.log(`\n⚠️ 跳过的缺货产品ID:`);
+            for (const id of this.skippedOutOfStock) {
+                console.log(`  - ${id}`);
+            }
+        }
 
         if (this.failedIds.size > 0) {
             console.log(`\n❌ 失败产品ID:`);

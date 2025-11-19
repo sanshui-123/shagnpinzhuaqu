@@ -121,6 +121,19 @@ class ConvertedJsonProductLoader(BaseProductLoader):
                 if 'scrapeInfo' in product_info:
                     product.scrapeInfo = product_info['scrapeInfo']
 
+                # 📦 添加库存状态信息
+                if 'variantInventory' in product_info:
+                    product.variantInventory = product_info['variantInventory']
+                if 'stockStatus' in product_info:
+                    product.stockStatus = product_info['stockStatus']
+
+                # 设置extra字段用于透传
+                product.extra = {
+                    'variantInventory': product_info.get('variantInventory', []),
+                    'stockStatus': product_info.get('stockStatus', 'in_stock'),
+                    '_original_data': product_info.get('_original_data', {})
+                }
+
                 products.append(product)
 
         except Exception as e:

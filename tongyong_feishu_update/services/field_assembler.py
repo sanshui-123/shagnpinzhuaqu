@@ -135,6 +135,35 @@ class FieldAssembler:
         _, brand_chinese, brand_short = brand_module.extract_brand_from_product(product)
         fields['品牌名'] = brand_short
 
+        # 📦 处理库存状态数据（如果有）
+        variant_inventory = product.get('variantInventory', [])
+        stock_status = product.get('stockStatus', 'in_stock')
+
+        # 根据库存状态过滤颜色和尺码
+        in_stock_colors = set()
+        in_stock_sizes = set()
+        out_of_stock_info = []
+
+        if variant_inventory:
+            for variant in variant_inventory:
+                color = variant.get('color', '')
+                size = variant.get('size', '')
+                in_stock = variant.get('inStock', True)
+
+                if in_stock:
+                    if color:
+                        in_stock_colors.add(color)
+                    if size:
+                        in_stock_sizes.add(size)
+                else:
+                    if color and size:
+                        out_of_stock_info.append(f"{color}-{size}")
+
+            # 检查是否全部缺货
+            if not in_stock_colors and not in_stock_sizes and variant_inventory:
+                stock_status = 'out_of_stock'
+                print(f"⚠️ 商品 {product.get('productId', '')} 所有变体都已缺货")
+
         # 颜色（优先使用详情数据）
         colors = None
         if product_detail and product_detail.get('colors'):
@@ -167,7 +196,23 @@ class FieldAssembler:
                     for meta in product['imagesMetadata']
                     if meta.get('colorName') or meta.get('name')
                 ]
-        
+
+        # 📦 如果有库存数据，只保留有货的颜色
+        if variant_inventory and in_stock_colors:
+            # 过滤只保留有货的颜色
+            filtered_colors = []
+            for color in colors:
+                # 检查颜色名称是否在有货集合中（去掉括号内容比较）
+                color_clean = color.split('（')[0].split('(')[0].strip() if color else ''
+                if color_clean in in_stock_colors or color in in_stock_colors:
+                    filtered_colors.append(color)
+            colors = filtered_colors if filtered_colors else colors  # 如果过滤后为空，保留原始
+
+        # 📦 如果全部缺货，清空颜色
+        if stock_status == 'out_of_stock' and variant_inventory:
+            colors = []
+            print(f"⚠️ 商品全部缺货，清空颜色列表")
+
         color_multiline = translation.build_color_multiline(colors)
         fields['颜色'] = color_multiline if color_multiline else ''  # 只有真的为空时才为空
 
@@ -203,6 +248,21 @@ class FieldAssembler:
                     # 无法映射时保持原值
                     mapped_sizes.append(size_str)
             sizes_list = mapped_sizes
+
+        # 📦 如果有库存数据，只保留有货的尺码
+        if variant_inventory and in_stock_sizes and sizes_list:
+            # 过滤只保留有货的尺码
+            filtered_sizes = []
+            for size in sizes_list:
+                size_str = str(size).strip().upper()
+                if size_str in in_stock_sizes or size in in_stock_sizes:
+                    filtered_sizes.append(size)
+            sizes_list = filtered_sizes if filtered_sizes else sizes_list  # 如果过滤后为空，保留原始
+
+        # 📦 如果全部缺货，清空尺码
+        if stock_status == 'out_of_stock' and variant_inventory:
+            sizes_list = []
+            print(f"⚠️ 商品全部缺货，清空尺码列表")
 
         if sizes_list:
             size_multiline = sizes.build_size_multiline(sizes_list, gender)

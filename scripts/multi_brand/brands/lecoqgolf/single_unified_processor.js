@@ -112,6 +112,9 @@ class SingleUnifiedProcessor {
                 html: result.sizeChart.html || '',
                 text: result.sizeChart.text || ''
             } : {},
+            // 📦 库存状态字段
+            variantInventory: result.variantInventory || [],
+            stockStatus: result.stockStatus || 'in_stock',
             category: "",
             sku: "",
             status: "",
@@ -130,7 +133,9 @@ class SingleUnifiedProcessor {
                 图片链接: result.imageUrls || [],
                 尺码: result.sizes || [],
                 详情页文字: result.description,
-                尺码表: result.sizeChart
+                尺码表: result.sizeChart,
+                库存状态: result.stockStatus || 'in_stock',
+                变体库存: result.variantInventory || []
             }
         };
     }

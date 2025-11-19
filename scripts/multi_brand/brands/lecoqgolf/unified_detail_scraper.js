@@ -78,19 +78,43 @@ class UnifiedDetailScraper {
             console.log('🎨 抓取颜色和尺码...');
             const colorsAndSizes = await this.extractColorsAndSizes(page);
 
+            // 📦 抓取库存状态信息
+            console.log('📦 抓取库存状态...');
+            const inventoryData = await this.extractVariantInventory(page);
+
+            // 判断是否全部缺货
+            let stockStatus = 'in_stock';
+            let productNameFinal = basicInfo.productName;
+
+            if (inventoryData.variantInventory && inventoryData.variantInventory.length > 0) {
+                const hasAnyStock = inventoryData.variantInventory.some(v => v.inStock);
+                if (!hasAnyStock) {
+                    stockStatus = 'out_of_stock';
+                    // 添加缺货前缀
+                    if (productNameFinal && !productNameFinal.startsWith('【缺货】')) {
+                        productNameFinal = '【缺货】' + productNameFinal;
+                    }
+                    console.log('⚠️ 该商品所有变体都已缺货');
+                }
+            }
+
             // 组装最终结果
             const result = {
                 success: true,
                 url: url,
                 timestamp: new Date().toISOString(),
                 ...basicInfo,
+                productName: productNameFinal,
                 ...colorsAndSizes,
                 imageUrls: images,
                 sizeChart: sizeChartData,
+                variantInventory: inventoryData.variantInventory || [],
+                stockStatus: stockStatus,
                 _scraper_info: {
-                    version: 'unified_v1.0',
+                    version: 'unified_v1.1',
                     debug_mode: this.options.debug,
                     size_chart_method: sizeChartData.method,
+                    inventory_extracted: inventoryData.variantInventory ? inventoryData.variantInventory.length : 0,
                     processing_time: new Date().toISOString()
                 }
             };
@@ -650,6 +674,203 @@ class UnifiedDetailScraper {
 
             return result;
         });
+    }
+
+    /**
+     * 📦 抓取库存状态信息 - 遍历所有颜色和尺码组合
+     */
+    async extractVariantInventory(page) {
+        try {
+            // 首先获取所有颜色选项
+            const colorOptions = await page.evaluate(() => {
+                const colors = [];
+                const colorItems = document.querySelectorAll('#color-selector li, .color-selector li');
+
+                colorItems.forEach((item, index) => {
+                    const img = item.querySelector('img');
+                    const colorName = img ? img.getAttribute('alt') : '';
+                    const isCurrent = item.classList.contains('currentCommodityColor');
+
+                    if (colorName) {
+                        colors.push({
+                            index: index,
+                            colorName: colorName.replace(/[（(][A-Z0-9]+[)）]/g, '').trim(),
+                            fullName: colorName,
+                            isCurrent: isCurrent
+                        });
+                    }
+                });
+
+                return colors;
+            });
+
+            console.log(`📦 发现 ${colorOptions.length} 个颜色选项`);
+
+            const variantInventory = [];
+
+            // 遍历每个颜色
+            for (let i = 0; i < colorOptions.length; i++) {
+                const colorOption = colorOptions[i];
+
+                // 如果不是当前颜色，点击切换
+                if (!colorOption.isCurrent && colorOptions.length > 1) {
+                    console.log(`🎨 切换到颜色: ${colorOption.colorName}`);
+
+                    try {
+                        // 点击颜色选择器
+                        await page.evaluate((colorIndex) => {
+                            const items = document.querySelectorAll('#color-selector li, .color-selector li');
+                            if (items[colorIndex]) {
+                                items[colorIndex].click();
+                            }
+                        }, colorOption.index);
+
+                        // 等待页面更新
+                        await page.waitForTimeout(2000);
+                    } catch (e) {
+                        console.log(`⚠️ 切换颜色失败: ${e.message}`);
+                    }
+                }
+
+                // 提取当前颜色的所有尺码库存状态
+                const sizeStocks = await page.evaluate(() => {
+                    const stocks = [];
+
+                    // 方法1: 查找库存摘要行 "M:△2点 / L:△2点 / LL:✕" 格式
+                    const allElements = document.querySelectorAll('div, p, span, li');
+                    for (const el of allElements) {
+                        const text = el.textContent.trim();
+                        // 匹配格式: M:△ 或 L:○ 或 LL:✕
+                        const stockPattern = /([SMLX]+|LL|3L|4L|5L)\s*[:：]\s*([○△✕×])/g;
+                        let match;
+                        while ((match = stockPattern.exec(text)) !== null) {
+                            const size = match[1];
+                            const symbol = match[2];
+                            const inStock = symbol === '○' || symbol === '△';
+                            const status = symbol === '○' ? 'normal' : (symbol === '△' ? 'little' : 'oos');
+
+                            // 避免重复添加
+                            if (!stocks.find(s => s.size === size)) {
+                                stocks.push({ size, inStock, status });
+                            }
+                        }
+                        if (stocks.length > 0) break; // 找到后退出
+                    }
+
+                    // 方法2: 查找包含 "残りわずか" 或 "なし" 的元素
+                    if (stocks.length === 0) {
+                        const sizeSection = [...document.querySelectorAll('section, div')].find(el =>
+                            /サイズ/.test(el.textContent) && el.querySelectorAll('li, button').length > 0
+                        );
+
+                        if (sizeSection) {
+                            const items = sizeSection.querySelectorAll('li, button, .option');
+                            items.forEach(item => {
+                                const text = item.textContent.trim();
+                                // 提取尺码
+                                const sizeMatch = text.match(/^([SMLX]+|LL|3L|4L|5L)\b/i);
+                                if (sizeMatch) {
+                                    const size = sizeMatch[1].toUpperCase();
+                                    const hasLowStock = /残りわずか/.test(text);
+                                    const hasNoStock = /なし|sold\s*out|品切/i.test(text);
+                                    const inStock = !hasNoStock;
+                                    const status = hasNoStock ? 'oos' : (hasLowStock ? 'little' : 'normal');
+
+                                    if (!stocks.find(s => s.size === size)) {
+                                        stocks.push({ size, inStock, status });
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    // 方法3: 通用文本搜索
+                    if (stocks.length === 0) {
+                        const stockElements = [...document.querySelectorAll('li, div, span')].filter(el =>
+                            /残りわずか|なし|○|△|✕|×/.test(el.textContent.trim()) &&
+                            el.textContent.length < 100
+                        );
+
+                        stockElements.forEach(el => {
+                            const text = el.textContent.trim();
+                            const sizeMatch = text.match(/([SMLX]+|LL|3L|4L|5L)/i);
+                            if (sizeMatch) {
+                                const size = sizeMatch[1].toUpperCase();
+                                const hasSymbol = /[○△✕×]/.test(text);
+                                let inStock = true;
+                                let status = 'normal';
+
+                                if (/✕|×|なし/.test(text)) {
+                                    inStock = false;
+                                    status = 'oos';
+                                } else if (/△|残りわずか/.test(text)) {
+                                    status = 'little';
+                                }
+
+                                if (!stocks.find(s => s.size === size)) {
+                                    stocks.push({ size, inStock, status });
+                                }
+                            }
+                        });
+                    }
+
+                    return stocks;
+                });
+
+                // 添加到库存数组
+                for (const stock of sizeStocks) {
+                    variantInventory.push({
+                        color: colorOption.colorName,
+                        size: stock.size,
+                        inStock: stock.inStock,
+                        status: stock.status
+                    });
+                }
+
+                console.log(`  颜色 ${colorOption.colorName}: ${sizeStocks.length} 个尺码, ${sizeStocks.filter(s => s.inStock).length} 个有货`);
+            }
+
+            // 如果没有找到任何库存信息，尝试备用方法
+            if (variantInventory.length === 0) {
+                console.log('⚠️ 未找到库存信息，尝试备用方法...');
+
+                const fallbackStocks = await page.evaluate(() => {
+                    const stocks = [];
+
+                    // 查找任何包含库存状态的元素
+                    const allElements = document.querySelectorAll('[class*="stock"], [class*="inventory"]');
+                    allElements.forEach(el => {
+                        const text = el.textContent.trim();
+                        if (text.includes('○') || text.includes('△') || text.includes('✕') || text.includes('×')) {
+                            stocks.push({
+                                text: text,
+                                hasStock: text.includes('○') || text.includes('△')
+                            });
+                        }
+                    });
+
+                    return stocks;
+                });
+
+                if (fallbackStocks.length > 0) {
+                    console.log(`📦 备用方法找到 ${fallbackStocks.length} 个库存元素`);
+                }
+            }
+
+            return {
+                variantInventory: variantInventory,
+                totalVariants: variantInventory.length,
+                inStockCount: variantInventory.filter(v => v.inStock).length,
+                outOfStockCount: variantInventory.filter(v => !v.inStock).length
+            };
+
+        } catch (error) {
+            console.log('❌ 库存信息提取失败:', error.message);
+            return {
+                variantInventory: [],
+                error: error.message
+            };
+        }
     }
 }
 

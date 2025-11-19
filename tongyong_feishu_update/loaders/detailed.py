@@ -181,7 +181,7 @@ class DetailedProductLoader(BaseProductLoader):
             extra={
                 **product_info.get('extra', {}),
                 # 保留原始详细数据
-                **{k: v for k, v in product_info.items() if k.startswith('_') or k in ['sizeSectionText', 'variantDetails', 'colorDetails', 'sizeChart', 'images']},
+                **{k: v for k, v in product_info.items() if k.startswith('_') or k in ['sizeSectionText', 'variantDetails', 'colorDetails', 'sizeChart', 'images', 'variantInventory', 'stockStatus']},
                 'variant_details': variants,
                 'color_details': colors,
                 'size_details': sizes
