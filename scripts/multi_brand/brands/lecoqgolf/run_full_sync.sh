@@ -113,7 +113,14 @@ if [ -n "$LIMIT" ]; then
 fi
 echo ""
 
+# 检测断点续传状态文件
 cd "$LECOQ_DIR"
+if [ -f "sequential_sync_status.json" ]; then
+    echo -e "${YELLOW}⚠️  检测到断点续传状态文件 (sequential_sync_status.json)${NC}"
+    echo -e "${YELLOW}   已处理的 product_id 会被跳过；如需对所有记录重跑，${NC}"
+    echo -e "${YELLOW}   请删除该文件或运行时带 --no-resume 参数。${NC}"
+    echo ""
+fi
 node sequential_sync.js \
     --source "golf_content/lecoqgolf/$FILENAME" \
     $LIMIT

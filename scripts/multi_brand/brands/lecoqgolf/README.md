@@ -198,3 +198,15 @@ A: 抓取器已包含反检测机制，会自动处理
 ### Q: 数据不完整怎么办？
 A: 检查选择器配置，更新CSS选择器
 有些产品信息可能需要单独请求详情页
+
+### Q: 为什么重新运行脚本后空字段仍未填充？
+A: 这是因为断点续传机制。脚本会跳过已处理过的 product_id。
+如果想重新填充空字段，请删除 `sequential_sync_status.json` 文件，或运行脚本时加 `--no-resume` 参数：
+```bash
+# 方法1: 删除状态文件后重新运行
+rm sequential_sync_status.json
+./run_full_sync.sh
+
+# 方法2: 使用 --no-resume 参数（如果支持）
+node sequential_sync.js --source "..." --no-resume
+```

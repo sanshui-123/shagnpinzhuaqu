@@ -95,6 +95,15 @@ def main(
     try:
         if streaming:
             print("🚀 开始执行流式更新流程...")
+
+            # 检查断点续传状态文件
+            if resume:
+                from pathlib import Path
+                progress_file = Path(input_path).stem + '_progress.json'
+                if Path(progress_file).exists():
+                    print(f"📝 断点续传启用：已存在进度文件 {progress_file}，之前处理过的产品将跳过。")
+                    print(f"   若要强制重跑，请删除该文件或使用 --no-resume。")
+
             orchestrator = StreamingUpdateOrchestrator(
                 glm_client=glm_client,
                 feishu_client=feishu_client,
