@@ -824,7 +824,7 @@ class UnifiedDetailScraper {
                 }
             }
 
-            return uniqueImages.slice(0, 20);
+            return uniqueImages;
         });
     }
 
