@@ -2,10 +2,10 @@
 导入基础产品信息到飞书工具
 从 scrape_category 输出中提取基础信息，批量创建飞书记录
 
-⚠️ 重要说明：去重逻辑
-- Stage1 导入时使用「商品链接」（URL）作为去重依据
-- 即使 productId 不同，只要 URL 相同就会跳过
-- 导入时会将 URL 编号写入「商品ID」字段
+⚠️ 重要说明：双重去重逻辑
+- 同时使用「商品ID」和「商品链接」作为去重依据
+- 只要 productId 或 URL 任意一个已存在，就跳过不创建
+- 这可以防止 PG（ID相同URL不同）和 Descente（URL相同ID不同）的重复问题
 - Stage2 会抓取详情页并将「商品ID」覆盖为品牌货号
 """
 
@@ -100,34 +100,53 @@ def import_basic_products(
     if verbose:
         print(f"✅ 已获取 {len(existing_records)} 条现有记录", file=sys.stderr)
 
-    # 4. 构建已存在的 URL 集合（用于去重）
-    # ⚠️ 去重逻辑已改为基于 URL 而非 productId
-    # 🔥 使用 normalize_url 规范化，避免因协议/末尾斜杠不同导致重复
+    # 4. 构建已存在的 ID 和 URL 集合（双重去重）
+    # 🔥 同时检查商品ID和商品链接，任意一个存在就跳过
+    existing_ids = set()
     existing_urls = set()
     for record_data in existing_records.values():
         fields = record_data.get('fields', {})
+        # 收集商品ID
+        product_id = fields.get('商品ID', '').strip()
+        if product_id:
+            existing_ids.add(product_id)
+        # 收集商品链接（规范化）
         url = fields.get('商品链接', '')
         if url:
             existing_urls.add(normalize_url(url))
 
     if verbose:
+        print(f"📊 已提取 {len(existing_ids)} 个已存在的商品ID", file=sys.stderr)
         print(f"📊 已提取 {len(existing_urls)} 个已存在的商品链接", file=sys.stderr)
 
-    # 5. 过滤掉已存在的记录（基于 URL 去重）
-    # 🔥 使用 normalize_url 规范化后进行比较
+    # 5. 过滤掉已存在的记录（双重去重：ID 或 URL 任一存在即跳过）
     new_products = []
     skip_count = 0
 
     for product in products_to_import:
+        product_id = product.get('product_id', '').strip()
         url = product.get('url', '')
-        normalized = normalize_url(url)
-        if normalized in existing_urls:
+        normalized_url = normalize_url(url)
+
+        # 检查商品ID是否已存在
+        if product_id in existing_ids:
             skip_count += 1
             if verbose:
-                print(f"⏭️ 跳过已存在的 URL: {url}", file=sys.stderr)
-        else:
-            new_products.append(product)
-            existing_urls.add(normalized)  # 防止同一批次内重复
+                print(f"⏭️ 跳过已存在的商品ID: {product_id}", file=sys.stderr)
+            continue
+
+        # 检查商品链接是否已存在
+        if normalized_url in existing_urls:
+            skip_count += 1
+            if verbose:
+                print(f"⏭️ 跳过已存在的URL: {url}", file=sys.stderr)
+            continue
+
+        # 两者都不存在，加入新产品列表
+        new_products.append(product)
+        # 防止同一批次内重复
+        existing_ids.add(product_id)
+        existing_urls.add(normalized_url)
 
     if verbose:
         print(f"📊 新增: {len(new_products)} 个，跳过: {skip_count} 个", file=sys.stderr)

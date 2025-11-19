@@ -53,6 +53,7 @@ class FeishuClient(FeishuClientInterface):
 
         # 记录映射缓存
         self.records_by_url: Dict[str, Dict] = {}  # 按商品链接映射
+        self.existing_ids: set = set()  # 已存在的商品ID集合（用于去重保护）
 
         # API端点
         self.auth_url = 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal'
@@ -74,6 +75,7 @@ class FeishuClient(FeishuClientInterface):
         
         existing_records = {}
         records_by_url = {}  # 新增：按商品链接映射
+        existing_ids = set()  # 新增：已存在的商品ID集合
         page_token = None
 
         while True:
@@ -113,6 +115,7 @@ class FeishuClient(FeishuClientInterface):
                         product_id = fields.get('商品ID', '').strip()
                         if product_id:
                             existing_records[product_id] = record_info
+                            existing_ids.add(product_id)  # 添加到ID集合
 
                         # 按商品链接映射（去掉末尾斜杠）
                         product_url = fields.get('商品链接', '').strip().rstrip('/')
@@ -133,10 +136,21 @@ class FeishuClient(FeishuClientInterface):
 
             time.sleep(0.2)  # 分页间隔
 
-        # 保存URL映射到实例变量
+        # 保存URL映射和ID集合到实例变量
         self.records_by_url = records_by_url
+        self.existing_ids = existing_ids
 
         return existing_records
+
+    def get_existing_ids(self) -> set:
+        """获取已存在的商品ID集合
+
+        注意：必须先调用 get_records() 才能使用此方法
+
+        Returns:
+            set: 已存在的商品ID集合
+        """
+        return self.existing_ids
 
     def get_records_by_url(self) -> Dict[str, Dict]:
         """获取按商品链接映射的记录

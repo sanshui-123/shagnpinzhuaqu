@@ -1,262 +1,210 @@
 #!/usr/bin/env python3
 """
 飞书记录去重脚本
-清理飞书表中重复的 URL 记录，保留有标题的记录
+
+功能：
+- 检测并删除飞书表中重复的记录
+- 同时按「商品ID」和「商品链接」进行去重
+- 优先保留有标题的记录
+
+使用方法：
+    python3 scripts/dedupe_feishu_records.py          # 预览模式
+    python3 scripts/dedupe_feishu_records.py --apply  # 执行删除
 """
 
 import sys
 import time
+import argparse
 import requests
-from pathlib import Path
 from collections import defaultdict
+from pathlib import Path
 
-# 添加父目录到 Python 路径
+# 添加项目根目录到 Python 路径
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from tongyong_feishu_update.clients import create_feishu_client
+from tongyong_feishu_update.config.settings import get_feishu_config
 
 
 def normalize_url(url: str) -> str:
-    """规范化 URL"""
+    """规范化URL用于去重比较"""
     if not url:
         return ''
-    return url.strip().rstrip('/')
+    cleaned = url.strip().replace('http://', 'https://').rstrip('/')
+    return cleaned.lower()
 
 
-def get_all_records_with_details(client):
-    """
-    获取所有记录的详细信息，包括 record_id
+def main():
+    parser = argparse.ArgumentParser(description='飞书记录去重脚本')
+    parser.add_argument('--apply', action='store_true', help='执行删除（默认为预览模式）')
+    parser.add_argument('--verbose', '-v', action='store_true', help='显示详细信息')
+    args = parser.parse_args()
 
-    Returns:
-        list: 记录列表，每个记录包含 record_id 和 fields
-    """
-    token = client._get_token()
+    # 使用项目配置系统获取飞书凭证
+    cfg = get_feishu_config()
+    APP_ID = cfg.app_id
+    APP_SECRET = cfg.app_secret
+    APP_TOKEN = cfg.app_token
+    TABLE_ID = cfg.table_id
+
+    if not all([APP_ID, APP_SECRET, APP_TOKEN, TABLE_ID]):
+        print("错误: 飞书配置不完整，请检查环境变量或配置文件")
+        sys.exit(1)
+
+    # 获取token
+    auth_url = 'https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal'
+    resp = requests.post(auth_url, json={'app_id': APP_ID, 'app_secret': APP_SECRET}, timeout=15)
+    token = resp.json()['tenant_access_token']
+
     headers = {
         'Authorization': f'Bearer {token}',
         'Content-Type': 'application/json'
     }
 
+    # 获取所有记录
+    records_url = f'https://open.feishu.cn/open-apis/bitable/v1/apps/{APP_TOKEN}/tables/{TABLE_ID}/records'
     all_records = []
     page_token = None
 
+    print("正在获取所有飞书记录...")
+    page_count = 0
     while True:
         params = {
             'page_size': 500,
-            'field_names': '["商品ID","品牌名","商品标题","颜色","尺码","价格","衣服分类","性别","商品链接"]'
+            'field_names': '["商品ID","商品链接","商品标题"]'
         }
         if page_token:
             params['page_token'] = page_token
 
-        resp = requests.get(
-            client.records_url,
-            headers=headers,
-            params=params,
-            timeout=30
-        )
-        resp.raise_for_status()
+        resp = requests.get(records_url, headers=headers, params=params, timeout=30)
         data = resp.json()
 
         if data.get('code') != 0:
-            print(f"飞书API返回错误: {data}")
+            print(f"API错误: {data}")
             break
 
         items = data.get('data', {}).get('items', [])
         for item in items:
-            all_records.append({
+            fields = item.get('fields', {})
+            record = {
                 'record_id': item.get('record_id'),
-                'fields': item.get('fields', {})
-            })
+                'product_id': fields.get('商品ID', '').strip(),
+                'url': normalize_url(fields.get('商品链接', '')),
+                'title': fields.get('商品标题', '').strip(),
+                'has_title': bool(fields.get('商品标题', '').strip())
+            }
+            all_records.append(record)
+
+        page_count += 1
+        print(f"  已获取 {len(all_records)} 条记录 (第 {page_count} 页)")
 
         page_token = data.get('data', {}).get('page_token')
         if not page_token:
             break
-
         time.sleep(0.2)
 
-    return all_records
+    print(f"\n总共获取 {len(all_records)} 条记录")
 
+    # 按商品ID和URL分组
+    by_product_id = defaultdict(list)
+    by_url = defaultdict(list)
 
-def batch_delete_records(client, record_ids: list, batch_size: int = 50):
-    """
-    批量删除记录
+    for record in all_records:
+        if record['product_id']:
+            by_product_id[record['product_id']].append(record)
+        if record['url']:
+            by_url[record['url']].append(record)
 
-    Args:
-        client: 飞书客户端
-        record_ids: 要删除的 record_id 列表
-        batch_size: 每批删除数量
+    # 找出需要删除的记录
+    # 使用 set 防止重复删除
+    to_delete = set()
+    to_keep = set()
 
-    Returns:
-        int: 成功删除的数量
-    """
-    token = client._get_token()
-    headers = {
-        'Authorization': f'Bearer {token}',
-        'Content-Type': 'application/json'
-    }
+    # 按商品ID去重
+    id_duplicates = {pid: recs for pid, recs in by_product_id.items() if len(recs) > 1}
+    print(f"\n按商品ID发现 {len(id_duplicates)} 组重复")
 
-    delete_url = f'https://open.feishu.cn/open-apis/bitable/v1/apps/{client.app_token}/tables/{client.table_id}/records/batch_delete'
+    for product_id, records in id_duplicates.items():
+        # 优先保留有标题的记录
+        records_with_title = [r for r in records if r['has_title']]
+        if records_with_title:
+            keep = records_with_title[0]
+        else:
+            keep = records[0]
 
-    total_deleted = 0
-    total_batches = (len(record_ids) + batch_size - 1) // batch_size
+        to_keep.add(keep['record_id'])
+        for r in records:
+            if r['record_id'] != keep['record_id']:
+                to_delete.add(r['record_id'])
 
-    for i in range(0, len(record_ids), batch_size):
-        batch = record_ids[i:i + batch_size]
+        if args.verbose:
+            print(f"  商品ID {product_id}: 保留 {keep['record_id']} (有标题: {keep['has_title']})")
+
+    # 按URL去重
+    url_duplicates = {url: recs for url, recs in by_url.items() if len(recs) > 1}
+    print(f"按商品链接发现 {len(url_duplicates)} 组重复")
+
+    for url, records in url_duplicates.items():
+        # 过滤掉已经标记为删除的
+        remaining = [r for r in records if r['record_id'] not in to_delete]
+        if len(remaining) <= 1:
+            continue
+
+        # 优先保留有标题的记录
+        records_with_title = [r for r in remaining if r['has_title']]
+        if records_with_title:
+            keep = records_with_title[0]
+        else:
+            keep = remaining[0]
+
+        to_keep.add(keep['record_id'])
+        for r in remaining:
+            if r['record_id'] != keep['record_id']:
+                to_delete.add(r['record_id'])
+
+        if args.verbose:
+            print(f"  URL ...{url[-50:]}: 保留 {keep['record_id']} (有标题: {keep['has_title']})")
+
+    print(f"\n需要删除 {len(to_delete)} 条重复记录")
+
+    if not to_delete:
+        print("没有重复记录需要删除")
+        sys.exit(0)
+
+    # 显示部分删除示例
+    delete_list = list(to_delete)
+    print("\n将删除的记录ID示例:")
+    for rid in delete_list[:10]:
+        print(f"  {rid}")
+    if len(delete_list) > 10:
+        print(f"  ... 还有 {len(delete_list) - 10} 条")
+
+    if not args.apply:
+        print("\n这是预览模式，未执行删除。")
+        print("如需执行删除，请运行: python3 scripts/dedupe_feishu_records.py --apply")
+        sys.exit(0)
+
+    # 执行批量删除
+    print("\n开始删除重复记录...")
+    delete_url = f'https://open.feishu.cn/open-apis/bitable/v1/apps/{APP_TOKEN}/tables/{TABLE_ID}/records/batch_delete'
+    batch_size = 500
+    deleted_count = 0
+
+    for i in range(0, len(delete_list), batch_size):
+        batch = delete_list[i:i+batch_size]
         payload = {'records': batch}
 
-        batch_num = i // batch_size + 1
+        resp = requests.post(delete_url, headers=headers, json=payload, timeout=30)
+        data = resp.json()
 
-        for attempt in range(3):
-            try:
-                resp = requests.post(
-                    delete_url,
-                    headers=headers,
-                    json=payload,
-                    timeout=30
-                )
-                resp.raise_for_status()
-                data = resp.json()
-
-                if data.get('code') != 0:
-                    print(f"批次 {batch_num}/{total_batches}: 删除失败 - {data}")
-                    break
-
-                total_deleted += len(batch)
-                print(f"批次 {batch_num}/{total_batches}: 成功删除 {len(batch)} 条")
-                break
-
-            except Exception as e:
-                if attempt < 2:
-                    print(f"批次 {batch_num} 重试 ({attempt + 1}/3): {e}")
-                    time.sleep(2 ** attempt)
-                else:
-                    print(f"批次 {batch_num}/{total_batches}: 删除失败 - {e}")
+        if data.get('code') == 0:
+            deleted_count += len(batch)
+            print(f"  已删除 {deleted_count}/{len(delete_list)} 条记录")
+        else:
+            print(f"  删除失败: {data}")
 
         time.sleep(0.3)
 
-    return total_deleted
-
-
-def find_duplicates(records: list):
-    """
-    查找重复的 URL 记录
-
-    Args:
-        records: 记录列表
-
-    Returns:
-        tuple: (要保留的记录, 要删除的记录)
-    """
-    # 按 URL 分组
-    url_groups = defaultdict(list)
-
-    for record in records:
-        fields = record.get('fields', {})
-        url = fields.get('商品链接', '')
-        normalized = normalize_url(url)
-
-        if normalized:
-            url_groups[normalized].append(record)
-
-    to_delete = []
-    duplicate_urls = []
-
-    for url, group in url_groups.items():
-        if len(group) <= 1:
-            continue
-
-        duplicate_urls.append(url)
-
-        # 分离有标题和无标题的记录
-        with_title = []
-        without_title = []
-
-        for record in group:
-            title = record.get('fields', {}).get('商品标题', '')
-            if title and title.strip():
-                with_title.append(record)
-            else:
-                without_title.append(record)
-
-        # 决定保留哪条
-        if with_title:
-            # 保留第一条有标题的，其余全部删除
-            keep = with_title[0]
-            to_delete.extend(with_title[1:])
-            to_delete.extend(without_title)
-        else:
-            # 都没标题，保留第一条
-            keep = without_title[0]
-            to_delete.extend(without_title[1:])
-
-        print(f"URL: {url}")
-        print(f"  重复 {len(group)} 条，保留 record_id={keep['record_id']}")
-        print(f"  删除 {len(group) - 1} 条")
-
-    return duplicate_urls, to_delete
-
-
-def main():
-    import argparse
-    parser = argparse.ArgumentParser(description='飞书记录去重脚本')
-    parser.add_argument('--yes', '-y', action='store_true', help='跳过确认直接删除')
-    args = parser.parse_args()
-
-    print("=" * 60)
-    print("飞书记录去重脚本")
-    print("=" * 60)
-
-    # 1. 创建客户端
-    print("\n1. 连接飞书...")
-    client = create_feishu_client()
-
-    # 2. 获取所有记录
-    print("\n2. 获取所有记录...")
-    records = get_all_records_with_details(client)
-    print(f"   共获取 {len(records)} 条记录")
-
-    # 3. 查找重复
-    print("\n3. 查找重复记录...")
-    duplicate_urls, to_delete = find_duplicates(records)
-
-    if not to_delete:
-        print("\n没有找到重复记录!")
-        return
-
-    print(f"\n发现 {len(duplicate_urls)} 个重复 URL")
-    print(f"需要删除 {len(to_delete)} 条重复记录")
-
-    # 4. 显示将要删除的记录
-    print("\n4. 将要删除的记录:")
-    print("-" * 60)
-    for i, record in enumerate(to_delete[:20], 1):  # 只显示前20条
-        url = record.get('fields', {}).get('商品链接', '')
-        title = record.get('fields', {}).get('商品标题', '(无标题)')
-        print(f"  {i}. {record['record_id']}: {title[:30]}... | {url[:50]}...")
-
-    if len(to_delete) > 20:
-        print(f"  ... 还有 {len(to_delete) - 20} 条")
-
-    # 5. 确认删除
-    print("\n" + "=" * 60)
-    if args.yes:
-        print(f"自动确认删除 {len(to_delete)} 条重复记录")
-    else:
-        confirm = input(f"确认删除 {len(to_delete)} 条重复记录? (yes/no): ")
-        if confirm.lower() != 'yes':
-            print("已取消删除操作")
-            return
-
-    # 6. 执行删除
-    print("\n5. 执行删除...")
-    delete_ids = [record['record_id'] for record in to_delete]
-    deleted_count = batch_delete_records(client, delete_ids)
-
-    # 7. 输出结果
-    print("\n" + "=" * 60)
-    print("删除完成!")
-    print(f"  成功删除: {deleted_count} 条")
-    print(f"  重复 URL 数: {len(duplicate_urls)}")
-    print("=" * 60)
+    print(f"\n完成！共删除 {deleted_count} 条重复记录")
 
 
 if __name__ == '__main__':

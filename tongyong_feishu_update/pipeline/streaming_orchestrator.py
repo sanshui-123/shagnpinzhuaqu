@@ -399,9 +399,20 @@ class StreamingUpdateOrchestrator:
             return set()
 
     def _create_missing_records(self, missing_ids: List[str], products: Dict[str, Product], dry_run: bool):
-        """创建缺失的记录"""
+        """创建缺失的记录（带ID去重保护）"""
+        # 获取已存在的商品ID集合
+        existing_ids = self.feishu_client.get_existing_ids()
+
         create_records = []
+        skipped_ids = []
+
         for pid in missing_ids:
+            # 检查ID是否已存在（防止重复创建）
+            if pid in existing_ids:
+                print(f"⏭️ 跳过已存在的商品ID: {pid}（URL不匹配但ID已存在）")
+                skipped_ids.append(pid)
+                continue
+
             product = products[pid]
             create_records.append({
                 'fields': {
@@ -411,15 +422,26 @@ class StreamingUpdateOrchestrator:
                 },
                 'product_id': pid
             })
-        
+
+        if skipped_ids:
+            print(f"⚠️ 跳过 {len(skipped_ids)} 个已存在的商品ID")
+
+        if not create_records:
+            print("✅ 没有需要创建的新记录")
+            return
+
         if not dry_run:
             create_result = self.feishu_client.batch_create(create_records, batch_size=30)
             if create_result.get('success_count', 0) > 0:
                 print(f"✅ 成功创建 {create_result['success_count']} 条新记录")
+                # 将新创建的ID添加到existing_ids集合
+                for record in create_records:
+                    existing_ids.add(record['product_id'])
             else:
-                raise RuntimeError("缺失记录创建失败，无法继续处理")
+                if not skipped_ids:  # 只有在没有跳过任何记录时才报错
+                    raise RuntimeError("缺失记录创建失败，无法继续处理")
         else:
-            print(f"模拟模式：跳过创建 {len(missing_ids)} 条缺失记录")
+            print(f"模拟模式：跳过创建 {len(create_records)} 条缺失记录")
 
     def _get_fields_to_check(self, title_only: bool) -> List[str]:
         """获取需要检查的字段列表"""

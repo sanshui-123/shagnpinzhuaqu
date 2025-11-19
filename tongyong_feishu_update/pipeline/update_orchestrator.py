@@ -92,8 +92,20 @@ class UpdateOrchestrator:
                     missing_ids.append(pid)
         if missing_ids:
             print(f"发现 {len(missing_ids)} 个缺失的product_id，正在批量创建...")
+
+            # 获取已存在的商品ID集合（用于去重保护）
+            existing_ids = self.feishu_client.get_existing_ids()
+
             create_records = []
+            skipped_ids = []
+
             for pid in missing_ids:
+                # 检查ID是否已存在（防止重复创建）
+                if pid in existing_ids:
+                    print(f"⏭️ 跳过已存在的商品ID: {pid}（URL不匹配但ID已存在）")
+                    skipped_ids.append(pid)
+                    continue
+
                 product = products[pid]
                 create_records.append({
                     'fields': {
@@ -104,6 +116,9 @@ class UpdateOrchestrator:
                     },
                     'product_id': pid
                 })
+
+            if skipped_ids:
+                print(f"⏭️ 共跳过 {len(skipped_ids)} 个已存在的商品ID")
             
             if not dry_run:
                 create_result = self.feishu_client.batch_create(create_records, batch_size=30)
