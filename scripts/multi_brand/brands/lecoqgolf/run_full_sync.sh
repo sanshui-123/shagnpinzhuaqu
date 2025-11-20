@@ -7,9 +7,10 @@
 # - Step 1: 抓取商品列表（scrape_category.js）
 # - Step 1.5: 导入基础记录到飞书（import_basic_products.py）
 # - Step 2: 顺序抓详情并同步（sequential_sync.js）
+# - Step 3: 库存巡检并同步（导出产品→check_inventory→同步库存状态）
 #
 # 使用方法：
-#   ./run_full_sync.sh              # 运行完整流程
+#   ./run_full_sync.sh              # 运行完整流程（包含库存巡检）
 #   ./run_full_sync.sh --skip-step1 # 跳过 Step 1，使用已有的最新文件
 #   ./run_full_sync.sh --limit 10   # Step 2 只处理 10 个产品（测试用）
 ###############################################################################
@@ -129,6 +130,50 @@ echo ""
 echo -e "${GREEN}✅ Step 2 完成${NC}"
 echo ""
 
+# Step 3: 库存巡检（自动执行）
+echo -e "${YELLOW}[Step 3] 库存巡检并同步...${NC}"
+echo -e "${BLUE}这将更新飞书中的 颜色/尺码/库存状态 三个字段${NC}"
+echo ""
+
+# Step 3.1: 从飞书导出当前品牌的所有商品
+echo -e "${YELLOW}[Step 3.1] 从飞书导出商品列表...${NC}"
+cd "$PROJECT_ROOT"
+set -a && source callaway.env && set +a
+python3 -m tongyong_feishu_update.tools.export_brand_products \
+    --brand "$BRAND_NAME" \
+    --output "/tmp/lecoq_inventory_products.json"
+
+PRODUCT_COUNT=$(cat /tmp/lecoq_inventory_products.json | grep -o '"productId"' | wc -l | tr -d ' ')
+echo -e "${GREEN}✅ 已导出 $PRODUCT_COUNT 个商品${NC}"
+echo ""
+
+# Step 3.2: 运行库存巡检脚本
+echo -e "${YELLOW}[Step 3.2] 运行库存巡检...${NC}"
+echo -e "${BLUE}输入: /tmp/lecoq_inventory_products.json${NC}"
+echo -e "${BLUE}输出: /tmp/lecoq_inventory_result.json${NC}"
+echo -e "${BLUE}配置: 并发3, 延迟500ms${NC}"
+echo ""
+
+cd "$LECOQ_DIR"
+node check_inventory.js \
+    --input "/tmp/lecoq_inventory_products.json" \
+    --output "/tmp/lecoq_inventory_result.json"
+
+echo ""
+echo -e "${GREEN}✅ 库存巡检完成，结果已保存到 /tmp/lecoq_inventory_result.json${NC}"
+echo ""
+
+# Step 3.3: 同步库存结果到飞书
+echo -e "${YELLOW}[Step 3.3] 同步库存到飞书...${NC}"
+cd "$PROJECT_ROOT"
+set -a && source callaway.env && set +a
+python3 -m tongyong_feishu_update.run_inventory_sync \
+    "/tmp/lecoq_inventory_result.json"
+
+echo ""
+echo -e "${GREEN}✅ Step 3 完成（库存已同步）${NC}"
+echo ""
+
 # 完成
 echo -e "${BLUE}=======================================================${NC}"
 echo -e "${GREEN}🎉 完整同步流程执行完成！${NC}"
@@ -136,4 +181,5 @@ echo -e "${BLUE}=======================================================${NC}"
 echo ""
 echo -e "${YELLOW}📋 处理的文件: $FILENAME${NC}"
 echo -e "${YELLOW}📁 文件路径: $LATEST_FILE${NC}"
+echo -e "${YELLOW}📦 库存巡检: /tmp/lecoq_inventory_result.json${NC}"
 echo ""
