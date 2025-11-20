@@ -681,22 +681,27 @@ class UnifiedDetailScraper {
      */
     async extractVariantInventory(page) {
         try {
-            // 首先获取所有颜色选项
+            const currentUrl = page.url();
+
+            // 首先获取所有颜色选项（包括 URL）
             const colorOptions = await page.evaluate(() => {
                 const colors = [];
                 const colorItems = document.querySelectorAll('#color-selector li, .color-selector li');
 
                 colorItems.forEach((item, index) => {
                     const img = item.querySelector('img');
+                    const link = item.querySelector('a');
                     const colorName = img ? img.getAttribute('alt') : '';
                     const isCurrent = item.classList.contains('currentCommodityColor');
+                    const href = link ? link.getAttribute('href') : '';
 
                     if (colorName) {
                         colors.push({
                             index: index,
                             colorName: colorName.replace(/[（(][A-Z0-9]+[)）]/g, '').trim(),
                             fullName: colorName,
-                            isCurrent: isCurrent
+                            isCurrent: isCurrent,
+                            url: href
                         });
                     }
                 });
@@ -712,49 +717,153 @@ class UnifiedDetailScraper {
             for (let i = 0; i < colorOptions.length; i++) {
                 const colorOption = colorOptions[i];
 
-                // 如果不是当前颜色，点击切换
-                if (!colorOption.isCurrent && colorOptions.length > 1) {
-                    console.log(`🎨 切换到颜色: ${colorOption.colorName}`);
+                console.log(`🎨 选择颜色: ${colorOption.colorName}`);
 
-                    try {
-                        // 点击颜色选择器
-                        await page.evaluate((colorIndex) => {
-                            const items = document.querySelectorAll('#color-selector li, .color-selector li');
-                            if (items[colorIndex]) {
-                                items[colorIndex].click();
-                            }
-                        }, colorOption.index);
-
-                        // 等待页面更新
+                try {
+                    // 如果不是当前颜色，需要导航到该颜色的页面
+                    if (!colorOption.isCurrent && colorOption.url) {
+                        const colorUrl = colorOption.url.startsWith('http')
+                            ? colorOption.url
+                            : `https://store.descente.co.jp${colorOption.url}`;
+                        console.log(`  📍 导航到: ${colorUrl}`);
+                        await page.goto(colorUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
                         await page.waitForTimeout(2000);
-                    } catch (e) {
-                        console.log(`⚠️ 切换颜色失败: ${e.message}`);
                     }
+                } catch (e) {
+                    console.log(`⚠️ 导航到颜色页面失败: ${e.message}`);
+                    continue;
                 }
 
                 // 提取当前颜色的所有尺码库存状态
                 const sizeStocks = await page.evaluate(() => {
                     const stocks = [];
+                    let debugInfo = { method: 'none', found: false };
 
-                    // 方法1: 查找库存摘要行 "M:△2点 / L:△2点 / LL:✕" 格式
-                    const allElements = document.querySelectorAll('div, p, span, li');
-                    for (const el of allElements) {
-                        const text = el.textContent.trim();
-                        // 匹配格式: M:△ 或 L:○ 或 LL:✕
-                        const stockPattern = /([SMLX]+|LL|3L|4L|5L)\s*[:：]\s*([○△✕×])/g;
-                        let match;
-                        while ((match = stockPattern.exec(text)) !== null) {
-                            const size = match[1];
-                            const symbol = match[2];
-                            const inStock = symbol === '○' || symbol === '△';
-                            const status = symbol === '○' ? 'normal' : (symbol === '△' ? 'little' : 'oos');
+                    // 方法0: 从页面下方的尺码表格获取（切换颜色后会更新，最可靠）
+                    const sizeList = document.querySelector('.shopping_cantrol.commoditySizelist, .commoditySizelist');
+                    if (sizeList) {
+                        const text = sizeList.innerText || sizeList.textContent;
+                        // 分割成行或块
+                        const lines = text.split(/\n/);
+                        let currentSize = null;
 
-                            // 避免重复添加
-                            if (!stocks.find(s => s.size === size)) {
-                                stocks.push({ size, inStock, status });
+                        lines.forEach(line => {
+                            const trimmed = line.trim();
+                            // 检查是否是尺码数字
+                            const sizeMatch = trimmed.match(/^(\d{2,3}|[SMLX]+|LL|3L|4L|5L)$/);
+                            if (sizeMatch) {
+                                currentSize = sizeMatch[1];
+                            } else if (currentSize && trimmed) {
+                                // 检查库存状态
+                                let inStock = true;
+                                let status = 'normal';
+
+                                if (/✕|×|なし|sold\s*out|品切/i.test(trimmed)) {
+                                    inStock = false;
+                                    status = 'oos';
+                                } else if (/残りわずか|△/i.test(trimmed)) {
+                                    status = 'little';
+                                    inStock = true;
+                                } else if (/○|在庫あり/i.test(trimmed)) {
+                                    status = 'normal';
+                                    inStock = true;
+                                } else if (/カートに入れる|添加到购物车/i.test(trimmed)) {
+                                    // 有购物车按钮说明有货
+                                    if (!stocks.find(s => s.size === currentSize)) {
+                                        stocks.push({ size: currentSize, inStock: true, status: status || 'normal' });
+                                    }
+                                    currentSize = null;
+                                    return;
+                                } else {
+                                    return; // 跳过其他内容
+                                }
+
+                                if (!stocks.find(s => s.size === currentSize)) {
+                                    stocks.push({ size: currentSize, inStock, status });
+                                }
+                            }
+                        });
+
+                        if (stocks.length > 0) {
+                            debugInfo = { method: '方法0-commoditySizelist', found: true };
+                        }
+                    }
+
+                    // 方法0.1: 查找悬浮弹出框 popupRelatedStock
+                    if (stocks.length === 0) {
+                        const popupStock = document.querySelector('.popupRelatedStock');
+                        if (popupStock) {
+                            const text = popupStock.textContent;
+                            const stockPattern = /(\d{2,3}|[SMLX]+|LL|3L)\s*[:：]\s*([○△✕×✖])(?:\d*点)?/g;
+                            let match;
+                            while ((match = stockPattern.exec(text)) !== null) {
+                                const size = match[1];
+                                const symbol = match[2];
+                                const inStock = symbol === '○' || symbol === '△';
+                                const status = symbol === '○' ? 'normal' : (symbol === '△' ? 'little' : 'oos');
+
+                                if (!stocks.find(s => s.size === size)) {
+                                    stocks.push({ size, inStock, status });
+                                }
+                            }
+                            if (stocks.length > 0) {
+                                debugInfo = { method: '方法0.1-popupRelatedStock', found: true };
                             }
                         }
-                        if (stocks.length > 0) break; // 找到后退出
+                    }
+
+                    // 方法0.5: 查找任何包含 "の在庫" 的元素
+                    if (stocks.length === 0) {
+                        const stockSection = [...document.querySelectorAll('div, section, p')].find(el =>
+                            el.textContent.includes('の在庫') && el.textContent.length < 500
+                        );
+
+                        if (stockSection) {
+                            const text = stockSection.textContent;
+                            // 匹配格式: 76: △2点 或 79: × (支持多种 × 字符)
+                            const stockPattern = /(7[6-9]|8[0-9]|9[0-6])\s*[:：]\s*([○△✕×✖Xx])(?:\d*点)?/g;
+                            let match;
+                            while ((match = stockPattern.exec(text)) !== null) {
+                                const size = match[1];
+                                const symbol = match[2];
+                                const inStock = symbol === '○' || symbol === '△';
+                                const status = symbol === '○' ? 'normal' : (symbol === '△' ? 'little' : 'oos');
+
+                                if (!stocks.find(s => s.size === size)) {
+                                    stocks.push({ size, inStock, status });
+                                }
+                            }
+                            if (stocks.length > 0) {
+                                debugInfo = { method: '方法0.5-section', found: true };
+                            }
+                        }
+                    }
+
+                    // 方法1: 查找库存摘要行 "M:△2点 / L:△2点 / LL:✕" 或 "76: △2点 / 79: ×" 格式
+                    if (stocks.length === 0) {
+                        const allElements = document.querySelectorAll('div, p, span, li');
+                        for (const el of allElements) {
+                            const text = el.textContent.trim();
+                            // 只在包含库存符号的短文本中匹配
+                            if (text.length > 200 || !(/[○△✕×]/.test(text))) continue;
+
+                            // 匹配格式: M:△ 或 L:○ 或 LL:✕ 或 76:△2点 或 79:×
+                            // 支持字母尺码和数字尺码，支持多种 × 字符
+                            const stockPattern = /([SMLX]+|LL|3L|4L|5L|7[6-9]|8[0-9]|9[0-6])\s*[:：]\s*([○△✕×✖Xx])(?:\d*点)?/g;
+                            let match;
+                            while ((match = stockPattern.exec(text)) !== null) {
+                                const size = match[1];
+                                const symbol = match[2];
+                                const inStock = symbol === '○' || symbol === '△';
+                                const status = symbol === '○' ? 'normal' : (symbol === '△' ? 'little' : 'oos');
+
+                                // 避免重复添加
+                                if (!stocks.find(s => s.size === size)) {
+                                    stocks.push({ size, inStock, status });
+                                }
+                            }
+                            if (stocks.length > 0) break; // 找到后退出
+                        }
                     }
 
                     // 方法2: 查找包含 "残りわずか" 或 "なし" 的元素
@@ -767,12 +876,12 @@ class UnifiedDetailScraper {
                             const items = sizeSection.querySelectorAll('li, button, .option');
                             items.forEach(item => {
                                 const text = item.textContent.trim();
-                                // 提取尺码
-                                const sizeMatch = text.match(/^([SMLX]+|LL|3L|4L|5L)\b/i);
+                                // 提取尺码（支持字母和裤子尺码76-96）
+                                const sizeMatch = text.match(/^([SMLX]+|LL|3L|4L|5L|7[6-9]|8[0-9]|9[0-6])\b/i);
                                 if (sizeMatch) {
-                                    const size = sizeMatch[1].toUpperCase();
-                                    const hasLowStock = /残りわずか/.test(text);
-                                    const hasNoStock = /なし|sold\s*out|品切/i.test(text);
+                                    const size = sizeMatch[1].toUpperCase ? sizeMatch[1].toUpperCase() : sizeMatch[1];
+                                    const hasLowStock = /残りわずか|△/.test(text);
+                                    const hasNoStock = /なし|sold\s*out|品切|✕|×/i.test(text);
                                     const inStock = !hasNoStock;
                                     const status = hasNoStock ? 'oos' : (hasLowStock ? 'little' : 'normal');
 
@@ -784,7 +893,7 @@ class UnifiedDetailScraper {
                         }
                     }
 
-                    // 方法3: 通用文本搜索
+                    // 方法3: 通用文本搜索 - 确保尺码和符号在同一匹配中
                     if (stocks.length === 0) {
                         const stockElements = [...document.querySelectorAll('li, div, span')].filter(el =>
                             /残りわずか|なし|○|△|✕|×/.test(el.textContent.trim()) &&
@@ -793,19 +902,14 @@ class UnifiedDetailScraper {
 
                         stockElements.forEach(el => {
                             const text = el.textContent.trim();
-                            const sizeMatch = text.match(/([SMLX]+|LL|3L|4L|5L)/i);
-                            if (sizeMatch) {
-                                const size = sizeMatch[1].toUpperCase();
-                                const hasSymbol = /[○△✕×]/.test(text);
-                                let inStock = true;
-                                let status = 'normal';
-
-                                if (/✕|×|なし/.test(text)) {
-                                    inStock = false;
-                                    status = 'oos';
-                                } else if (/△|残りわずか/.test(text)) {
-                                    status = 'little';
-                                }
+                            // 必须同时包含尺码和符号，格式如: "76: ×" 或 "M △"
+                            const combinedPattern = /([SMLX]+|LL|3L|4L|5L|7[6-9]|8[0-9]|9[0-6])\s*[:：]?\s*([○△✕×✖Xx])(?:\d*点)?/gi;
+                            let match;
+                            while ((match = combinedPattern.exec(text)) !== null) {
+                                const size = match[1].toUpperCase ? match[1].toUpperCase() : match[1];
+                                const symbol = match[2];
+                                const inStock = symbol === '○' || symbol === '△';
+                                const status = symbol === '○' ? 'normal' : (symbol === '△' ? 'little' : 'oos');
 
                                 if (!stocks.find(s => s.size === size)) {
                                     stocks.push({ size, inStock, status });
