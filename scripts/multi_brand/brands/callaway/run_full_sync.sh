@@ -141,26 +141,26 @@ cd "$PROJECT_ROOT"
 set -a && source callaway.env && set +a
 python3 -m tongyong_feishu_update.tools.export_brand_products \
     --brand "$BRAND_NAME" \
-    --output "/tmp/lecoq_inventory_products.json"
+    --output "/tmp/callaway_inventory_products.json"
 
-PRODUCT_COUNT=$(cat /tmp/lecoq_inventory_products.json | grep -o '"productId"' | wc -l | tr -d ' ')
+PRODUCT_COUNT=$(cat /tmp/callaway_inventory_products.json | grep -o '"productId"' | wc -l | tr -d ' ')
 echo -e "${GREEN}✅ 已导出 $PRODUCT_COUNT 个商品${NC}"
 echo ""
 
 # Step 3.2: 运行库存巡检脚本
 echo -e "${YELLOW}[Step 3.2] 运行库存巡检...${NC}"
-echo -e "${BLUE}输入: /tmp/lecoq_inventory_products.json${NC}"
-echo -e "${BLUE}输出: /tmp/lecoq_inventory_result.json${NC}"
+echo -e "${BLUE}输入: /tmp/callaway_inventory_products.json${NC}"
+echo -e "${BLUE}输出: /tmp/callaway_inventory_result.json${NC}"
 echo -e "${BLUE}配置: 并发3, 延迟500ms${NC}"
 echo ""
 
 cd "$CALLAWAY_DIR"
 node check_inventory.js \
-    --input "/tmp/lecoq_inventory_products.json" \
-    --output "/tmp/lecoq_inventory_result.json"
+    --input "/tmp/callaway_inventory_products.json" \
+    --output "/tmp/callaway_inventory_result.json"
 
 echo ""
-echo -e "${GREEN}✅ 库存巡检完成，结果已保存到 /tmp/lecoq_inventory_result.json${NC}"
+echo -e "${GREEN}✅ 库存巡检完成，结果已保存到 /tmp/callaway_inventory_result.json${NC}"
 echo ""
 
 # Step 3.3: 同步库存结果到飞书
@@ -168,7 +168,7 @@ echo -e "${YELLOW}[Step 3.3] 同步库存到飞书...${NC}"
 cd "$PROJECT_ROOT"
 set -a && source callaway.env && set +a
 python3 -m tongyong_feishu_update.run_inventory_sync \
-    "/tmp/lecoq_inventory_result.json"
+    "/tmp/callaway_inventory_result.json"
 
 echo ""
 echo -e "${GREEN}✅ Step 3 完成（库存已同步）${NC}"
@@ -181,5 +181,5 @@ echo -e "${BLUE}=======================================================${NC}"
 echo ""
 echo -e "${YELLOW}📋 处理的文件: $FILENAME${NC}"
 echo -e "${YELLOW}📁 文件路径: $LATEST_FILE${NC}"
-echo -e "${YELLOW}📦 库存巡检: /tmp/lecoq_inventory_result.json${NC}"
+echo -e "${YELLOW}📦 库存巡检: /tmp/callaway_inventory_result.json${NC}"
 echo ""
