@@ -21,7 +21,7 @@ class SequentialSyncProcessor {
         this.tempDir = '/tmp';
         this.processedIds = new Set();
         this.failedIds = new Map();
-        this.skippedOutOfStock = new Set();  // 📦 跳过的缺货商品
+        this.outOfStockProducts = new Set();  // 📦 缺货商品记录
 
         this.loadStatus();
     }
@@ -115,7 +115,7 @@ class SequentialSyncProcessor {
                 console.log('✅ 抓取成功');
 
                 // 📦 检查库存状态
-                let shouldSync = true;
+                let isOutOfStockProduct = false;
                 if (fs.existsSync(tempFile)) {
                     try {
                         const scrapedData = JSON.parse(fs.readFileSync(tempFile, 'utf8'));
@@ -123,9 +123,9 @@ class SequentialSyncProcessor {
                         const products = scrapedData.products || [scrapedData];
                         for (const prod of products) {
                             if (prod.stockStatus === 'out_of_stock') {
-                                console.log('⚠️ 商品全部缺货，跳过同步到飞书');
-                                shouldSync = false;
-                                this.skippedOutOfStock.add(productId);
+                                console.log('⚠️ 商品全部缺货，将以缺货状态同步');
+                                isOutOfStockProduct = true;
+                                this.outOfStockProducts.add(productId);
                                 break;
                             }
                         }
@@ -134,15 +134,13 @@ class SequentialSyncProcessor {
                     }
                 }
 
-                // 3.2 同步到飞书（仅当有库存时）
-                if (shouldSync) {
-                    console.log('📤 同步到飞书...');
+                // 3.2 同步到飞书
+                console.log('📤 同步到飞书...');
 
-                    const syncCmd = `cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline "${tempFile}" --verbose`;
-                    execSync(syncCmd, { encoding: 'utf8', stdio: 'inherit' });
+                const syncCmd = `cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline "${tempFile}" --verbose`;
+                execSync(syncCmd, { encoding: 'utf8', stdio: 'inherit' });
 
-                    console.log('✅ 同步成功');
-                }
+                console.log(isOutOfStockProduct ? '✅ 同步成功（缺货记录）' : '✅ 同步成功');
 
                 // 清理临时文件
                 if (fs.existsSync(tempFile)) {
@@ -171,14 +169,14 @@ class SequentialSyncProcessor {
         console.log('=' .repeat(60));
         console.log(`📊 处理统计:`);
         console.log(`  ✅ 成功: ${successCount}`);
-        console.log(`  ⚠️ 跳过缺货: ${this.skippedOutOfStock.size}`);
+        console.log(`  📦 缺货记录: ${this.outOfStockProducts.size}`);
         console.log(`  ❌ 失败: ${errorCount}`);
         console.log(`  📦 总计: ${toProcess.length}`);
         console.log('=' .repeat(60));
 
-        if (this.skippedOutOfStock.size > 0) {
-            console.log(`\n⚠️ 跳过的缺货产品ID:`);
-            for (const id of this.skippedOutOfStock) {
+        if (this.outOfStockProducts.size > 0) {
+            console.log(`\n📦 缺货产品ID (已同步):`);
+            for (const id of this.outOfStockProducts) {
                 console.log(`  - ${id}`);
             }
         }
