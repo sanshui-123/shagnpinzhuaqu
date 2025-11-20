@@ -524,6 +524,8 @@ class UnifiedDetailScraper {
                 });
             }
 
+            console.log(`过滤后图片数量: ${currentImages.length}`);
+
             return {
                 colorName,
                 colorCode,
