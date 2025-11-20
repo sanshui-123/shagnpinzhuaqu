@@ -78,6 +78,10 @@ class UnifiedDetailScraper {
             console.log('🎨 抓取颜色和尺码...');
             const colorsAndSizes = await this.extractColorsAndSizes(page);
 
+            // 🔴 抓取库存信息（variantInventory）
+            console.log('📦 抓取库存信息...');
+            const inventoryData = await this.extractVariantInventory(page);
+
             // 组装最终结果
             const result = {
                 success: true,
@@ -85,6 +89,7 @@ class UnifiedDetailScraper {
                 timestamp: new Date().toISOString(),
                 ...basicInfo,
                 ...colorsAndSizes,
+                ...inventoryData,
                 imageUrls: images,
                 sizeChart: sizeChartData,
                 _scraper_info: {
@@ -941,6 +946,211 @@ class UnifiedDetailScraper {
 
             return result;
         });
+    }
+
+    /**
+     * 🔴 抓取库存信息 (variantInventory) - PG 品牌专用
+     * 返回格式: { variantInventory: [{color, size, inStock}] }
+     *
+     * 策略：使用下拉框选择颜色，解析文本行获取库存
+     */
+    async extractVariantInventory(page) {
+        if (this.options.debug) {
+            console.log('🐛 开始抓取库存信息...');
+        }
+
+        try {
+            // 🔴 关键调试：先关闭可能打开的模态框
+            console.log('🐛 检查并关闭可能打开的模态框...');
+            await page.evaluate(() => {
+                // 查找并关闭所有可能的模态框
+                const modals = document.querySelectorAll('.modal, .c_modal, [role="dialog"]');
+                modals.forEach(modal => {
+                    if (modal.style.display !== 'none') {
+                        modal.style.display = 'none';
+                    }
+                });
+
+                // 查找并点击关闭按钮
+                const closeButtons = document.querySelectorAll('.modal-close, .c_modal__close, [aria-label="close"], [aria-label="閉じる"]');
+                closeButtons.forEach(btn => btn.click());
+            });
+
+            await page.waitForTimeout(500);
+
+            // 方法1: 查找可见的颜色按钮
+            console.log('🐛 查找颜色按钮...');
+            const colorButtons = await page.$$('button.product__thumbnail-item');
+            console.log(`🐛 找到 ${colorButtons.length} 个 button.product__thumbnail-item 元素`);
+
+            if (colorButtons.length === 0) {
+                console.log('⚠️ 未找到颜色按钮');
+                return { variantInventory: [] };
+            }
+
+            // 获取所有颜色按钮的信息（只选择可见的）
+            const visibleColorButtons = [];
+            for (let i = 0; i < colorButtons.length; i++) {
+                const btn = colorButtons[i];
+                const isVisible = await btn.isVisible();
+                const text = await btn.textContent();
+                console.log(`🐛 按钮 ${i + 1}: 文本="${text ? text.trim() : '无'}", 可见=${isVisible}`);
+
+                if (isVisible && text && text.trim()) {
+                    visibleColorButtons.push({
+                        element: btn,
+                        name: text.trim()
+                    });
+                }
+            }
+
+            if (visibleColorButtons.length === 0) {
+                console.log('⚠️ 未找到可见的颜色按钮');
+                console.log('🐛 尝试直接解析当前显示的库存表...');
+
+                // 尝试直接从当前页面解析库存信息（不切换颜色）
+                console.log('🐛 直接从DOM解析库存单元格...');
+
+                const inventoryData = await page.evaluate(() => {
+                    // 获取所有颜色选项
+                    const colorSelect = document.querySelector('select[aria-label="colorを選択"]');
+                    if (!colorSelect) {
+                        return { colors: [], inventory: [] };
+                    }
+
+                    const colors = Array.from(colorSelect.options).map(opt => opt.textContent.trim());
+
+                    // 获取所有库存单元格
+                    const cells = Array.from(document.querySelectorAll('.c_size-availability__cell'));
+
+                    const inventory = cells.map(cell => {
+                        const text = cell.textContent.trim().replace(/\s+/g, ' ');
+                        // 提取尺码（第一个数字）
+                        const sizeMatch = text.match(/^(\d+)/);
+                        if (!sizeMatch) return null;
+
+                        const size = sizeMatch[1];
+                        // 检查库存符号
+                        const hasCircle = text.includes('○');
+                        const hasTriangle = text.includes('△');
+                        const hasCross = text.includes('×');
+                        const isOOS = cell.classList.contains('is-oos');
+
+                        // ○=有货, △=少量有货, ×=无货
+                        const inStock = (hasCircle || hasTriangle) && !hasCross && !isOOS;
+
+                        return {
+                            size,
+                            inStock,
+                            symbol: hasCircle ? '○' : hasTriangle ? '△' : hasCross ? '×' : '?'
+                        };
+                    }).filter(item => item !== null);
+
+                    return { colors, inventory };
+                });
+
+                if (inventoryData.inventory.length > 0 && inventoryData.colors.length > 0) {
+                    console.log(`✅ 找到 ${inventoryData.inventory.length} 个库存单元格`);
+                    console.log(`✅ 颜色列表: ${inventoryData.colors.join(', ')}`);
+
+                    // 计算每种颜色对应多少个尺码单元格
+                    const sizesPerColor = Math.floor(inventoryData.inventory.length / inventoryData.colors.length);
+                    console.log(`🐛 每种颜色 ${sizesPerColor} 个尺码`);
+
+                    // 将库存单元格分配给对应的颜色
+                    const allVariants = [];
+                    inventoryData.inventory.forEach((item, index) => {
+                        const colorIndex = Math.floor(index / sizesPerColor);
+                        const color = inventoryData.colors[colorIndex] || inventoryData.colors[inventoryData.colors.length - 1];
+
+                        allVariants.push({
+                            color: color,
+                            size: item.size,
+                            inStock: item.inStock
+                        });
+                    });
+
+                    console.log(`📦 总共提取了 ${allVariants.length} 个变体`);
+
+                    // 按颜色分组显示统计
+                    const byColor = {};
+                    allVariants.forEach(v => {
+                        if (!byColor[v.color]) byColor[v.color] = { total: 0, inStock: 0 };
+                        byColor[v.color].total++;
+                        if (v.inStock) byColor[v.color].inStock++;
+                    });
+
+                    for (const [color, stats] of Object.entries(byColor)) {
+                        console.log(`  ${color}: ${stats.inStock}/${stats.total} 有货`);
+                    }
+
+                    return { variantInventory: allVariants };
+                }
+
+                return { variantInventory: [] };
+            }
+
+            console.log(`✅ 找到 ${visibleColorButtons.length} 个颜色: ${visibleColorButtons.map(c => c.name).join(', ')}`);
+
+            const allVariants = [];
+
+            // 遍历每个颜色
+            for (const colorBtn of visibleColorButtons) {
+                const colorName = colorBtn.name;
+                console.log(`  点击颜色: ${colorName}`);
+
+                // 点击颜色按钮
+                await colorBtn.element.click();
+
+                // 等待页面更新（动态内容加载）
+                await page.waitForTimeout(1500);
+
+                // 解析当前颜色的库存信息
+                const sizeInventory = await page.evaluate(() => {
+                    const result = [];
+
+                    // 查找所有包含尺码和符号的文本行
+                    const allText = document.body.innerText;
+                    const lines = allText.split('\n');
+
+                    for (const line of lines) {
+                        // 匹配日语格式："4 在庫 ○" 或 "6 在庫 △" 或 "7 在庫 ×"
+                        // 也兼容中文格式："4 有货 ○" 或 "6 库存△"
+                        const match = line.trim().match(/^(\d+)\s*(在庫|有货|库存)?\s*([○△×])/);
+
+                        if (match) {
+                            const size = match[1];
+                            const symbol = match[3];
+
+                            // ○ = 有货, △ = 少量（也算有货）, × = 无货
+                            const inStock = (symbol === '○' || symbol === '△');
+
+                            result.push({ size, inStock });
+                        }
+                    }
+
+                    return result;
+                });
+
+                // 添加颜色信息
+                for (const item of sizeInventory) {
+                    allVariants.push({
+                        color: colorName,
+                        size: item.size,
+                        inStock: item.inStock
+                    });
+                }
+
+                console.log(`    找到 ${sizeInventory.length} 个尺码`);
+            }
+
+            console.log(`📦 总共提取了 ${allVariants.length} 个变体`);
+            return { variantInventory: allVariants };
+
+        } catch (error) {
+            console.error('❌ 库存信息抓取失败:', error.message);
+            return { variantInventory: [] };
+        }
     }
 }
 
