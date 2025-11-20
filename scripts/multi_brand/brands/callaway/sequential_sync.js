@@ -15,7 +15,7 @@ class SequentialSyncProcessor {
         this.sourceFile = path.isAbsolute(options.sourceFile)
             ? options.sourceFile
             : path.resolve(process.cwd(), options.sourceFile);
-        this.brand = options.brand || 'Le Coq公鸡乐卡克';
+        this.brand = options.brand || '卡拉威';
         this.limit = options.limit || null;
         this.statusFile = './sequential_sync_status.json';
         this.tempDir = '/tmp';
