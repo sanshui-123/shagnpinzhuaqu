@@ -15,7 +15,7 @@ from typing import Dict, List
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from tongyong_feishu_update.clients import create_feishu_client
-from tongyong_feishu_update.config import translation
+from tongyong_feishu_update.config import translation, sizes as sizes_module
 
 
 def build_inventory_fields(product_data: dict) -> dict:
@@ -31,6 +31,7 @@ def build_inventory_fields(product_data: dict) -> dict:
     fields = {}
 
     variant_inventory = product_data.get('variantInventory', [])
+    gender = product_data.get('gender', '')
 
     if not variant_inventory:
         return fields
@@ -92,6 +93,25 @@ def build_inventory_fields(product_data: dict) -> dict:
 
     # 构建尺码字段（只保留有货的）
     sizes = product_data.get('sizes', [])
+    if sizes:
+        mapped_sizes = []
+        women_mapping = {'00': 'XXS', '0': 'XS', '1': 'S', '2': 'M'}
+        men_mapping = {'3': 'S', '4': 'M', '5': 'L', '6': 'XL', '7': 'XXL'}
+
+        for size in sizes:
+            size_str = str(size).strip()
+            if not size_str:
+                continue
+            size_key = size_str.upper()
+
+            if size_key in women_mapping:
+                mapped_sizes.append(women_mapping[size_key])
+            elif size_key in men_mapping:
+                mapped_sizes.append(men_mapping[size_key])
+            else:
+                mapped_sizes.append(size_str)
+
+        sizes = mapped_sizes
     if variant_inventory and in_stock_sizes:
         filtered_sizes = [s for s in sizes if str(s) in in_stock_sizes]
         sizes = filtered_sizes if filtered_sizes else sizes
@@ -99,7 +119,11 @@ def build_inventory_fields(product_data: dict) -> dict:
     if stock_status == 'out_of_stock':
         sizes = []
 
-    fields['尺码'] = '\n'.join(str(s) for s in sizes)
+    if sizes:
+        size_multiline = sizes_module.build_size_multiline(sizes, gender)
+        fields['尺码'] = size_multiline if size_multiline else '\n'.join(str(s) for s in sizes)
+    else:
+        fields['尺码'] = ''
 
     # 构建库存状态字段
     stock_notes: List[str] = []

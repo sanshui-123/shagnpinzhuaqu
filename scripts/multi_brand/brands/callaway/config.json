@@ -1,0 +1,70 @@
+{
+  "name": "Callaway",
+  "nameChinese": "卡拉威",
+  "domain": "www.callawaygolf.jp",
+  "baseUrl": "https://www.callawaygolf.jp",
+  "enabled": true,
+  "schedule": {
+    "interval": "10-days",
+    "dayOfMonth": 8
+  },
+  "scraper": {
+    "type": "playwright",
+    "timeout": 45000,
+    "retries": 3,
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "headless": true,
+    "viewport": {
+      "width": 1920,
+      "height": 1080
+    },
+    "waitStrategy": {
+      "waitForNetworkIdle": true,
+      "minWaitTime": 3000,
+      "maxWaitTime": 15000
+    }
+  },
+  "selectors": {
+    "productGrid": ".c-productCard, [class*=\"product\"], [class*=\"item-card\"]",
+    "productName": ".title, .name, h1, h2, h3, [data-testid=\"product-title\"]",
+    "productUrl": "a[href*=\"?pid=\"]",
+    "productImage": "img",
+    "productPrice": "[class*=\"price\"]",
+    "productCategory": ".category",
+    "productBrand": ".brand"
+  },
+  "categories": [
+    "mens",
+    "womens",
+    "apparel",
+    "accessories"
+  ],
+  "urls": {
+    "main": "/shop/men.html",
+    "womens": "/shop/women.html",
+    "apparel": "/shop/apparel.html"
+  },
+  "pagination": {
+    "enabled": true,
+    "nextSelector": ".next-button, [class*=\"next\"], button:has-text(\"次へ\")",
+    "pageParam": "page",
+    "maxPages": 5,
+    "itemsPerPage": 48
+  },
+  "constraints": {
+    "minProductsPerPage": 5,
+    "maxPagesPerCategory": 3,
+    "requestDelay": 3000,
+    "maxConcurrentPages": 1
+  },
+  "output": {
+    "format": "json",
+    "path": "golf_content/callaway",
+    "filename": "callaway_products.json"
+  },
+  "antiDetection": {
+    "randomDelays": true,
+    "rotateUserAgents": true,
+    "simulateHumanBehavior": true
+  }
+}

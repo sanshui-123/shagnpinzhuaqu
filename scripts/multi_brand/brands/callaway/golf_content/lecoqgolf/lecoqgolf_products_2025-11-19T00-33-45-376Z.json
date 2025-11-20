@@ -1,0 +1,29 @@
+{
+  "brand": "Le Coq Sportif Golf",
+  "brandId": "lecoqgolf",
+  "scrapeTime": "2025-11-19T00:33:45.376Z",
+  "baseUrl": "https://store.descente.co.jp",
+  "totalProducts": 0,
+  "totalCollections": 2,
+  "status": "no_products",
+  "results": [
+    {
+      "collection": "mens",
+      "collectionName": "男士系列",
+      "url": "https://store.descente.co.jp/brand/le%2520coq%2520sportif%2520golf/ds_apparel_m?commercialType=0%7C2%7C3&groupByModel=1&currentPage=1&alignmentSequence=recommend_commodity_rank+asc",
+      "products": [],
+      "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"https://store.descente.co.jp/brand/le%2520coq%2520sportif%2520golf/ds_apparel_m?commercialType=0%7C2%7C3&groupByModel=1&currentPage=1&alignmentSequence=recommend_commodity_rank+asc\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "totalPages": 0,
+      "timestamp": "2025-11-19T00:33:43.670Z"
+    },
+    {
+      "collection": "womens",
+      "collectionName": "女士系列",
+      "url": "https://store.descente.co.jp/brand/le%2520coq%2520sportif%2520golf/ds_apparel_l?commercialType=0%7C2%7C3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1",
+      "products": [],
+      "error": "page.goto: net::ERR_NETWORK_CHANGED at https://store.descente.co.jp/brand/le%2520coq%2520sportif%2520golf/ds_apparel_l?commercialType=0%7C2%7C3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1\nCall log:\n\u001b[2m  - navigating to \"https://store.descente.co.jp/brand/le%2520coq%2520sportif%2520golf/ds_apparel_l?commercialType=0%7C2%7C3&currentPage=1&alignmentSequence=recommend_commodity_rank+asc&groupByModel=1\", waiting until \"domcontentloaded\"\u001b[22m\n",
+      "totalPages": 0,
+      "timestamp": "2025-11-19T00:33:45.298Z"
+    }
+  ]
+}

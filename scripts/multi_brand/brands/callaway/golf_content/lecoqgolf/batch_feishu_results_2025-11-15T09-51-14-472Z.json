@@ -1,0 +1,53 @@
+{
+  "products": {
+    "LCQ-001": {
+      "productId": "LCQ-001",
+      "productName": "ルコックゴルフ メンズ ポロシャツ 25SS",
+      "detailUrl": "https://example.com/product1",
+      "price": "￥8,800",
+      "brand": "Le Coq公鸡乐卡克",
+      "gender": "男士",
+      "description": "",
+      "colors": [],
+      "sizes": [],
+      "imageUrls": [
+        "https://example.com/img1.jpg",
+        "https://example.com/img2.jpg"
+      ],
+      "sizeChart": {},
+      "scrapeInfo": {
+        "totalColors": 3,
+        "totalSizes": 4,
+        "totalImages": 12
+      }
+    },
+    "LCQ-002": {
+      "productId": "LCQ-002",
+      "productName": "ルコックゴルフ レディース ジャケット 25FW",
+      "detailUrl": "https://example.com/product2",
+      "price": "￥12,000",
+      "brand": "Le Coq公鸡乐卡克",
+      "gender": "女士",
+      "description": "",
+      "colors": [],
+      "sizes": [],
+      "imageUrls": [
+        "https://example.com/img3.jpg",
+        "https://example.com/img4.jpg"
+      ],
+      "sizeChart": {},
+      "scrapeInfo": {
+        "totalColors": 2,
+        "totalSizes": 5,
+        "totalImages": 8
+      }
+    }
+  },
+  "total": 2,
+  "processed": 2,
+  "failed": 0,
+  "errors": [],
+  "timestamp": "2025-11-15T09:51:14.473Z",
+  "brand": "lecoqgolf",
+  "batchMode": true
+}
