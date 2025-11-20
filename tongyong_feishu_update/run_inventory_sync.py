@@ -159,6 +159,7 @@ def sync_inventory(input_file: str, brand_name: str = None, dry_run: bool = Fals
     # 处理每个产品，收集更新记录
     update_records = []
     skip_count = 0
+    unchanged_count = 0  # 无变化跳过计数
 
     for product_data in products:
         product_id = product_data.get('productId', '')
@@ -182,10 +183,40 @@ def sync_inventory(input_file: str, brand_name: str = None, dry_run: bool = Fals
             skip_count += 1
             continue
 
-        # 显示更新内容
-        stock_status = fields.get('库存状态', '')
-        print(f"\n📝 {product_id}:")
-        print(f"   库存状态: {stock_status}")
+        # 获取飞书中的旧值
+        existing_record = feishu_records.get(product_id, {})
+        existing_fields = existing_record.get('fields', {})
+
+        old_values = {
+            '颜色': existing_fields.get('颜色', '').strip(),
+            '尺码': existing_fields.get('尺码', '').strip(),
+            '库存状态': existing_fields.get('库存状态', '').strip()
+        }
+
+        new_values = {
+            '颜色': fields.get('颜色', '').strip(),
+            '尺码': fields.get('尺码', '').strip(),
+            '库存状态': fields.get('库存状态', '').strip()
+        }
+
+        # 比较新旧值，如果完全相同则跳过
+        if old_values == new_values:
+            print(f"⚪ {product_id} 无变化，跳过")
+            unchanged_count += 1
+            continue
+
+        # 显示变化内容
+        print(f"\n🔄 {product_id} 有变化:")
+
+        # 显示每个字段的变化
+        for field_name in ['颜色', '尺码', '库存状态']:
+            old_val = old_values[field_name]
+            new_val = new_values[field_name]
+            if old_val != new_val:
+                # 简化显示（换行符用 | 表示）
+                old_display = old_val.replace('\n', ' | ') if old_val else '(空)'
+                new_display = new_val.replace('\n', ' | ') if new_val else '(空)'
+                print(f"   {field_name}: {old_display} → {new_display}")
 
         if dry_run:
             print(f"   [预览模式，不实际更新]")
@@ -217,8 +248,10 @@ def sync_inventory(input_file: str, brand_name: str = None, dry_run: bool = Fals
     # 汇总
     print('\n' + '=' * 50)
     print('📊 同步完成汇总:')
-    print(f"  成功: {success_count}")
-    print(f"  跳过: {skip_count}")
+    print(f"  总商品数: {len(products)}")
+    print(f"  成功更新: {success_count}")
+    print(f"  无变化跳过: {unchanged_count}")
+    print(f"  其他跳过: {skip_count}")
     print(f"  失败: {error_count}")
     print('=' * 50)
 
