@@ -302,26 +302,58 @@ class UnifiedDetailScraper {
         try {
             console.log('🔍 使用优化的颜色按钮检测逻辑...');
 
-            // Callaway 专用颜色选择器（从旧版 DOM 逻辑迁移）
+            // Callaway 专用颜色选择器（从旧版 DOM 逻辑迁移 - 使用实际工作的选择器）
             const colorButtonSelectors = [
+                '.d_flex.items_center.gap_2\\.5.flex_row.flex-wrap_wrap button',  // Callaway 实际使用的选择器
                 '[data-color]',
-                '[data-colorcode]',
-                '.color-selector button',
-                '.variant-color',
-                'button[class*="color"]',
-                '[class*="swatch"]'
+                '[data-colorcode]'
             ];
 
             let colorButtons = [];
 
-            // CSS选择器检测
+            // CSS选择器检测（添加属性验证，从旧版逻辑迁移）
             for (const selector of colorButtonSelectors) {
                 try {
                     const buttons = await page.$$(selector);
                     if (buttons.length > 0) {
                         console.log(`✓ 选择器 "${selector}" 找到 ${buttons.length} 个元素`);
-                        colorButtons = buttons;
-                        break;
+
+                        // 对于 Callaway 的第一个选择器（.d_flex...），非常specific，无需验证
+                        // 对于其他选择器，验证是否有颜色相关属性
+                        if (selector.includes('d_flex')) {
+                            // Callaway 专用选择器，直接使用
+                            console.log(`   ✓ 使用 Callaway 专用选择器，找到 ${buttons.length} 个颜色按钮`);
+                            colorButtons = buttons;
+                            break;
+                        } else {
+                            // 其他选择器需要验证
+                            const validButtons = [];
+                            for (const button of buttons) {
+                                const hasColorAttr = await button.evaluate(el => {
+                                    const dataColor = el.getAttribute('data-color');
+                                    const dataColorCode = el.getAttribute('data-colorcode');
+                                    const dataValue = el.getAttribute('data-value');
+                                    const title = el.getAttribute('title');
+                                    const ariaLabel = el.getAttribute('aria-label');
+                                    const text = el.textContent?.trim();
+
+                                    // 颜色按钮通常有这些特征之一
+                                    return dataColor || dataColorCode || dataValue || title || ariaLabel || (text && text.length > 0 && text.length < 50);
+                                });
+
+                                if (hasColorAttr) {
+                                    validButtons.push(button);
+                                }
+                            }
+
+                            if (validButtons.length > 0) {
+                                console.log(`   ✓ 验证后有效颜色按钮: ${validButtons.length} 个`);
+                                colorButtons = validButtons;
+                                break;
+                            } else {
+                                console.log(`   ⚠️ 未找到有效颜色属性，尝试下一个选择器...`);
+                            }
+                        }
                     }
                 } catch (error) {
                     console.log(`⚠️ 选择器 "${selector}" 执行失败:`, error.message);
