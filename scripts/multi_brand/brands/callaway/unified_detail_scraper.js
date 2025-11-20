@@ -568,12 +568,18 @@ class UnifiedDetailScraper {
 
                     // 增强的描述抓取
                     let description = '';
+
+                    // 策略1: 查找常见的描述选择器
                     const descriptionSelectors = [
                         '[class*="description"]',
                         '[class*="detail"]',
                         '[class*="product"]',
                         '[class*="info"]',
-                        '[class*="spec"]'
+                        '[class*="spec"]',
+                        '[id*="description"]',
+                        '[id*="detail"]',
+                        'meta[name="description"]',
+                        'meta[property="og:description"]'
                     ];
 
                     for (const selector of descriptionSelectors) {
@@ -582,8 +588,47 @@ class UnifiedDetailScraper {
                             const text = element.getAttribute('content') || element.textContent;
                             if (text && text.length > 50) {
                                 description = text.trim();
+                                console.log(`✓ 策略1成功 - 找到描述内容 (${selector}, ${text.length}字符)`);
                                 break;
                             }
+                        }
+                    }
+
+                    // 策略2: 如果没找到，查找包含特定关键词的段落
+                    if (!description) {
+                        console.log('🔍 策略2开始 - 搜索包含关键词的元素...');
+                        const textElements = Array.from(document.querySelectorAll('p, div, span, section, article'));
+
+                        for (const element of textElements) {
+                            const text = element.textContent.trim();
+                            if (text && text.length > 100 && (
+                                text.includes('素材') ||
+                                text.includes('MADE IN') ||
+                                text.includes('バスト') ||
+                                text.includes('着丈') ||
+                                text.includes('ポリエステル') ||
+                                text.includes('ストレッチ') ||
+                                text.includes('デタッチャブル')
+                            )) {
+                                description = text;
+                                console.log(`✓ 策略2成功 - 通过关键词找到描述内容 (${text.length}字符)`);
+                                break;
+                            }
+                        }
+                    }
+
+                    // 策略3: 查找页面标题之外的较长文本
+                    if (!description) {
+                        console.log('🔍 策略3开始 - 提取页面长文本...');
+                        const allText = document.body.textContent || '';
+                        const title = document.querySelector('h1')?.textContent?.trim() || '';
+                        const cleanText = allText.replace(title, '').replace(/\s+/g, ' ').trim();
+
+                        if (cleanText.length > 200) {
+                            description = cleanText.substring(0, 1000);
+                            console.log(`✓ 策略3成功 - 使用页面文本 (${description.length}字符)`);
+                        } else {
+                            console.log('✗ 策略3失败 - 页面文本太短');
                         }
                     }
 
