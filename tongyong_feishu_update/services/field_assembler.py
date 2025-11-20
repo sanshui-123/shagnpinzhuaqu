@@ -4,6 +4,7 @@
 
 from typing import Dict, List, Optional
 from datetime import datetime
+import re
 
 from .pricing import calculate_final_price
 from ..config import translation, sizes
@@ -143,12 +144,16 @@ class FieldAssembler:
         in_stock_colors = set()
         in_stock_sizes = set()
         out_of_stock_info = []
+        color_oos_map: Dict[str, List[str]] = {}
 
         if variant_inventory:
             for variant in variant_inventory:
                 color = variant.get('color', '')
                 size = variant.get('size', '')
                 in_stock = variant.get('inStock', True)
+                color_display = ''
+                if color:
+                    color_display = color.split('（')[0].split('(')[0].strip() or color.strip()
 
                 if in_stock:
                     if color:
@@ -158,6 +163,12 @@ class FieldAssembler:
                 else:
                     if color and size:
                         out_of_stock_info.append(f"{color}-{size}")
+                        if color_display:
+                            if color_display not in color_oos_map:
+                                color_oos_map[color_display] = []
+                            size_label = str(size).strip()
+                            if size_label and size_label not in color_oos_map[color_display]:
+                                color_oos_map[color_display].append(size_label)
 
             # 检查是否全部缺货
             if not in_stock_colors and not in_stock_sizes and variant_inventory:
@@ -313,8 +324,20 @@ class FieldAssembler:
         
         fields['图片数量'] = image_count if image_count is not None else 1
 
-        # 库存状态（默认有货）- 已移除，飞书表不需要此字段
-        # fields['库存状态'] = '有货'
+        # 库存状态
+        stock_notes: List[str] = []
+        if variant_inventory:
+            if stock_status == 'out_of_stock':
+                stock_notes.append('都缺货')
+            else:
+                for color_name, size_list in color_oos_map.items():
+                    if not size_list:
+                        continue
+                    # 翻译颜色名称为中文
+                    color_chinese = translation.translate_color_name(color_name)
+                    stock_notes.append(f"{color_chinese}({'/'.join(size_list)}) 没货")
+
+        fields['库存状态'] = '\n'.join(stock_notes) if stock_notes else ''
 
         # 尺码表（使用DOM抓取或结构化数据）
         size_text_source = None
