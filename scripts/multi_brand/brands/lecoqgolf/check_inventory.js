@@ -278,8 +278,8 @@ async function main() {
         input: null,
         output: null,
         limit: 0,
-        concurrent: 2,  // 默认并发2
-        delay: 1000,    // 默认延迟1秒
+        concurrent: 3,  // 默认并发3（优化后）
+        delay: 500,     // 默认延迟500ms（优化后）
         brand: 'lecoqgolf'
     };
 
