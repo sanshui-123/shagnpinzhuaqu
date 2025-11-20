@@ -337,6 +337,10 @@ class FieldAssembler:
                     color_chinese = translation.translate_color_name(color_name)
                     stock_notes.append(f"{color_chinese}({'/'.join(size_list)}) 没货")
 
+                # 如果没有缺货信息，显示"不缺货"
+                if not stock_notes:
+                    stock_notes.append('不缺货')
+
         fields['库存状态'] = '\n'.join(stock_notes) if stock_notes else ''
 
         # 尺码表（使用DOM抓取或结构化数据）
