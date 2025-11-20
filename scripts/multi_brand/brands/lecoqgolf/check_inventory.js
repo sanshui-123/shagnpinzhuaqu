@@ -31,7 +31,7 @@ class InventoryChecker {
         this.brandConfig = BRAND_CONFIG[this.brand];
         this.limit = options.limit || 0; // 0 = no limit
         this.concurrent = options.concurrent || 1;
-        this.delay = options.delay || 2000; // 请求间隔
+        this.delay = options.delay || 1000; // 请求间隔（默认1秒）
 
         this.scraper = new UnifiedDetailScraper({
             headless: true,
@@ -164,6 +164,7 @@ class InventoryChecker {
         console.log('📦 开始库存巡检...');
         console.log(`📄 输入文件: ${inputPath}`);
         console.log(`📁 输出文件: ${outputPath}`);
+        console.log(`⚡ 并发数: ${this.concurrent}, 延迟: ${this.delay}ms`);
 
         // 加载商品
         const products = this.loadProducts(inputPath);
@@ -178,12 +179,9 @@ class InventoryChecker {
         const errors = [];
         const skipped = [];
 
-        // 逐个处理（可扩展为并发）
-        for (let i = 0; i < products.length; i++) {
-            const product = products[i];
-            console.log(`\n[${i + 1}/${products.length}]`);
-
-            // 跳过已标记"都缺货"的商品
+        // 先过滤掉需要跳过的商品
+        const toProcess = [];
+        for (const product of products) {
             if (product.stockStatusText === '都缺货') {
                 console.log(`⏭️ SKIP: ${product.productId} 已标记都缺货，跳过巡检`);
                 skipped.push({
@@ -192,19 +190,44 @@ class InventoryChecker {
                     reason: '已标记都缺货',
                     timestamp: new Date().toISOString()
                 });
-                continue;
-            }
-
-            const result = await this.checkSingleProduct(product);
-
-            if (result.error) {
-                errors.push(result);
             } else {
-                results.push(result);
+                toProcess.push(product);
+            }
+        }
+
+        console.log(`\n📋 实际需要检查: ${toProcess.length} 个商品`);
+
+        // 并发处理
+        let processed = 0;
+        for (let i = 0; i < toProcess.length; i += this.concurrent) {
+            const batch = toProcess.slice(i, i + this.concurrent);
+            const batchNum = Math.floor(i / this.concurrent) + 1;
+            const totalBatches = Math.ceil(toProcess.length / this.concurrent);
+
+            console.log(`\n[批次 ${batchNum}/${totalBatches}] 处理 ${batch.length} 个商品...`);
+
+            // 并发执行这一批
+            const batchResults = await Promise.all(
+                batch.map(async (product, idx) => {
+                    const globalIdx = i + idx + 1;
+                    console.log(`  [${globalIdx}/${toProcess.length}] 检查: ${product.productId}`);
+                    return this.checkSingleProduct(product);
+                })
+            );
+
+            // 收集结果
+            for (const result of batchResults) {
+                if (result.error) {
+                    errors.push(result);
+                } else {
+                    results.push(result);
+                }
             }
 
-            // 延迟避免请求过快
-            if (i < products.length - 1) {
+            processed += batch.length;
+
+            // 批次间延迟
+            if (i + this.concurrent < toProcess.length) {
                 await new Promise(resolve => setTimeout(resolve, this.delay));
             }
         }
@@ -255,8 +278,8 @@ async function main() {
         input: null,
         output: null,
         limit: 0,
-        concurrent: 1,
-        delay: 2000,
+        concurrent: 2,  // 默认并发2
+        delay: 1000,    // 默认延迟1秒
         brand: 'lecoqgolf'
     };
 
@@ -298,14 +321,15 @@ async function main() {
   --input, -i     输入文件路径（必需）
   --output, -o    输出文件路径（必需）
   --limit, -l     限制检查数量（默认: 全部）
-  --concurrent    并发数（默认: 1）
-  --delay, -d     请求间隔毫秒（默认: 2000）
+  --concurrent    并发数（默认: 2）
+  --delay, -d     请求间隔毫秒（默认: 1000）
   --brand, -b     品牌（默认: lecoqgolf）
   --help, -h      显示帮助
 
 示例:
   node check_inventory.js --input products.json --output inventory.json
-  node check_inventory.js --input products.json --output inventory.json --limit 50
+  node check_inventory.js --input products.json --output inventory.json --concurrent 3
+  node check_inventory.js --input products.json --output inventory.json --delay 500
 `);
                 process.exit(0);
         }
