@@ -447,7 +447,7 @@ XL码 | 胸围72 肩宽51 衣长116 袖长64 下摆24
             return ''
 
         except Exception as e:
-            print(f"⚠️ AI尺码表格式化失败: {e}")
+            # 任何异常立即返回空字符串，不打印（由build()统一处理）
             return ''
 
     def _clean_html_pollution(self, text: str) -> str:
