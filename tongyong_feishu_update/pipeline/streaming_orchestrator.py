@@ -64,6 +64,7 @@ class StreamingUpdateOrchestrator:
         *,
         force_update: bool = False,
         title_only: bool = False,
+        category_only: bool = False,
         dry_run: bool = False,
         resume: bool = True,  # 是否启用断点续传
     ) -> UpdateResult:
@@ -117,7 +118,7 @@ class StreamingUpdateOrchestrator:
             existing_records = self.feishu_client.get_records()
 
         # 4. 计算需要处理的产品
-        fields_to_check = self._get_fields_to_check(title_only)
+        fields_to_check = self._get_fields_to_check(title_only, category_only)
         candidate_ids, skipped_ids = self._calculate_candidates(
             products, existing_records, fields_to_check, force_update
         )
@@ -151,6 +152,7 @@ class StreamingUpdateOrchestrator:
             products,
             existing_records,
             title_only,
+            category_only,
             force_update,
             dry_run,
             progress_file,
@@ -164,6 +166,7 @@ class StreamingUpdateOrchestrator:
         products: Dict[str, Product],
         existing_records: Dict[str, Dict],
         title_only: bool,
+        category_only: bool,
         force_update: bool,
         dry_run: bool,
         progress_file: Path,
@@ -189,6 +192,7 @@ class StreamingUpdateOrchestrator:
                     products[product_id],
                     existing_records[product_id],
                     title_only,
+                    category_only,
                     force_update,
                     dry_run
                 )
@@ -248,6 +252,7 @@ class StreamingUpdateOrchestrator:
         product: Product,
         record_info: Dict,
         title_only: bool,
+        category_only: bool,
         force_update: bool,
         dry_run: bool
     ) -> bool:
@@ -307,6 +312,7 @@ class StreamingUpdateOrchestrator:
                 product=product_dict,
                 pre_generated_title=title,
                 title_only=title_only,
+                category_only=category_only,
                 product_detail=detail_data
             )
 
@@ -443,12 +449,14 @@ class StreamingUpdateOrchestrator:
         else:
             print(f"模拟模式：跳过创建 {len(create_records)} 条缺失记录")
 
-    def _get_fields_to_check(self, title_only: bool) -> List[str]:
+    def _get_fields_to_check(self, title_only: bool, category_only: bool) -> List[str]:
         """获取需要检查的字段列表"""
         fields_to_check = ['商品ID','商品标题','价格','性别','衣服分类','品牌名',
                           '颜色','尺码','图片URL','图片数量','详情页文字','商品链接','尺码表']
         if title_only:
             fields_to_check = ['商品标题']
+        elif category_only:
+            fields_to_check = ['衣服分类']
         return fields_to_check
 
     def _calculate_candidates(

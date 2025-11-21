@@ -16,10 +16,11 @@ from .models.update_result import UpdateResult
 
 
 def main(
-    input_path: str, 
+    input_path: str,
     *,
     force_update: bool = False,
     title_only: bool = False,
+    category_only: bool = False,
     dry_run: bool = False,
     verbose: bool = False,
     streaming: bool = False,
@@ -39,6 +40,7 @@ def main(
         input_path: 产品数据文件路径
         force_update: 强制更新所有字段
         title_only: 仅更新标题字段
+        category_only: 仅更新衣服分类字段
         dry_run: 干运行模式
         verbose: 显示详细进度
         streaming: 启用流式处理模式（推荐）
@@ -116,6 +118,7 @@ def main(
                 input_path=input_path,
                 force_update=force_update,
                 title_only=title_only,
+                category_only=category_only,
                 dry_run=dry_run,
                 resume=resume
             )
@@ -132,6 +135,7 @@ def main(
                 input_path=input_path,
                 force_update=force_update,
                 title_only=title_only,
+                category_only=category_only,
                 dry_run=dry_run
             )
         
@@ -202,6 +206,11 @@ def create_argument_parser() -> argparse.ArgumentParser:
         '--title-only',
         action='store_true',
         help='仅更新标题字段'
+    )
+    update_group.add_argument(
+        '--category-only',
+        action='store_true',
+        help='仅更新衣服分类字段'
     )
     update_group.add_argument(
         '--dry-run',
@@ -275,6 +284,7 @@ if __name__ == "__main__":
             input_path=args.input_path,
             force_update=args.force_update,
             title_only=args.title_only,
+            category_only=args.category_only,
             dry_run=args.dry_run,
             verbose=verbose,
             streaming=args.streaming,

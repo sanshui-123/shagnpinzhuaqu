@@ -50,6 +50,7 @@ class UpdateOrchestrator:
         *,
         force_update: bool = False,
         title_only: bool = False,
+        category_only: bool = False,
         dry_run: bool = False
     ) -> UpdateResult:
         """执行完整更新流程"""
@@ -131,11 +132,13 @@ class UpdateOrchestrator:
             else:
                 print(f"干运行模式：跳过创建 {len(missing_ids)} 条缺失记录")
 
-        # 4. 根据 force_update/title_only 计算 target_fields 列表（与主脚本一致）
+        # 4. 根据 force_update/title_only/category_only 计算 target_fields 列表（与主脚本一致）
         fields_to_check = ['商品ID','商品标题','价格','性别','衣服分类','品牌名',
                            '颜色','尺码','图片URL','图片数量','详情页文字','商品链接','尺码表']
         if title_only:
             fields_to_check = ['商品标题']
+        elif category_only:
+            fields_to_check = ['衣服分类']
 
         # 5. 计算候选产品：保持与主脚本相同逻辑（force_update / 空字段 / 新产品）
         candidate_ids = []
@@ -252,6 +255,7 @@ class UpdateOrchestrator:
                 product=enhanced_product,
                 pre_generated_title=pre_title,
                 title_only=title_only,
+                category_only=category_only,
                 product_detail=detail_data
             )
             if not fields:

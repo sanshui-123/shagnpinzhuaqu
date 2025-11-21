@@ -12,7 +12,7 @@ from .images import build_image_url_multiline, count_total_images
 from .translator import Translator
 from .title_generator import TitleGenerator
 from .size_table_formatter import SizeTableFormatter
-from .classifiers import determine_gender, determine_clothing_type
+from .classifiers import determine_gender, determine_clothing_type, map_to_taobao_category
 from ..config.brands import BRAND_SHORT_NAME, BRAND_MAP
 from ..config import brands as brand_module
 
@@ -38,17 +38,17 @@ class FieldAssembler:
         product: Dict,
         pre_generated_title: Optional[str] = None,
         title_only: bool = False,
+        category_only: bool = False,
         product_detail: Optional[Dict] = None
     ) -> Dict[str, any]:
         """构建单个产品的字段"""
         fields: Dict[str, any] = {}
 
-        
+
         # 标题（支持预生成缓存）
-        # 直接使用原始gender数据，不做任何处理
-        gender = product.get('gender', '')
-        # 优先使用产品的category字段（从抓取器获取），否则使用determine_clothing_type
-        clothing_type = product.get('category') or determine_clothing_type(product)
+        # 性别/分类统一用分类器计算，避免源数据缺失
+        gender = determine_gender(product)
+        clothing_type = determine_clothing_type(product) or '其他'
 
         if pre_generated_title:
             fields['商品标题'] = pre_generated_title
@@ -58,6 +58,17 @@ class FieldAssembler:
                 fields['商品标题'] = title
 
         if title_only:
+            return fields
+
+        # 如果仅更新衣服分类，只返回分类字段（淘宝映射），可附带性别/商品ID便于审计
+        if category_only:
+            mapped_category = map_to_taobao_category(product, clothing_type)
+            fields['衣服分类'] = mapped_category
+            if gender:
+                fields['性别'] = gender
+            product_id = product.get('productId') or product.get('product_id')
+            if product_id:
+                fields['商品ID'] = product_id
             return fields
 
         # 商品ID
@@ -126,11 +137,11 @@ class FieldAssembler:
         if detail_url:
             fields['商品链接'] = detail_url
 
-        # 性别 - 直接使用原始数据，不做任何处理
         if gender:
-            fields['性别'] = gender  # 直接使用原始值
+            fields['性别'] = gender
         if clothing_type:
-            fields['衣服分类'] = clothing_type
+            mapped_category = map_to_taobao_category(product, clothing_type)
+            fields['衣服分类'] = mapped_category
 
         # 品牌名（使用简短中文）
         _, brand_chinese, brand_short = brand_module.extract_brand_from_product(product)

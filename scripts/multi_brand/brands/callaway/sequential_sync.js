@@ -109,7 +109,7 @@ class SequentialSyncProcessor {
                 const tempFile = path.join(this.tempDir, `pending_${productId}.json`);
                 console.log('📥 抓取详情...');
 
-                const scrapeCmd = `cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/lecoqgolf && node single_unified_processor.js "${product.url}" "${productId}" --output "${tempFile}"`;
+                const scrapeCmd = `cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/callaway && node single_unified_processor.js "${product.url}" "${productId}" --output "${tempFile}"`;
                 execSync(scrapeCmd, { encoding: 'utf8', stdio: 'inherit' });
 
                 console.log('✅ 抓取成功');
@@ -194,7 +194,7 @@ class SequentialSyncProcessor {
         const productMap = new Map();
 
         if (data.results && Array.isArray(data.results)) {
-            // scrape_category.js 格式
+            // 新版 scrape_category 结果格式
             for (const result of data.results) {
                 if (result.products && Array.isArray(result.products)) {
                     for (const item of result.products) {
@@ -206,6 +206,17 @@ class SequentialSyncProcessor {
                             });
                         }
                     }
+                }
+            }
+        } else if (data.links && Array.isArray(data.links)) {
+            // 旧版 raw_links_xxx.json 格式
+            for (const item of data.links) {
+                const productId = item.productId || (item.variantId && String(item.variantId).split('_')[0]);
+                if (productId) {
+                    productMap.set(productId, {
+                        url: item.detailUrl || item.url || item.link || '',
+                        name: item.title || item.productName || item.name
+                    });
                 }
             }
         }
@@ -234,12 +245,12 @@ async function main() {
         console.log('');
         console.log('选项:');
         console.log('  --source <path>   源文件路径（必需）');
-        console.log('  --brand <name>    品牌名称（默认：Le Coq公鸡乐卡克）');
+        console.log('  --brand <name>    品牌名称（默认：卡拉威）');
         console.log('  --limit <n>       限制处理数量');
         console.log('  --help, -h        显示帮助');
         console.log('');
         console.log('示例:');
-        console.log('  node sequential_sync.js --source "golf_content/lecoqgolf/lecoqgolf_products_xxx.json"');
+        console.log('  node sequential_sync.js --source "golf_content/callaway/callaway_products_xxx.json"');
         console.log('  node sequential_sync.js --source "..." --limit 10');
         process.exit(0);
     }
