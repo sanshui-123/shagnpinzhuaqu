@@ -1,7 +1,7 @@
 """
 标题生成系统 - 核心逻辑
-版本：v6.0 - 精简版
-核心思想：提示词包含所有规则，GLM一步生成
+版本：v6.1 - 精简款（地区+季节款）
+核心思想：提示词简短，明确格式，带“地区+季节款”
 """
 
 import re
@@ -23,6 +23,24 @@ except ImportError:
 # 全局变量
 glm_call_lock = threading.Lock()
 last_glm_call_ts = 0.0
+
+# 地区映射（按品牌扩展，默认日本）
+BRAND_REGION = {
+    'callawaygolf': '日本',
+    'lecoqgolf': '日本',
+    'pearlygates': '日本',
+    'munsingwear': '日本',
+    'puma': '日本',
+    'adidas': '日本',
+    'nike': '日本',
+    'titleist': '日本',
+    'mizuno': '日本',
+    'ping': '日本',
+    'taylormade': '日本',
+    'cleveland': '日本',
+    'underarmour': '日本',
+    'footjoy': '日本',
+}
 
 # ============================================================================
 # 品牌提取功能
@@ -184,17 +202,17 @@ def extract_season_from_name(name: str, product: Dict = None) -> str:
 
 def build_smart_prompt(product: Dict) -> str:
     """
-    构建超完整提示词 - 使用模板化的提示词配置
-    让GLM自己判断性别、类别、功能词、结尾词
+    构建简短提示词：地区+季节款+品牌+高尔夫+性别+功能词可选+品类结尾
     """
-    from ..config.prompts import TITLE_GENERATION_PROMPT
-
     # 🔥 确保所有字段都是字符串类型
     name = str(product.get('productName', '') or '')
     gender = str(product.get('gender', '') or '')
 
     # 提取品牌信息
     brand_key, brand_chinese, brand_short = extract_brand_from_product(product)
+    # 品牌文案：中文+英文（去掉斜杠）
+    brand_display = (BRAND_MAP.get(brand_key, brand_short)).replace('/', '')
+    region = BRAND_REGION.get(brand_key, '日本')
 
     # 性别映射
     gender_text = "男士"  # 默认
@@ -205,15 +223,23 @@ def build_smart_prompt(product: Dict) -> str:
             gender_text = "男士"
 
     # 🎯 智能季节判断（从表格数据优先）
-    current_season = extract_season_from_name(name, product)
+    current_season = extract_season_from_name(name, product) or get_season_by_date()
+    if current_season and not current_season.endswith('款'):
+        current_season = f"{current_season}款"
 
-    # 使用模板化的提示词
-    prompt = TITLE_GENERATION_PROMPT.format(
-        name=name,
-        gender=gender,
-        current_season=current_season,
-        brand_short=brand_short,
-        gender_text=gender_text
+    # 短提示词，明确结构，避免冗长
+    prompt = (
+        f"生成淘宝标题，长度26-30字，格式：[地区][季节款][品牌]高尔夫[性别][功能词可选][品类结尾]。\n"
+        f"- 地区：{region}\n"
+        f"- 季节：{current_season}（必须带“款”）\n"
+        f"- 品牌：{brand_display}（可含品牌英文和空格，去掉斜杠）\n"
+        f"- 性别：{gender_text}\n"
+        f"- 功能词：保暖/防泼水/弹力/抓绒/轻量等，无则省略\n"
+        f"- 结尾必须是具体品类，如夹克/卫衣/长裤/背心/帽子/球杆头套等，不要“运动/时尚”作结尾\n"
+        f"要求：保留“款”字；只用简体中文和品牌英文，去掉日文假名、斜杠和特殊符号；“高尔夫”只出现1次；"
+        f"禁止出现正品/代购/旗舰/促销等词。\n"
+        f"商品名：{name}\n"
+        f"直接输出标题。"
     )
 
     return prompt
@@ -386,35 +412,12 @@ def optimize_title(title: str) -> str:
     if not title:
         return title
 
-    # 1. 去除日文、英文、符号
-    # 日文假名
+    # 1. 去除日文、斜杠和特殊符号，保留品牌英文与空格
     japanese_pattern = re.compile(r'[\u3040-\u309F\u30A0-\u30FF\uFF66-\uFF9F]')
     title = japanese_pattern.sub('', title)
-
-    # 去除特殊符号（不包括空格）
     title = re.sub(r'[/／\\|｜×＋\+\-\*•·]+', '', title)
-
-    # 去除英文字母，但保留品牌名中的英文
-    # 定义需要保留的英文品牌名
-    english_brands = ['PEARLY GATES', 'FootJoy', 'Cleveland', 'Ping']
-
-    # 先用占位符替换品牌名（使用中文占位符避免被正则删除）
-    placeholders = {}
-    for i, brand in enumerate(english_brands):
-        placeholder = f'【品牌占位{i}】'
-        if brand in title:
-            title = title.replace(brand, placeholder)
-            placeholders[placeholder] = brand
-
-    # 去除其他英文字母（保留数字，用于年份）
-    title = re.sub(r'[a-zA-Z]+', '', title)
-
-    # 恢复品牌名
-    for placeholder, brand in placeholders.items():
-        title = title.replace(placeholder, brand)
-
-    # 去除空格
-    title = re.sub(r'\s+', '', title)
+    # 允许英文和空格，但压缩多余空格
+    title = re.sub(r'\s+', ' ', title).strip()
 
     # 2. 确保"高尔夫"只出现一次
     if title.count('高尔夫') > 1:
@@ -435,7 +438,7 @@ def optimize_title(title: str) -> str:
             i += 1
     title = ''.join(words)
 
-    # 4. 长度调整
+    # 4. 长度调整（26-30）
     if len(title) > 30:
         title = title[:30]
     elif len(title) < 26:
@@ -526,12 +529,17 @@ def validate_title(title: str, product: Dict) -> bool:
 
     # 3. 必须包含对应品牌
     brand_key, brand_chinese, brand_short = extract_brand_from_product(product)
-    # 检查品牌简称（去除空格后比较，因为标题中空格已被删除）
-    brand_short_nospace = brand_short.replace(' ', '')
-    if brand_short_nospace not in title:
+    brand_short_clean = brand_short.replace('/', '')
+    brand_full_clean = BRAND_MAP.get(brand_key, brand_short).replace('/', '')
+    title_nospace = title.replace(' ', '')
+    if brand_short_clean.replace(' ', '') not in title_nospace and brand_full_clean.replace(' ', '') not in title_nospace:
         return False
 
-    # 4. 不能包含禁止词汇
+    # 4. 必须包含“款”
+    if '款' not in title:
+        return False
+
+    # 5. 不能包含禁止词汇
     forbidden_words = [
         '官网', '正品', '专柜', '代购', '海外', '进口',
         '授权', '旗舰', '限量', '促销', '特价', '淘宝',
@@ -541,11 +549,11 @@ def validate_title(title: str, product: Dict) -> bool:
         if word in title:
             return False
 
-    # 5. 不能包含日文字符
+    # 6. 不能包含日文字符
     if re.search(r'[\u3040-\u309F\u30A0-\u30FF]', title):
         return False
 
-    # 6. 不能包含连续重复
+    # 7. 不能包含连续重复
     if re.search(r'(.)\1{2,}', title):  # 3个及以上相同字符连续
         return False
     if re.search(r'(..)\1{2,}', title):  # 2字词语重复3次
