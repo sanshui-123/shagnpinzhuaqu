@@ -59,6 +59,50 @@ def determine_clothing_type(product_data):
     else:
         return '其他'
 
+def map_to_taobao_category(product_data, clothing_type: str) -> str:
+    """
+    将内部服装细分类映射到淘宝类目（飞书写入直接使用淘宝分类）
+    """
+    if isinstance(product_data, dict):
+        product_name = product_data.get('productName', '')
+    elif hasattr(product_data, 'product_name'):
+        product_name = product_data.product_name
+    else:
+        product_name = ''
+
+    name_lower = product_name.lower()
+    ctype = clothing_type or '其他'
+
+    # 特殊关键词优先
+    if any(k in name_lower for k in ['紧身', '压缩', '打底']):
+        return '紧身衣裤'
+    if '训练' in name_lower or '场训' in name_lower:
+        return '训练服'
+    if any(k in name_lower for k in ['短袖', '半袖', 'short sleeve']):
+        return '短袖'
+    if any(k in name_lower for k in ['长袖', 'long sleeve']):
+        return '长袖'
+
+    # 直接映射表到淘宝类目
+    mapping = {
+        'Polo衫': 'POLO',
+        'T恤': 'T恤',
+        '卫衣/连帽衫': '卫衣',
+        '夹克': '外套',
+        '风衣/防风外套': '外套',
+        '羽绒服/棉服': '外套',
+        '外套': '外套',
+        '马甲/背心': '马甲',
+        '针织衫/毛衣': '长袖',
+        '衬衫': '长袖',
+        '长裤': '长裤',
+        '短裤': '短裤',
+        '裙装': '短裙',
+        '腰带': '腰带',
+        '袜子': '袜子'
+    }
+
+    return mapping.get(ctype, '其他')
     # 转换为小写便于匹配
     product_name_lower = product_name.lower()
     category_lower = category.lower()

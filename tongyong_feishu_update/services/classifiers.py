@@ -79,15 +79,15 @@ def determine_clothing_type(product_data):
     def has_any(words):
         return any(w in name_lower or w in category_lower or w in url_lower for w in words)
 
-    # 外套优先：羽绒/棉服/中綿/ブルゾン/ジャケット 等
-    if has_any(['down', 'padded', 'quilted', '中綿', 'ブルゾン', 'ジャケット', 'outer', 'coat']):
+    # 卫衣/连帽衫/抓绒（名称优先于 URL 模糊路径）
+    if has_any(['hoodie', 'sweatshirt', 'sweat', 'crewneck', 'pullover', 'fleece', 'パーカー', 'スウェット', 'フリース']):
+        return '卫衣'
+
+    # 外套：羽绒/棉服/中綿/ブルゾン/ジャケット 等
+    if has_any(['down', 'padded', 'quilted', '中綿', 'ブルゾン', 'ジャケット', 'coat']):
         return '外套'
     if has_any(['windbreaker', 'wind jacket', '防风', '风衣']):
         return '外套'
-
-    # 卫衣/连帽衫/抓绒
-    if has_any(['hoodie', 'sweat', 'crewneck', 'pullover', 'fleece', 'パーカー', 'スウェット', 'フリース']):
-        return '卫衣'
 
     # 马甲/背心
     if has_any(['vest', 'gilet', 'ベスト', 'ジレ', '無袖', '无袖']):

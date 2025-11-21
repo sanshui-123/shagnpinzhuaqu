@@ -12,6 +12,7 @@ from .translator import Translator
 from .title_generator import TitleGenerator
 from .size_table_formatter import SizeTableFormatter
 from .classifiers import determine_gender, determine_clothing_type
+from .classifiers import map_to_taobao_category
 from ..config.brands import BRAND_SHORT_NAME, BRAND_MAP
 from ..config import brands as brand_module
 
@@ -127,7 +128,7 @@ class FieldAssembler:
         if gender:
             fields['性别'] = gender
         if clothing_type:
-            fields['衣服分类'] = clothing_type
+            fields['衣服分类'] = map_to_taobao_category(product, clothing_type)
 
         # 品牌名（使用简短中文）
         _, brand_chinese, brand_short = brand_module.extract_brand_from_product(product)
