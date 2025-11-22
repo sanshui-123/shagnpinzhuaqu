@@ -80,7 +80,7 @@ def determine_clothing_type(product_data):
         return any(w in name_lower or w in category_lower or w in url_lower for w in words)
 
     # 卫衣/连帽衫/抓绒（名称优先于 URL 模糊路径）
-    if has_any(['hoodie', 'sweatshirt', 'sweat', 'crewneck', 'pullover', 'fleece', 'パーカー', 'スウェット', 'フリース']):
+    if has_any(['hoodie', 'sweatshirt', 'sweat', 'crewneck', 'pullover', 'フーディ', 'プルオーバー', 'fleece', 'パーカー', 'スウェット', 'フリース']):
         return '卫衣'
 
     # 外套：羽绒/棉服/中綿/ブルゾン/ジャケット 等
@@ -102,7 +102,7 @@ def determine_clothing_type(product_data):
         return '短袖'
 
     # 长袖上衣（针织、衬衫、毛衣、开衫）
-    if has_any(['long sleeve', '長袖', '长袖', 'shirt', 'シャツ', 'knit', 'sweater', 'cardigan', 'カーディガン']):
+    if has_any(['long sleeve', '長袖', '长袖', 'shirt', 'シャツ', 'knit', 'ニット', 'sweater', 'cardigan', 'カーディガン']):
         return '长袖'
 
     # 紧身/打底
