@@ -34,15 +34,12 @@
     "productBrand": ".brand"
   },
   "categories": [
-    "mens",
-    "womens",
-    "apparel",
-    "accessories"
+    "/apparel/mens",
+    "/apparel/womens"
   ],
   "urls": {
-    "main": "/shop/men.html",
-    "womens": "/shop/women.html",
-    "apparel": "/shop/apparel.html"
+    "mens": "/apparel/mens",
+    "womens": "/apparel/womens"
   },
   "pagination": {
     "enabled": true,
