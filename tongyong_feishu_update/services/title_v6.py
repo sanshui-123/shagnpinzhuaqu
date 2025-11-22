@@ -20,6 +20,8 @@ except ImportError:
         SEASON_PATTERNS, FUNCTION_WORD_MAPPING, ENDING_WORD_MAPPING
     )
 
+from .classifiers import determine_gender
+
 # 地区映射（按品牌扩展，默认日本）
 BRAND_REGION = {
     'callawaygolf': '日本',
@@ -49,6 +51,8 @@ ALLOWED_TAIL_CATEGORIES = [
 # 通用填充/修饰词（用于裁剪或补长时优先移除/插入）
 FILLER_WORDS = ['时尚', '新款', '运动', '舒适', '经典', '优雅', '精品', '轻便', '透气', '款']
 MODIFIERS = ['新款', '时尚', '轻便', '透气', '运动', '专业', '经典', '优雅', '高级', '精品']
+FEATURE_KEYWORDS = ['保暖', '防水', '透气', '轻量', '弹力', '抓绒', '速干', '防风', '舒适', '抗皱', '耐磨']
+FALLBACK_FILLERS = ['时尚', '舒适', '畅销', '精选']
 
 # 禁用词
 FORBIDDEN_WORDS = [
@@ -60,6 +64,92 @@ FORBIDDEN_WORDS = [
 # 全局限流相关
 glm_call_lock = threading.Lock()
 last_glm_call_ts = 0.0
+
+
+def _collect_title_features(product: Dict) -> Dict[str, str]:
+    name = str(
+        product.get('productName')
+        or product.get('title')
+        or product.get('name')
+        or product.get('product', {}).get('name')
+        or ''
+    )
+    description = str(product.get('description') or product.get('详情页文字') or '')
+
+    brand_key, brand_chinese, brand_short = extract_brand_from_product(product)
+    brand_display = (brand_short or brand_chinese or '').replace('/', '')
+    if brand_chinese and brand_short and brand_short not in brand_display:
+        brand_display = f"{brand_chinese}{brand_short}"
+    if not brand_display:
+        brand_display = '卡拉威Callaway'
+
+    region = BRAND_REGION.get(brand_key, '日本')
+
+    gender_raw = determine_gender(product)
+    gender_text = {
+        '女': '女士',
+        '男': '男士'
+    }.get(gender_raw, '中性')
+
+    season_phrase = extract_season_from_name(name, product) or get_season_by_date()
+    if not season_phrase.endswith('款'):
+        season_phrase = season_phrase + '款'
+
+    forced_category = _get_forced_category(product)
+    target_category = _resolve_target_category(product)
+    if target_category == '场训服' and forced_category and forced_category != '场训服':
+        target_category = '其他' if forced_category not in ALLOWED_TAIL_CATEGORIES else forced_category
+    if target_category not in ALLOWED_TAIL_CATEGORIES:
+        target_category = '其他'
+
+    text_pool = f"{name} {description}"
+    feature_tokens = []
+    for kw in FEATURE_KEYWORDS:
+        if kw in text_pool and kw not in feature_tokens:
+            feature_tokens.append(kw)
+        if len(feature_tokens) >= 2:
+            break
+    feature_phrase = ''.join(feature_tokens[:2])
+
+    return {
+        'brand_display': brand_display,
+        'region': region,
+        'gender_text': gender_text,
+        'season_phrase': season_phrase,
+        'target_category': target_category,
+        'feature_phrase': feature_phrase,
+        'product_name': name or '未知商品'
+    }
+
+
+def build_template_title(features: Dict[str, str]) -> str:
+    parts = [
+        features['region'],
+        features['season_phrase'],
+        features['brand_display'],
+        '高尔夫',
+        features['gender_text'],
+    ]
+    if features['feature_phrase']:
+        parts.append(features['feature_phrase'])
+    parts.append(features['target_category'])
+    title = ''.join(parts)
+
+    if len(title) < 26:
+        for filler in FALLBACK_FILLERS:
+            if filler not in title:
+                insert_index = title.rfind(features['target_category'])
+                if insert_index != -1:
+                    title = title[:insert_index] + filler + features['target_category']
+                else:
+                    title += filler
+                if len(title) >= 26:
+                    break
+    if len(title) < 26:
+        title += '精选'
+    if len(title) > 30:
+        title = title[:30]
+    return title
 
 # ============================================================================
 # 品牌提取功能（复用配置模块逻辑）
@@ -146,64 +236,30 @@ def build_smart_prompt(product: Dict) -> str:
     """
     构建简短提示词：地区+季节款+品牌+高尔夫+性别+功能词可选+品类结尾
     """
-    # 🔥 确保所有字段都是字符串类型
-    name = str(
-        product.get('productName')
-        or product.get('title')
-        or product.get('name')
-        or product.get('product_name')
-        or ''
-    )
-    gender = str(product.get('gender', '') or '')
-
-    # 提取品牌信息
-    brand_key, brand_chinese, brand_short = extract_brand_from_product(product)
-    # 品牌文案：中文+英文（去掉斜杠）
-    brand_display = (BRAND_MAP.get(brand_key, brand_short)).replace('/', '')
-    region = BRAND_REGION.get(brand_key, '日本')
-
-    # 性别映射
-    gender_text = ""
-    if gender:
-        if gender.lower() in ['女', '女性', 'womens', 'ladies']:
-            gender_text = "女士"
-        elif gender.lower() in ['男', '男性', 'mens', 'men']:
-            gender_text = "男士"
-
-    # 🎯 智能季节判断（从表格数据优先）
-    current_season = extract_season_from_name(name, product) or get_season_by_date()
-    # 季节可带“款”可不带
-
-    # 品类提示（兜底给 GLM 明确方向，避免配件写成夹克）
-    name_hint = name.lower()
-    if any(k in name_hint for k in ['バッグ', 'bag', 'キャディ', 'caddy']):
-        category_hint = '高尔夫球包（中性，可不写性别）'
-    elif any(k in name_hint for k in ['ボール', 'ball']):
-        category_hint = '高尔夫球'
-    elif any(k in name_hint for k in ['cap', '帽', 'キャップ']):
-        category_hint = '帽子'
-    elif any(k in name_hint for k in ['glove', 'グローブ', '手套']):
-        category_hint = '手套'
-    else:
-        category_hint = '服装或配件，按商品名匹配准确品类'
-
-    target_tail = _resolve_target_category(product or {})
+    features = _collect_title_features(product)
+    example_title = build_template_title(features)
     tail_whitelist = '、'.join(ALLOWED_TAIL_CATEGORIES)
-    category_text = str(product.get('category', '') or '')
-    gender_text_raw = gender_text or '未标注'
     desc_text = (str(product.get('description') or product.get('详情页文字') or '')
                  [:80]).replace('\n', ' ')
-
     prompt = (
-        "请生成淘宝标题，长度 26-30 字，务必遵循下列规则：\n"
-        f"1) 格式：[地区][季节款][品牌]高尔夫[性别][功能词可选][品类结尾]，高尔夫固定只出现 1 次，放在品牌之后。\n"
-        f"2) 地区：{region}；季节：{current_season}（写成“{current_season}款”放品牌前）。\n"
-        f"3) 品牌：{brand_display or '请写实际品牌'}，可含品牌英文，禁止写“未知品牌”。性别：{gender_text or '按商品判定男士/女士/中性'}。\n"
-        "4) 功能词可选保暖/防泼水/弹力/抓绒/轻量/透气/速干，“中棉/中綿”统一写成棉服。\n"
-        f"5) 结尾必须是白名单品类之一：{tail_whitelist}；当前建议品类：{category_hint}（优先写 {target_tail}），除非品类是“高尔夫球”，否则禁止以单字“球”结尾，不要用“运动/时尚”。\n"
-        "6) 禁止出现正品/代购/旗舰/促销等词，只能使用简体中文和品牌英文，去掉日文假名、斜杠、特殊符号。\n"
-        f"补充信息：商品名《{name}》，分类/性别：{category_text} / {gender_text_raw}，描述片段：{desc_text}\n"
-        "直接输出符合格式的标题，不要解释。"
+        "你是一名资深电商标题优化师，请根据以下商品信息输出 1 条淘宝标题。\n"
+        "必须遵守：\n"
+        "1. 长度 26-30 个汉字，结构为“地区+季节款+品牌+高尔夫+性别+功能词+品类”。\n"
+        "2. 品牌写成“卡拉威Callaway”这类中文+英文组合，高尔夫只出现一次且紧跟品牌。\n"
+        "3. 性别写“男士/女士/中性”，若无法判断写“中性”。\n"
+        f"4. 功能词从保暖/防水/透气/轻量/弹力/抓绒/速干/防风/舒适中挑 1-2 个贴合特点，可省略。\n"
+        f"5. 结尾必须是以下品类之一：{tail_whitelist}，当前推荐：{features['target_category']}。\n"
+        "6. 禁止出现“正品/代购/旗舰/促销/淘宝/拼多多”等词，去掉日文假名、数字编号及符号，不要解释或加引号。\n"
+        f"示例：{example_title}\n\n"
+        "商品信息：\n"
+        f"- 品牌：{features['brand_display']}\n"
+        f"- 地区：{features['region']}  季节：{features['season_phrase']}\n"
+        f"- 性别：{features['gender_text']}\n"
+        f"- 推荐功能词：{features['feature_phrase'] or '保暖/轻量/透气'}\n"
+        f"- 品类：{features['target_category']}\n"
+        f"- 商品名称：{features['product_name']}\n"
+        f"- 描述片段：{desc_text}\n"
+        "只输出最终标题。"
     )
 
     return prompt
@@ -681,9 +737,11 @@ def generate_cn_title(product: Dict) -> str:
         else:
             print(f"尝试 {attempt + 1}: GLM返回空，重新生成")
 
-    # 如果2次都失败，返回空字符串
     print("❌ GLM生成失败，2次尝试未通过验证")
-    return ""
+    fallback_features = _collect_title_features(product)
+    fallback_title = build_template_title(fallback_features)
+    print(f"⚠️ 使用模板标题: {fallback_title}")
+    return fallback_title
 
 
 class TitleGenerationError(Exception):

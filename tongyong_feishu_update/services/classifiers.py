@@ -47,7 +47,7 @@ def determine_gender(product_data):
         return '男'
 
     # 检查产品名称 - 英文和日文
-    if any(word in product_name_lower for word in ['women', 'ladies', 'womens', 'レディース', '女性']):
+    if any(word in product_name_lower for word in ['women', 'ladies', 'womens', 'レディース', '女性', 'ウィメンズ']):
         return '女'
     elif any(word in product_name_lower for word in ['men', 'mens', '(mens)', 'メンズ', '男性']):
         return '男'
@@ -139,15 +139,17 @@ def determine_clothing_type(product_data):
     if has_any(['sock', 'socks', 'ソックス', '袜']):
         return '袜子'
 
-    # 配件类（当前单选列表未覆盖，统一回落到场训服）
+    # 配件类具体品类
     if has_any(['glove', 'グローブ', '手套']):
-        return '场训服'
+        return '手套'
+    if has_any(['headcover', 'head cover', 'ヘッドカバー', '头套', 'ヘッドカバーズ']):
+        return '头套'
     if has_any(['cap', 'hat', 'ハット', 'キャップ', 'バイザー', '帽']):
-        return '场训服'
+        return '帽子'
     if has_any(['ball', 'ボール', '高尔夫球']):
-        return '场训服'
+        return '高尔夫球'
     if has_any(['bag', 'バッグ', 'キャディ', 'caddy', 'tote', 'トート', 'pouch', 'ポーチ']):
-        return '场训服'
+        return '球包'
 
     return '场训服'
 
@@ -205,7 +207,12 @@ def map_to_taobao_category(product_data, clothing_type: str) -> str:
         '场训服': '场训服',
         '紧身衣裤': '紧身衣裤',
         '比赛服': '比赛服',
-        '套装': '套装'
+        '套装': '套装',
+        '帽子': '帽子',
+        '手套': '手套',
+        '头套': '头套',
+        '球包': '球包',
+        '高尔夫球': '高尔夫球'
     }
 
     # 其他非服装类或未在映射表中的，统一落到场训服以满足单选限制
