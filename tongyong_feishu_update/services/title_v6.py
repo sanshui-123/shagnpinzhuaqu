@@ -91,11 +91,11 @@ def extract_brand_from_product(product: Dict) -> Tuple[str, str, str]:
                 BRAND_SHORT_NAME[brand_key]
             )
 
-    # 默认
+    # 未匹配到品牌时，不强制回落卡拉威，返回未知品牌
     return (
-        'callawaygolf',
-        BRAND_MAP['callawaygolf'],
-        BRAND_SHORT_NAME['callawaygolf']
+        'unknown',
+        '未知品牌',
+        ''
     )
 
 # ============================================================================
@@ -245,19 +245,27 @@ def build_smart_prompt(product: Dict) -> str:
     else:
         category_hint = '服装或配件，按商品名匹配准确品类'
 
+    # 拼接辅助信息，弥补分类文件字段缺失
+    category_text = str(product.get('category', '') or '')
+    desc_text = str(product.get('description', '') or '')[:80]
+    gender_text_raw = gender_text or '未提供'
+
     # 短提示词，明确结构，避免冗长
     prompt = (
         f"生成淘宝标题，长度26-30字，格式：[地区][季节款][品牌]高尔夫[性别][功能词可选][品类结尾]。\n"
         f"- 地区：{region}\n"
         f"- 季节：{current_season}（可带“款”也可省略，季节放品牌前，不要改变顺序）\n"
-        f"- 品牌：{brand_display}（可含品牌英文和空格，去掉斜杠）\n"
+        f"- 品牌：{brand_display or '未知品牌'}（可含品牌英文和空格，去掉斜杠）\n"
         f"- 性别：{gender_text or '可不写（中性/未知）'}\n"
         f"- 功能词：保暖/防泼水/弹力/抓绒/轻量/棉服等，无则省略；“中棉/中綿”统一理解为“棉服”\n"
         f"- 品类提示：{category_hint}；结尾必须是具体品类（夹克/卫衣/棉服/长裤/背心/帽子/球包/球/手套等），必须与商品匹配，不要用“运动/时尚”作结尾\n"
-        f"- “高尔夫”必须且只出现1次（固定放在品牌之后），优先级高于“款”\n"
+        f"- “高尔夫”必须且只出现1次（固定放在品牌之后），缺失视为不合格，优先级高于“款”\n"
+        f"补充信息：\n"
+        f"- 原始名称：{name}\n"
+        f"- 分类/性别：{category_text} / {gender_text_raw}\n"
+        f"- 描述片段：{desc_text}\n"
         f"要求：只用简体中文和品牌英文，去掉日文假名、斜杠和特殊符号；“高尔夫”只出现1次；"
         f"禁止出现正品/代购/旗舰/促销等词。\n"
-        f"商品名：{name}\n"
         f"直接输出标题。"
     )
 
@@ -429,6 +437,10 @@ def _get_forced_category(product: Dict) -> str:
     name_hint = (product.get('productName') or product.get('title') or '').lower()
     cat_hint = str(product.get('category', '') or '').lower()
     text = name_hint + ' ' + cat_hint
+    # 若明显是服装关键词，避免误判为配件
+    apparel_tokens = ['jacket', 'ブルゾン', 'coat', 'パーカー', 'hoodie', 'pants', 'パンツ', 'shirt', 'シャツ', 'sweat', '卫衣', '夹克']
+    if any(t in text for t in apparel_tokens):
+        pass  # 不提前返回，让后续服装判定继续
     # 包/球包
     if any(k in text for k in ['バッグ', 'bag', 'キャディ', 'caddy', 'tote', 'トート', 'pouch', 'ポーチ']):
         return '球包' if 'caddy' in text or 'キャディ' in text else '包'
@@ -506,8 +518,6 @@ def optimize_title(title: str, product: Dict = None) -> str:
             if '包' not in title:
                 title += '包'
         elif forced_cat == '球':
-            # 避免“球杆头套”
-            title = title.replace('球杆头套', '高尔夫球')
             if '球' not in title:
                 title += '高尔夫球'
         elif forced_cat == '手套':
@@ -641,13 +651,25 @@ def validate_title(title: str, product: Dict) -> bool:
     if '高尔夫' not in title or title.count('高尔夫') != 1:
         return False
 
-    # 3. 必须包含对应品牌
+    # 3. 必须包含对应品牌（若无法识别品牌则跳过此校验）
     brand_key, brand_chinese, brand_short = extract_brand_from_product(product)
-    brand_short_clean = brand_short.replace('/', '')
-    brand_full_clean = BRAND_MAP.get(brand_key, brand_short).replace('/', '')
-    title_nospace = title.replace(' ', '')
-    if brand_short_clean.replace(' ', '') not in title_nospace and brand_full_clean.replace(' ', '') not in title_nospace:
-        return False
+    brand_short_clean = (brand_short or '').replace('/', '')
+    brand_full_clean = BRAND_MAP.get(brand_key, brand_short) or ''
+    brand_full_clean = brand_full_clean.replace('/', '')
+    title_nospace = title.replace(' ', '').lower()
+
+    if brand_key != 'unknown':
+        candidates = set()
+        if brand_short_clean:
+            candidates.add(brand_short_clean.replace(' ', '').lower())
+        if brand_full_clean:
+            candidates.add(brand_full_clean.replace(' ', '').lower())
+        # 加入品牌关键词（去空格/斜杠）作为候选
+        for kw in BRAND_KEYWORDS.get(brand_key, []):
+            candidates.add(kw.replace(' ', '').replace('/', '').lower())
+        # 匹配任一即可
+        if not any(c and c in title_nospace for c in candidates):
+            return False
 
     # 4. 不能包含禁止词汇
     forbidden_words = [
