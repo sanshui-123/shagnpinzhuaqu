@@ -114,6 +114,7 @@ class SingleUnifiedProcessor {
                 html: result.sizeChart.html || '',
                 text: result.sizeChart.text || ''
             } : {},
+            variantInventory: result.variantInventory || [],
             category: result.category || "",
             sku: "",
             status: "",
@@ -132,7 +133,8 @@ class SingleUnifiedProcessor {
                 图片链接: result.imageUrls || [],
                 尺码: result.sizes || [],
                 详情页文字: result.description,
-                尺码表: result.sizeChart
+                尺码表: result.sizeChart,
+                变体库存: result.variantInventory || []
             }
         };
     }

@@ -1142,6 +1142,89 @@ class UnifiedDetailScraper {
                     return { variantInventory: allVariants };
                 }
 
+                // 配件专用兜底：从select获取颜色，从尺码表获取FR，检查库存状态
+                console.log('🐛 尝试配件专用解析（select颜色 + FR尺码）...');
+                const accessoryInventory = await page.evaluate(() => {
+                    const variants = [];
+
+                    // 1. 从select获取所有颜色选项
+                    const colorSelect = document.querySelector('select[aria-label="colorを選択"]');
+                    if (!colorSelect) {
+                        console.log('❌ 未找到颜色select');
+                        return [];
+                    }
+
+                    const colors = Array.from(colorSelect.options)
+                        .map(opt => opt.textContent.trim())
+                        .filter(c => c && c !== '選択してください');
+
+                    if (colors.length === 0) {
+                        console.log('❌ 颜色列表为空');
+                        return [];
+                    }
+
+                    // 2. 查找尺码（通常配件只有FR）
+                    // 尝试从多个位置查找尺码
+                    let sizes = [];
+
+                    // 方法A: 从尺码表的表头查找
+                    const sizeHeaders = document.querySelectorAll('table th');
+                    for (const th of sizeHeaders) {
+                        const text = th.textContent.trim();
+                        if (text === 'FR' || text.match(/^[A-Z]{1,3}$/)) {
+                            sizes.push(text);
+                        }
+                    }
+
+                    // 方法B: 从尺码表的第一列查找
+                    if (sizes.length === 0) {
+                        const firstCells = document.querySelectorAll('table tbody tr th');
+                        for (const cell of firstCells) {
+                            const text = cell.textContent.trim();
+                            if (text === 'FR' || text.match(/^[A-Z]{1,3}$/)) {
+                                sizes.push(text);
+                            }
+                        }
+                    }
+
+                    // 方法C: 默认使用FR（配件通用尺码）
+                    if (sizes.length === 0) {
+                        sizes = ['FR'];
+                    }
+
+                    // 3. 检查库存状态
+                    const stockStatus = document.querySelector('.c_stock-status, .stock-status, span.c_stock-status, span.stock-status');
+                    const stockText = stockStatus ? stockStatus.textContent.trim() : '';
+
+                    // 判断是否有货：包含○或△，不包含×
+                    const inStock = /[○◯△]/.test(stockText) && !/[×✕]/.test(stockText);
+
+                    // 4. 为每个颜色+尺码组合创建变体
+                    for (const color of colors) {
+                        for (const size of sizes) {
+                            variants.push({
+                                color: color,
+                                size: size,
+                                inStock: inStock
+                            });
+                        }
+                    }
+
+                    return variants;
+                });
+
+                if (accessoryInventory && accessoryInventory.length > 0) {
+                    console.log(`✅ 采用配件布局解析，获得 ${accessoryInventory.length} 个变体`);
+
+                    // 显示每个变体的详情
+                    accessoryInventory.forEach(v => {
+                        console.log(`  ${v.color} - ${v.size}: ${v.inStock ? '有货' : '无货'}`);
+                    });
+
+                    return { variantInventory: accessoryInventory };
+                }
+
+                console.log('❌ 配件解析也失败，返回空数组');
                 return { variantInventory: [] };
             }
 
