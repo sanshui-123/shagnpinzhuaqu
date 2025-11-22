@@ -78,19 +78,42 @@ class UnifiedDetailScraper {
             console.log('🎨 抓取颜色和尺码...');
             const colorsAndSizes = await this.extractColorsAndSizes(page);
 
+            // 📦 抓取库存信息
+            console.log('📦 抓取库存状态...');
+            const inventoryData = await this.extractVariantInventory(page);
+
+            let stockStatus = 'in_stock';
+            let finalName = basicInfo.productName;
+            if (inventoryData.variantInventory && inventoryData.variantInventory.length > 0) {
+                const hasStock = inventoryData.variantInventory.some(v => v.inStock);
+                if (!hasStock) {
+                    stockStatus = 'out_of_stock';
+                    if (finalName && !finalName.startsWith('【缺货】')) {
+                        finalName = `【缺货】${finalName}`;
+                    }
+                    console.log('⚠️ 所有变体缺货');
+                } else if (!inventoryData.variantInventory.every(v => v.inStock)) {
+                    stockStatus = 'partial_stock';
+                }
+            }
+
             // 组装最终结果
             const result = {
                 success: true,
                 url: url,
                 timestamp: new Date().toISOString(),
                 ...basicInfo,
+                productName: finalName,
                 ...colorsAndSizes,
                 imageUrls: images,
+                variantInventory: inventoryData.variantInventory || [],
+                stockStatus,
                 sizeChart: sizeChartData,
                 _scraper_info: {
                     version: 'unified_v1.0',
                     debug_mode: this.options.debug,
                     size_chart_method: sizeChartData.method,
+                    inventory_extracted: inventoryData.variantInventory ? inventoryData.variantInventory.length : 0,
                     processing_time: new Date().toISOString()
                 }
             };
@@ -564,6 +587,182 @@ class UnifiedDetailScraper {
     /**
      * 抓取颜色和尺码信息 - 修复版本，避免重复和无效值
      */
+    /**
+     * 📦 抓取库存状态信息
+     */
+    async extractVariantInventory(page) {
+        try {
+            const variantInventory = [];
+
+            // 获取所有颜色选项
+            const colorOptions = await page.evaluate(() => {
+                const colors = [];
+                const colorItems = document.querySelectorAll('#color-selector li, .color-selector li, .commodityColorList li');
+
+                colorItems.forEach((item, index) => {
+                    const img = item.querySelector('img');
+                    const link = item.querySelector('a');
+                    const colorName = img ? img.getAttribute('alt') : (item.textContent || '');
+                    const isCurrent = item.classList.contains('currentCommodityColor') || item.classList.contains('current');
+                    const href = link ? link.getAttribute('href') : '';
+
+                    if (colorName) {
+                        colors.push({
+                            index,
+                            colorName: colorName.replace(/[（(][A-Z0-9]+[)）]/g, '').trim(),
+                            fullName: colorName.trim(),
+                            isCurrent,
+                            url: href
+                        });
+                    }
+                });
+
+                return colors;
+            });
+
+            console.log(`📦 发现 ${colorOptions.length} 个颜色选项`);
+
+            // 遍历颜色逐个检查库存
+            for (let i = 0; i < colorOptions.length; i++) {
+                const colorOption = colorOptions[i];
+                console.log(`🎨 选择颜色: ${colorOption.colorName || colorOption.fullName}`);
+
+                // 导航到颜色页面，带重试机制
+                let navigated = false;
+                if (!colorOption.isCurrent && colorOption.url) {
+                    const colorUrl = colorOption.url.startsWith('http')
+                        ? colorOption.url
+                        : `https://store.descente.co.jp${colorOption.url}`;
+                    console.log(`  📍 导航到: ${colorUrl}`);
+
+                    // 尝试导航，失败后重试一次
+                    for (let retry = 0; retry < 2; retry++) {
+                        try {
+                            await page.goto(colorUrl, { waitUntil: 'domcontentloaded', timeout: 60000 });
+                            await page.waitForTimeout(2000);
+                            navigated = true;
+                            if (retry > 0) {
+                                console.log(`  ✅ 重试成功`);
+                            }
+                            break;
+                        } catch (err) {
+                            if (retry === 0) {
+                                console.log(`  ⚠️ 导航失败，正在重试... (${err.message})`);
+                            } else {
+                                console.log(`  ❌ 导航到颜色页面失败（已重试）: ${err.message}`);
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!navigated) {
+                        continue;
+                    }
+                } else {
+                    navigated = true;
+                }
+
+                const sizeStocks = await page.evaluate(() => {
+                    const stocks = [];
+
+                    const sizeList = document.querySelector('.shopping_cantrol.commoditySizelist, .commoditySizelist');
+                    if (sizeList) {
+                        const text = sizeList.innerText || sizeList.textContent || '';
+                        const lines = text.split(/\n/);
+                        let currentSize = null;
+
+                        lines.forEach(line => {
+                            const trimmed = line.trim();
+                            const sizeMatch = trimmed.match(/^(\d{2,3}|[SMLX]+|LL|3L|4L|5L)$/);
+                            if (sizeMatch) {
+                                currentSize = sizeMatch[1];
+                            } else if (currentSize && trimmed) {
+                                const symbol = trimmed.replace(/.*([○△✕×✖Xx]).*/, '$1');
+                                let inStock = true;
+                                let status = 'normal';
+
+                                if (/✕|×|✖|X/i.test(symbol) || /sold\s*out|品切|なし/i.test(trimmed)) {
+                                    inStock = false;
+                                    status = 'oos';
+                                } else if (/△|残りわずか|少量/i.test(trimmed)) {
+                                    status = 'little';
+                                    inStock = true;
+                                } else if (/○|在庫あり|有り/i.test(trimmed)) {
+                                    inStock = true;
+                                    status = 'normal';
+                                } else {
+                                    return;
+                                }
+
+                                if (!stocks.find(s => s.size === currentSize)) {
+                                    stocks.push({ size: currentSize, inStock, status });
+                                }
+                            }
+                        });
+                    }
+
+                    if (stocks.length === 0) {
+                        const popupStock = document.querySelector('.popupRelatedStock');
+                        if (popupStock) {
+                            const text = popupStock.textContent || '';
+                            const stockPattern = /(\d{2,3}|[SMLX]+|LL|3L)\s*[:：]\s*([○△✕×✖Xx])(?:\d*点)?/g;
+                            let match;
+                            while ((match = stockPattern.exec(text)) !== null) {
+                                const size = match[1];
+                                const symbol = match[2];
+                                const inStock = symbol === '○' || symbol === '△';
+                                const status = symbol === '○' ? 'normal' : (symbol === '△' ? 'little' : 'oos');
+                                stocks.push({ size, inStock, status });
+                            }
+                        }
+                    }
+
+                    if (stocks.length === 0) {
+                        const cartButtons = document.querySelectorAll('.btnCart, .btnAddCart, button[name=\"cart\"]');
+                        cartButtons.forEach(btn => {
+                            const text = btn.textContent.trim();
+                            if (text.includes('カートに入れる') || text.includes('添加到购物车')) {
+                                stocks.push({ size: '均码', inStock: true, status: 'normal' });
+                            } else if (text.includes('入荷連絡') || text.includes('売り切れ')) {
+                                stocks.push({ size: '均码', inStock: false, status: 'oos' });
+                            }
+                        });
+                    }
+
+                    return stocks;
+                });
+
+                if (!sizeStocks || sizeStocks.length === 0) {
+                    console.log(`⚠️ 未找到颜色 ${colorOption.colorName} 的库存信息`);
+                    continue;
+                }
+
+                sizeStocks.forEach(stock => {
+                    variantInventory.push({
+                        color: colorOption.colorName || colorOption.fullName,
+                        size: stock.size,
+                        inStock: stock.inStock,
+                        status: stock.status || (stock.inStock ? 'normal' : 'oos')
+                    });
+                });
+            }
+
+            return {
+                variantInventory,
+                totalVariants: variantInventory.length,
+                inStockCount: variantInventory.filter(v => v.inStock).length,
+                outOfStockCount: variantInventory.filter(v => !v.inStock).length
+            };
+
+        } catch (error) {
+            console.log('❌ 库存信息提取失败:', error.message);
+            return {
+                variantInventory: [],
+                error: error.message
+            };
+        }
+    }
+
     async extractColorsAndSizes(page) {
         return await page.evaluate(() => {
             const result = {
