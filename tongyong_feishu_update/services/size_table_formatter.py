@@ -184,7 +184,8 @@ class SizeTableFormatter:
         rows = re.findall(tr_pattern, html, re.DOTALL)
 
         extracted_lines = []
-        key_value_pairs = {}  # 用于存储key-value对
+        table_headers = []  # 存储表头
+        table_data = []     # 存储数据行
 
         for row in rows:
             # 同时提取表头(th)和单元格(td)
@@ -210,29 +211,60 @@ class SizeTableFormatter:
                 if clean_text:
                     clean_cells.append(clean_text)
 
-            # 处理表头-单元格配对
-            if clean_headers and clean_cells:
-                for header, cell in zip(clean_headers, clean_cells):
-                    if header and cell:
-                        # 跳过纯商品编号和品牌信息
-                        if any(keyword in header for keyword in ['商品番号', 'ブランド商品番号', 'ブランド名']):
-                            continue
+            # 如果这一行只有表头，保存为表头
+            if clean_headers and not clean_cells:
+                if not table_headers:  # 只保存第一行表头
+                    table_headers = clean_headers
+            # 如果这一行有数据单元格
+            elif clean_cells:
+                # 第一个单元格可能是th（尺码），其余是td（数据）
+                if clean_headers:
+                    # 表头+单元格的组合（例如：<th>4</th><td>108cm</td><td>64.5cm</td>...）
+                    row_data = clean_headers + clean_cells
+                else:
+                    row_data = clean_cells
+                table_data.append(row_data)
 
-                        # 翻译键名
-                        translated_key = self._translate_measurement_name(header)
-                        if translated_key and translated_key != header:
-                            key_value_pairs[translated_key] = cell
-                        else:
-                            key_value_pairs[header] = cell
+        # 如果没有找到表头和数据，返回空
+        if not table_data:
+            return []
 
-            # 处理只有单元格的情况（单列数据）
-            elif len(clean_cells) == 1:
-                # 这种情况可能是简单的值，尝试与之前的表头配对
-                pass  # 暂时跳过，因为我们没有上下文
+        # 翻译表头
+        translated_headers = []
+        for header in table_headers:
+            # 跳过纯商品编号和品牌信息
+            if any(keyword in header for keyword in ['商品番号', 'ブランド商品番号', 'ブランド名']):
+                continue
+            translated = self._translate_measurement_name(header)
+            translated_headers.append(translated if translated != header else header)
 
-        # 生成输出行
-        for key, value in key_value_pairs.items():
-            extracted_lines.append(f"{key}: {value}")
+        # 格式化每一行数据
+        for row_data in table_data:
+            if not row_data:
+                continue
+
+            # 第一个元素是尺码
+            size_value = row_data[0]
+            size_label = self._map_size_label(str(size_value))
+            if not size_label:
+                size_label = f"{size_value}码"
+
+            # 其余元素是测量数据
+            measurements = []
+            for idx, value in enumerate(row_data[1:]):
+                value_str = str(value).strip()
+                if not value_str:
+                    continue
+
+                # 如果有表头，使用翻译后的表头名
+                if idx < len(translated_headers) - 1:  # -1 因为第一个表头是"サイズ"
+                    header_name = translated_headers[idx + 1]
+                    measurements.append(f"{header_name}{value_str}")
+                else:
+                    measurements.append(value_str)
+
+            if measurements:
+                extracted_lines.append(f"{size_label}: {' | '.join(measurements)}")
 
         return extracted_lines
 

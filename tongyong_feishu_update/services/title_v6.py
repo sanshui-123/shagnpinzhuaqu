@@ -42,6 +42,15 @@ BRAND_REGION = {
     'footjoy': '日本',
 }
 
+# 品类白名单（结尾必须命中其中之一）
+ALLOWED_TAIL_CATEGORIES = [
+    '夹克', '外套', '卫衣', '棉服', '马甲', '背心', '连帽衫',
+    '短袖', '长袖', 'T恤', 'POLO',
+    '短裤', '长裤', '短裙', '连衣裙',
+    '帽子', '手套', '球包', '高尔夫球',
+    '紧身衣裤', '训练服', '场训服', '腰带', '袜子', '其他'
+]
+
 # ============================================================================
 # 品牌提取功能
 # ============================================================================
@@ -249,24 +258,25 @@ def build_smart_prompt(product: Dict) -> str:
     category_text = str(product.get('category', '') or '')
     desc_text = str(product.get('description', '') or '')[:80]
     gender_text_raw = gender_text or '未提供'
+    target_tail = _resolve_target_category(product)
+    tail_whitelist = '、'.join(ALLOWED_TAIL_CATEGORIES)
 
     # 短提示词，明确结构，避免冗长
     prompt = (
-        f"生成淘宝标题，长度26-30字，格式：[地区][季节款][品牌]高尔夫[性别][功能词可选][品类结尾]。\n"
+        f"生成淘宝标题，长度26-30字，固定格式：[地区][季节款][品牌]高尔夫[性别][功能词可选][品类结尾]。\n"
         f"- 地区：{region}\n"
-        f"- 季节：{current_season}（可带“款”也可省略，季节放品牌前，不要改变顺序）\n"
-        f"- 品牌：{brand_display or '未知品牌'}（可含品牌英文和空格，去掉斜杠）\n"
-        f"- 性别：{gender_text or '可不写（中性/未知）'}\n"
-        f"- 功能词：保暖/防泼水/弹力/抓绒/轻量/棉服等，无则省略；“中棉/中綿”统一理解为“棉服”\n"
-        f"- 品类提示：{category_hint}；结尾必须是具体品类（夹克/卫衣/棉服/长裤/背心/帽子/球包/球/手套等），必须与商品匹配，不要用“运动/时尚”作结尾\n"
-        f"- “高尔夫”必须且只出现1次（固定放在品牌之后），缺失视为不合格，优先级高于“款”\n"
+        f"- 季节：{current_season}（放品牌前，可带“款”可省略）\n"
+        f"- 品牌：{brand_display or '请按商品实际品牌写齐，不要写未知'}（必须出现，可含品牌英文，去掉斜杠）\n"
+        f"- 性别：{gender_text or '男/女/中性三选一，缺失时按商品推断'}，放在品类前或结尾\n"
+        f"- 功能词：保暖/防泼水/弹力/抓绒/轻量/棉服等，无则省略；“中棉/中綿”统一为“棉服”\n"
+        f"- 品类：{category_hint}，结尾必须是白名单品类之一（{tail_whitelist}），当前优先用「{target_tail}」，不要用“运动/时尚”作结尾\n"
+        f"- “高尔夫”只出现1次，固定放品牌后，禁止出现在结尾或多次出现\n"
         f"补充信息：\n"
         f"- 原始名称：{name}\n"
         f"- 分类/性别：{category_text} / {gender_text_raw}\n"
         f"- 描述片段：{desc_text}\n"
-        f"要求：只用简体中文和品牌英文，去掉日文假名、斜杠和特殊符号；“高尔夫”只出现1次；"
-        f"禁止出现正品/代购/旗舰/促销等词。\n"
-        f"直接输出标题。"
+        f"要求：只用简体中文和品牌英文，去掉日文假名、斜杠和特殊符号；结尾品类必须在白名单；“高尔夫”仅1次；"
+        f"禁止出现正品/代购/旗舰/促销等词；直接输出标题。\n"
     )
 
     return prompt
@@ -462,6 +472,40 @@ def _get_forced_category(product: Dict) -> str:
     return ''
 
 
+def _resolve_target_category(product: Dict) -> str:
+    """综合分类/名称/强制品类，确定标题尾部使用的品类"""
+    # 优先使用强制品类
+    forced = _get_forced_category(product)
+    if forced == '球':
+        forced = '高尔夫球'
+    if forced:
+        return forced
+
+    # 其次使用分类文本命中白名单
+    category_text = str(product.get('category', '') or '').lower()
+    for cat in ALLOWED_TAIL_CATEGORIES:
+        if cat.lower() in category_text:
+            return cat
+
+    # 兜底：若产品名中含常见品类关键词
+    name_hint = (product.get('productName') or product.get('title') or '').lower()
+    for cat in ALLOWED_TAIL_CATEGORIES:
+        if cat.lower() in name_hint:
+            return cat
+
+    return '其他'
+
+
+def _match_allowed_tail(title: str) -> str:
+    """匹配标题结尾的品类（按白名单和常见错误尾巴）"""
+    for cat in sorted(ALLOWED_TAIL_CATEGORIES, key=len, reverse=True):
+        if title.endswith(cat):
+            return cat
+    if title.endswith('球'):
+        return '球'
+    return ''
+
+
 def optimize_title(title: str, product: Dict = None) -> str:
     """
     优化标题，解决之前遇到的问题
@@ -470,6 +514,7 @@ def optimize_title(title: str, product: Dict = None) -> str:
         return title
 
     forced_cat = _get_forced_category(product or {})
+    target_cat = _resolve_target_category(product or {})
 
     # 1. 去除日文、斜杠和特殊符号，保留品牌英文与空格；移除通用英文占位如 UNISEX
     japanese_pattern = re.compile(r'[\u3040-\u309F\u30A0-\u30FF\uFF66-\uFF9F]')
@@ -490,8 +535,8 @@ def optimize_title(title: str, product: Dict = None) -> str:
 
     # 确保"高尔夫"只出现一次
     if title.count('高尔夫') > 1:
-        parts = title.split('高尔夫')
-        title = parts[0] + '高尔夫' + ''.join(parts[1:])
+        first_idx = title.find('高尔夫')
+        title = title[: first_idx + len('高尔夫')] + title.replace('高尔夫', '', 1).replace('高尔夫', '')
 
     # 3. 如长度因补“高尔夫”超长，优先移除修饰词/低优先占位再截断
     if len(title) > 30:
@@ -546,6 +591,34 @@ def optimize_title(title: str, product: Dict = None) -> str:
                     title = title[:30 - len(forced_cat)] + forced_cat
                 else:
                     title = forced_cat[:30]
+
+    # 4.5 结尾品类白名单与尾部“球”纠偏
+    tail = _match_allowed_tail(title)
+    if tail == '球' and target_cat != '高尔夫球':
+        title = title[:-1] + target_cat
+    elif tail and tail not in ALLOWED_TAIL_CATEGORIES:
+        title = title[: -len(tail)] + target_cat
+    elif not tail:
+        title = title.rstrip(' ，。,.、') + target_cat
+
+    # 品牌缺失时补品牌短名（放在最前）
+    brand_key, brand_chinese, brand_short = extract_brand_from_product(product or {})
+    brand_main = (brand_short or brand_chinese or '').replace('/', '')
+    if brand_key != 'unknown' and brand_main:
+        normalized = title.replace(' ', '').lower()
+        if brand_main.replace(' ', '').lower() not in normalized:
+            title = brand_main + title
+
+    # 性别缺失时补
+    gender_word = ''
+    gender_val = str((product or {}).get('gender', '') or '')
+    if gender_val:
+        if gender_val.lower() in ['女', '女性', 'womens', 'ladies']:
+            gender_word = '女士'
+        elif gender_val.lower() in ['男', '男性', 'mens', 'men']:
+            gender_word = '男士'
+    if gender_word and gender_word not in title:
+        title = title + gender_word
 
     # 5. 去除连续重复的词
     words = list(title)
@@ -689,6 +762,13 @@ def validate_title(title: str, product: Dict) -> bool:
     if re.search(r'(.)\1{2,}', title):  # 3个及以上相同字符连续
         return False
     if re.search(r'(..)\1{2,}', title):  # 2字词语重复3次
+        return False
+
+    # 8. 结尾品类必须在白名单，且非高尔夫球时不得以“球”结尾
+    tail = _match_allowed_tail(title)
+    if tail == '' or tail == '球':
+        return False
+    if tail not in ALLOWED_TAIL_CATEGORIES:
         return False
 
     return True

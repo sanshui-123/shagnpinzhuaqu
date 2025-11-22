@@ -288,6 +288,37 @@ class UnifiedDetailScraper {
                     await sizeTab.click();
                     await page.waitForSelector('div.c_table--wrapper, div.table-wrapper table, div.table-wrapper', { timeout: 5000 });
                     console.log('✅ 点击了「サイズ表記」tab');
+
+                    // 等待表格内容加载完成 - 等待包含具体尺寸数据的表格出现
+                    console.log('⏳ 等待表格内容加载...');
+                    await page.waitForFunction(() => {
+                        const tables = document.querySelectorAll('div.c_table--wrapper table, table');
+                        for (const table of tables) {
+                            const text = table.textContent;
+                            // 检查是否包含尺寸数据（cm单位）
+                            if (text.includes('cm') && text.includes('サイズ')) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }, { timeout: 10000 });
+
+                    console.log('✅ 表格内容已加载');
+                    await page.waitForTimeout(1000); // 额外等待确保完全渲染
+
+                    // 🎯 优先策略：点击tab后直接提取页面上的表格
+                    console.log('🔍 方法0: 直接提取サイズ表記tab下的表格...');
+                    const directResult = await this.extractSizeChartFromPage(page);
+                    if (directResult.hasContent) {
+                        console.log('✅ 成功从サイズ表記tab直接提取到完整尺码表');
+                        return {
+                            success: true,
+                            method: '点击サイズ表記tab后直接提取',
+                            html: directResult.html,
+                            text: directResult.text,
+                            tables: directResult.tables
+                        };
+                    }
                 }
             } catch (e) {
                 console.log('⚠️ 点击サイズ表記失败，继续后续策略:', e.message);
