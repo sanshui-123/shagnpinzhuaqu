@@ -673,12 +673,11 @@ def generate_cn_title(product: Dict) -> str:
 
             title = optimize_title(title, product)
 
-            # 简单验证：标题非空且包含中文字符
-            if title and any('\u4e00' <= c <= '\u9fff' for c in title):
+            if validate_title(title, product):
                 print(f"✅ 标题生成成功: {title}")
                 return title
             else:
-                print(f"尝试 {attempt + 1}: 验证失败（无中文或为空），重新生成")
+                print(f"尝试 {attempt + 1}: 验证失败，重新生成")
         else:
             print(f"尝试 {attempt + 1}: GLM返回空，重新生成")
 
