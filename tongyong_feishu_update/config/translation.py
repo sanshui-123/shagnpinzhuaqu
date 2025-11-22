@@ -179,6 +179,7 @@ COLOR_NAME_TRANSLATION = {
     'ネイビーベース': '深蓝底色',  # Navy Base
     'ライト杢グレー': '浅麻灰',   # Light Heather Gray
     'サックス×ホワイト': '浅蓝/白',  # Sax × White
+    'ベージュベース': '米色底色',
 
     # 新增颜色翻译
     'オフホワイト': '米白',
