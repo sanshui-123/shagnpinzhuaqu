@@ -52,7 +52,7 @@ def determine_gender(product_data):
     elif any(word in product_name_lower for word in ['men', 'mens', '(mens)', 'メンズ', '男性']):
         return '男'
     else:
-        return '男'  # 默认男
+        return '中性'  # 默认中性，避免误判男
 
 def determine_clothing_type(product_data):
     """根据标题/分类/URL 粗分服装类型（直接对接淘宝类目映射前的内部类型）"""
@@ -98,7 +98,7 @@ def determine_clothing_type(product_data):
         return 'POLO'
 
     # 短袖 / T恤
-    if has_any(['t-shirt', 'tshirt', 'tee', '短袖', '半袖']):
+    if has_any(['t-shirt', 'tshirt', 'tee', '短袖', '半袖', 't恤']):
         return '短袖'
 
     # 长袖上衣（针织、衬衫、毛衣、开衫）
@@ -128,6 +128,16 @@ def determine_clothing_type(product_data):
         return '腰带'
     if has_any(['sock', 'socks', 'ソックス', '袜']):
         return '袜子'
+
+    # 配件类
+    if has_any(['glove', 'グローブ', '手套']):
+        return '手套'
+    if has_any(['cap', 'hat', 'ハット', 'キャップ', 'バイザー', '帽']):
+        return '帽子'
+    if has_any(['ball', 'ボール', '高尔夫球']):
+        return '高尔夫球'
+    if has_any(['bag', 'バッグ', 'キャディ', 'caddy', 'tote', 'トート', 'pouch', 'ポーチ']):
+        return '球包'
 
     return '其他'
 
@@ -178,7 +188,12 @@ def map_to_taobao_category(product_data, clothing_type: str) -> str:
         '短袖': '短袖',
         '长袖': '长袖',
         '训练服': '训练服',
-        '紧身衣裤': '紧身衣裤'
+        '紧身衣裤': '紧身衣裤',
+        '手套': '手套',
+        '帽子': '帽子',
+        '高尔夫球': '高尔夫球',
+        '球包': '球包',
+        '包': '球包'
     }
 
     return mapping.get(ctype, '其他')

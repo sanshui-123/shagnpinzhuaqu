@@ -141,11 +141,11 @@ class FieldAssembler:
             fields['性别'] = gender
         if clothing_type:
             mapped_category = map_to_taobao_category(product, clothing_type)
-            fields['衣服分类'] = mapped_category
+        fields['衣服分类'] = mapped_category
 
         # 品牌名（使用简短中文）
         _, brand_chinese, brand_short = brand_module.extract_brand_from_product(product)
-        fields['品牌名'] = brand_short
+        fields['品牌名'] = brand_short or brand_chinese or BRAND_MAP.get('unknown', '未知品牌')
 
         # 📦 处理库存状态数据（如果有）
         variant_inventory = product.get('variantInventory', [])
@@ -235,6 +235,7 @@ class FieldAssembler:
             colors = []
             print(f"⚠️ 商品全部缺货，清空颜色列表")
 
+        colors = colors or []
         color_multiline = translation.build_color_multiline(colors)
         fields['颜色'] = color_multiline if color_multiline else ''  # 只有真的为空时才为空
 

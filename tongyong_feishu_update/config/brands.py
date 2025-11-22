@@ -360,9 +360,31 @@ def extract_brand_from_product(product):
                 BRAND_SHORT_NAME.get(brand_key, brand_key)
             )
     
+    # 兜底：如果 product 带有品牌字段/brandId/_scraper_info.brand，直接使用
+    fallback_brand = (
+        product.get('brand') or
+        product.get('brandId') or
+        product.get('brand_id') or
+        product.get('brandId', '')
+    )
+    if not fallback_brand and isinstance(product, dict):
+        fallback_brand = product.get('brandId')
+    if not fallback_brand:
+        info = product.get('_scraper_info', {})
+        if isinstance(info, dict):
+            fallback_brand = info.get('brand', '')
+
+    if fallback_brand:
+        brand_key = BRAND_ALIASES.get(fallback_brand.lower(), fallback_brand.lower())
+        return (
+            brand_key,
+            BRAND_MAP.get(brand_key, brand_key),
+            BRAND_SHORT_NAME.get(brand_key, brand_key)
+        )
+
     # 如果没有匹配，尝试通过域名匹配（针对 callawaygolf.jp）
     if 'callawaygolf' in detail_url or 'callaway' in combined_text:
         return ('callawaygolf', BRAND_MAP['callawaygolf'], BRAND_SHORT_NAME['callawaygolf'])
     
-    # 默认返回 Callaway
-    return ('callawaygolf', BRAND_MAP['callawaygolf'], BRAND_SHORT_NAME['callawaygolf'])
+    # 未匹配到品牌时，返回 unknown，避免误判成卡拉威
+    return ('unknown', '未知品牌', '')
