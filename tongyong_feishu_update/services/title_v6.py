@@ -221,7 +221,7 @@ def build_smart_prompt(product: Dict) -> str:
     region = BRAND_REGION.get(brand_key, '日本')
 
     # 性别映射
-    gender_text = "男士"  # 默认
+    gender_text = ""
     if gender:
         if gender.lower() in ['女', '女性', 'womens', 'ladies']:
             gender_text = "女士"
@@ -232,15 +232,28 @@ def build_smart_prompt(product: Dict) -> str:
     current_season = extract_season_from_name(name, product) or get_season_by_date()
     # 季节可带“款”可不带
 
+    # 品类提示（兜底给 GLM 明确方向，避免配件写成夹克）
+    name_hint = name.lower()
+    if any(k in name_hint for k in ['バッグ', 'bag', 'キャディ', 'caddy']):
+        category_hint = '高尔夫球包（中性，可不写性别）'
+    elif any(k in name_hint for k in ['ボール', 'ball']):
+        category_hint = '高尔夫球'
+    elif any(k in name_hint for k in ['cap', '帽', 'キャップ']):
+        category_hint = '帽子'
+    elif any(k in name_hint for k in ['glove', 'グローブ', '手套']):
+        category_hint = '手套'
+    else:
+        category_hint = '服装或配件，按商品名匹配准确品类'
+
     # 短提示词，明确结构，避免冗长
     prompt = (
         f"生成淘宝标题，长度26-30字，格式：[地区][季节款][品牌]高尔夫[性别][功能词可选][品类结尾]。\n"
         f"- 地区：{region}\n"
-        f"- 季节：{current_season}（可带“款”也可省略）\n"
+        f"- 季节：{current_season}（可带“款”也可省略，季节放品牌前，不要改变顺序）\n"
         f"- 品牌：{brand_display}（可含品牌英文和空格，去掉斜杠）\n"
-        f"- 性别：{gender_text}\n"
-        f"- 功能词：保暖/防泼水/弹力/抓绒/轻量等，无则省略\n"
-        f"- 结尾必须是具体品类（夹克/卫衣/长裤/背心/帽子/球杆头套等），品类要与商品匹配，不要用“运动/时尚”作结尾\n"
+        f"- 性别：{gender_text or '可不写（中性/未知）'}\n"
+        f"- 功能词：保暖/防泼水/弹力/抓绒/轻量/棉服等，无则省略；“中棉/中綿”统一理解为“棉服”\n"
+        f"- 品类提示：{category_hint}；结尾必须是具体品类（夹克/卫衣/棉服/长裤/背心/帽子/球包/球/手套等），必须与商品匹配，不要用“运动/时尚”作结尾\n"
         f"- “高尔夫”必须且只出现1次（固定放在品牌之后），优先级高于“款”\n"
         f"要求：只用简体中文和品牌英文，去掉日文假名、斜杠和特殊符号；“高尔夫”只出现1次；"
         f"禁止出现正品/代购/旗舰/促销等词。\n"
@@ -411,19 +424,50 @@ def clean_title(title: str) -> str:
     return title
 
 
-def optimize_title(title: str) -> str:
+def _get_forced_category(product: Dict) -> str:
+    """基于商品名称/分类判断强制品类（用于标题兜底，不影响服装分类字段）"""
+    name_hint = (product.get('productName') or product.get('title') or '').lower()
+    cat_hint = str(product.get('category', '') or '').lower()
+    text = name_hint + ' ' + cat_hint
+    # 包/球包
+    if any(k in text for k in ['バッグ', 'bag', 'キャディ', 'caddy', 'tote', 'トート', 'pouch', 'ポーチ']):
+        return '球包' if 'caddy' in text or 'キャディ' in text else '包'
+    # 球
+    if any(k in text for k in ['ボール', 'ball', '球']):
+        return '球'
+    # 手套
+    if any(k in text for k in ['glove', 'グローブ', '手套']):
+        return '手套'
+    # 帽子
+    if any(k in text for k in ['cap', '帽', 'キャップ']):
+        return '帽子'
+    # 背心
+    if any(k in text for k in ['vest', 'gilet', 'ベスト', 'ジレ']):
+        return '背心'
+    # 连帽衫
+    if any(k in text for k in ['parka', 'hoodie', 'パーカー']):
+        return '连帽衫'
+    return ''
+
+
+def optimize_title(title: str, product: Dict = None) -> str:
     """
     优化标题，解决之前遇到的问题
     """
     if not title:
         return title
 
-    # 1. 去除日文、斜杠和特殊符号，保留品牌英文与空格
+    forced_cat = _get_forced_category(product or {})
+
+    # 1. 去除日文、斜杠和特殊符号，保留品牌英文与空格；移除通用英文占位如 UNISEX
     japanese_pattern = re.compile(r'[\u3040-\u309F\u30A0-\u30FF\uFF66-\uFF9F]')
     title = japanese_pattern.sub('', title)
     title = re.sub(r'[/／\\|｜×＋\+\-\*•·]+', '', title)
+    title = re.sub(r'(?i)unisex', '', title)
     # 允许英文和空格，但压缩多余空格
     title = re.sub(r'\s+', ' ', title).strip()
+    # 中棉/中綿 统一为 棉服
+    title = title.replace('中棉', '棉服').replace('中綿', '棉服')
 
     # 2. 确保含“高尔夫”，若缺少则补在“款”后或开头
     if '高尔夫' not in title:
@@ -448,7 +492,52 @@ def optimize_title(title: str) -> str:
         if len(title) > 30:
             title = title[:30]
 
-    # 4. 去除连续重复的词
+    # 4. 根据强制品类兜底修正结尾
+    if forced_cat:
+        # 去掉错误的服装结尾
+        wrong_tail = ['夹克', '外套', '卫衣', '毛衣', '长裤', '短裤', '裤', '背心']
+        for w in wrong_tail:
+            if title.endswith(w):
+                title = title[: -len(w)]
+        if forced_cat == '球包':
+            if '球包' not in title:
+                title += '球包'
+        elif forced_cat == '包':
+            if '包' not in title:
+                title += '包'
+        elif forced_cat == '球':
+            # 避免“球杆头套”
+            title = title.replace('球杆头套', '高尔夫球')
+            if '球' not in title:
+                title += '高尔夫球'
+        elif forced_cat == '手套':
+            if '手套' not in title:
+                title += '手套'
+        elif forced_cat == '帽子':
+            if '帽子' not in title:
+                title += '帽子'
+        elif forced_cat == '背心':
+            if not title.endswith('背心'):
+                title = title.rstrip('夹克外套卫衣毛衣长裤短裤裤') + '背心'
+        elif forced_cat == '连帽衫':
+            if not title.endswith('连帽衫'):
+                title = title.rstrip('夹克外套毛衣长裤短裤裤') + '连帽衫'
+        # 再次长度校验，若因补品类超长，尝试移除修饰词后截断到30
+        if len(title) > 30:
+            fillers = ['时尚', '新款', '运动', '舒适', '经典', '优雅', '精品', '轻便', '透气', '款']
+            for f in fillers:
+                if len(title) <= 30:
+                    break
+                if f in title:
+                    title = title.replace(f, '', 1)
+            if len(title) > 30:
+                # 尽量保留结尾品类
+                if len(forced_cat) < 30:
+                    title = title[:30 - len(forced_cat)] + forced_cat
+                else:
+                    title = forced_cat[:30]
+
+    # 5. 去除连续重复的词
     words = list(title)
     i = 1
     while i < len(words):
@@ -462,7 +551,7 @@ def optimize_title(title: str) -> str:
             i += 1
     title = ''.join(words)
 
-    # 5. 长度调整（26-30）
+    # 6. 长度调整（26-30）
     if len(title) > 30:
         title = title[:30]
     elif len(title) < 26:
@@ -488,9 +577,10 @@ def optimize_title(title: str) -> str:
             # 尝试1-4个修饰词的组合
             found = False
             for n in range(1, 5):  # 尝试1到4个修饰词
+                from itertools import product as iter_product
                 for combo in combinations(modifiers, n):
                     # 生成所有排列
-                    for perm in product(combo, repeat=n):
+                    for perm in iter_product(combo, repeat=n):
                         if len(set(perm)) != n:  # 确保不重复
                             continue
                         test_title = title[:insert_pos] + ''.join(perm) + title[insert_pos:]
@@ -612,7 +702,7 @@ def generate_cn_title(product: Dict) -> str:
                 continue
 
             # 第四步：优化标题
-            title = optimize_title(title)
+            title = optimize_title(title, product)
 
             # 第五步：验证标题
             if validate_title(title, product):
