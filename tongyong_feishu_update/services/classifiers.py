@@ -3,6 +3,16 @@
 提供产品性别和服装类型的分类功能
 """
 
+# 允许输出的服装分类，仅在此列表内选择，避免产生新类型
+ALLOWED_CLOTHING_TYPES = [
+    '套装', '比赛服', '卫衣', '外套', '马甲', 'POLO',
+    '短袖', '长袖', '紧身衣裤', '训练服',
+    '短裤', '长裤', '短裙', '连衣裙',
+    '腰带', '袜子',
+    '手套', '杆头套', '帽子', '球包', '高尔夫球',
+]
+DEFAULT_CLOTHING_TYPE = '长袖'
+
 def determine_gender(product_data):
     """确定产品性别分类
 
@@ -55,7 +65,7 @@ def determine_gender(product_data):
         return '中性'  # 默认中性，避免误判男
 
 def determine_clothing_type(product_data):
-    """根据标题/分类/URL 粗分服装类型（直接对接淘宝类目映射前的内部类型）"""
+    """根据标题/分类/URL 粗分服装类型，只输出允许列表中的值"""
     if isinstance(product_data, dict):
         product_name = (
             product_data.get('productName')
@@ -142,8 +152,8 @@ def determine_clothing_type(product_data):
     # 配件类具体品类
     if has_any(['glove', 'グローブ', '手套']):
         return '手套'
-    if has_any(['headcover', 'head cover', 'ヘッドカバー', '头套', 'ヘッドカバーズ']):
-        return '头套'
+    if has_any(['headcover', 'head cover', 'ヘッドカバー', '头套', '杆头套', 'ヘッドカバーズ']):
+        return '杆头套'
     if has_any(['cap', 'hat', 'ハット', 'キャップ', 'バイザー', '帽']):
         return '帽子'
     if has_any(['ball', 'ボール', '高尔夫球']):
@@ -151,7 +161,7 @@ def determine_clothing_type(product_data):
     if has_any(['bag', 'バッグ', 'キャディ', 'caddy', 'tote', 'トート', 'pouch', 'ポーチ']):
         return '球包'
 
-    return '场训服'
+    return DEFAULT_CLOTHING_TYPE
 
 def map_to_taobao_category(product_data, clothing_type: str) -> str:
     """
@@ -165,7 +175,7 @@ def map_to_taobao_category(product_data, clothing_type: str) -> str:
         product_name = ''
 
     name_lower = product_name.lower()
-    ctype = clothing_type or '场训服'
+    ctype = clothing_type or DEFAULT_CLOTHING_TYPE
 
     # 特殊关键词优先
     if any(k in name_lower for k in ['紧身', '压缩', '打底', 'compression']):
@@ -191,7 +201,7 @@ def map_to_taobao_category(product_data, clothing_type: str) -> str:
         '外套': '外套',
         '马甲/背心': '马甲',
         '马甲': '马甲',
-        '背心': '背心',
+        '背心': '马甲',
         '针织衫/毛衣': '长袖',
         '衬衫': '长袖',
         '长裤': '长裤',
@@ -204,16 +214,15 @@ def map_to_taobao_category(product_data, clothing_type: str) -> str:
         '短袖': '短袖',
         '长袖': '长袖',
         '训练服': '训练服',
-        '场训服': '场训服',
         '紧身衣裤': '紧身衣裤',
         '比赛服': '比赛服',
         '套装': '套装',
         '帽子': '帽子',
         '手套': '手套',
-        '头套': '头套',
+        '杆头套': '杆头套',
         '球包': '球包',
         '高尔夫球': '高尔夫球'
     }
 
-    # 其他非服装类或未在映射表中的，统一落到场训服以满足单选限制
-    return mapping.get(ctype, '场训服')
+    # 其他非服装类或未在映射表中的，统一落到默认类型，避免产生新分类
+    return mapping.get(ctype, DEFAULT_CLOTHING_TYPE)
