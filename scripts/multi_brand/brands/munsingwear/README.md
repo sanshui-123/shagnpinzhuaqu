@@ -114,6 +114,23 @@ node sequential_sync.js \
   --limit 1
 ```
 
+#### Stage 3: 库存巡检 + 飞书同步
+```bash
+# Step 3.1: 抓取库存
+node check_inventory.js \
+  --input "golf_content/munsingwear/munsingwear_products_xxx.json" \
+  --output "results/munsingwear_inventory_$(date +%Y%m%d%H%M%S).json" \
+  --limit 20   # 可选
+
+# Step 3.2: 仅更新库存字段
+cd /Users/sanshui/Desktop/CallawayJP
+python3 -m tongyong_feishu_update.run_inventory_sync \
+  "scripts/multi_brand/brands/munsingwear/results/munsingwear_inventory_xxx.json"
+```
+- `check_inventory.js` 复用统一详情抓取器，批量抓 variantInventory + stockStatus
+- `run_inventory_sync` 只写颜色/尺码/库存状态，不会覆盖其他字段
+- 支持 `--limit`、`--concurrent`、`--delay` 等参数控制巡检节奏
+
 #### 旧方法：通过主CLI运行
 ```bash
 # 在 multi_brand 目录下
