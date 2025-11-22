@@ -51,6 +51,17 @@ ALLOWED_TAIL_CATEGORIES = [
     '紧身衣裤', '训练服', '场训服', '腰带', '袜子', '其他'
 ]
 
+# 通用填充/修饰词（用于裁剪或补长时优先移除/插入）
+FILLER_WORDS = ['时尚', '新款', '运动', '舒适', '经典', '优雅', '精品', '轻便', '透气', '款']
+MODIFIERS = ['新款', '时尚', '轻便', '透气', '运动', '专业', '经典', '优雅', '高级', '精品']
+
+# 禁用词
+FORBIDDEN_WORDS = [
+    '官网', '正品', '专柜', '代购', '海外', '进口',
+    '授权', '旗舰', '限量', '促销', '特价', '淘宝',
+    '天猫', '京东', '拼多多'
+]
+
 # ============================================================================
 # 品牌提取功能
 # ============================================================================
@@ -261,22 +272,16 @@ def build_smart_prompt(product: Dict) -> str:
     target_tail = _resolve_target_category(product)
     tail_whitelist = '、'.join(ALLOWED_TAIL_CATEGORIES)
 
-    # 短提示词，明确结构，避免冗长
     prompt = (
-        f"生成淘宝标题，长度26-30字，固定格式：[地区][季节款][品牌]高尔夫[性别][功能词可选][品类结尾]。\n"
-        f"- 地区：{region}\n"
-        f"- 季节：{current_season}（放品牌前，可带“款”可省略）\n"
-        f"- 品牌：{brand_display or '请按商品实际品牌写齐，不要写未知'}（必须出现，可含品牌英文，去掉斜杠）\n"
-        f"- 性别：{gender_text or '男/女/中性三选一，缺失时按商品推断'}，放在品类前或结尾\n"
-        f"- 功能词：保暖/防泼水/弹力/抓绒/轻量/棉服等，无则省略；“中棉/中綿”统一为“棉服”\n"
-        f"- 品类：{category_hint}，结尾必须是白名单品类之一（{tail_whitelist}），当前优先用「{target_tail}」，不要用“运动/时尚”作结尾\n"
-        f"- “高尔夫”只出现1次，固定放品牌后，禁止出现在结尾或多次出现\n"
-        f"补充信息：\n"
-        f"- 原始名称：{name}\n"
-        f"- 分类/性别：{category_text} / {gender_text_raw}\n"
-        f"- 描述片段：{desc_text}\n"
-        f"要求：只用简体中文和品牌英文，去掉日文假名、斜杠和特殊符号；结尾品类必须在白名单；“高尔夫”仅1次；"
-        f"禁止出现正品/代购/旗舰/促销等词；直接输出标题。\n"
+        "请生成淘宝标题，长度 26-30 字，务必遵循下列规则：\n"
+        f"1) 格式：[地区][季节款][品牌]高尔夫[性别][功能词可选][品类结尾]，高尔夫固定只出现 1 次，放在品牌之后。\n"
+        f"2) 地区：{region}；季节：{current_season}（写成“{current_season}款”放品牌前）。\n"
+        f"3) 品牌：{brand_display or '请写实际品牌'}，可含品牌英文，禁止写“未知品牌”。性别：{gender_text or '按商品判定男士/女士/中性'}。\n"
+        "4) 功能词可选保暖/防泼水/弹力/抓绒/轻量/棉服等，“中棉/中綿”统一写成棉服。\n"
+        f"5) 结尾必须是白名单品类之一：{tail_whitelist}；当前建议品类：{category_hint}（优先写 {target_tail}），除非品类是“高尔夫球”，否则禁止以单字“球”结尾，不要用“运动/时尚”。\n"
+        "6) 禁止出现正品/代购/旗舰/促销等词，只能使用简体中文和品牌英文，去掉日文假名、斜杠、特殊符号。\n"
+        f"补充信息：商品名《{name}》，分类/性别：{category_text} / {gender_text_raw}，描述片段：{desc_text}\n"
+        "直接输出符合格式的标题，不要解释。"
     )
 
     return prompt
@@ -442,6 +447,32 @@ def clean_title(title: str) -> str:
     return title
 
 
+def _ensure_single_golf(title: str) -> str:
+    """确保“高尔夫”恰好出现一次；多余的全部去掉，仅保留第一次"""
+    if '高尔夫' not in title:
+        return title
+    first_idx = title.find('高尔夫')
+    # 保留第一次，移除后续所有
+    prefix = title[: first_idx + len('高尔夫')]
+    suffix = title[first_idx + len('高尔夫'):]
+    suffix = suffix.replace('高尔夫', '')
+    return prefix + suffix
+
+
+def _truncate_with_fillers(title: str, max_len: int = 30) -> str:
+    """超长时优先移除填充词，再截断"""
+    if len(title) <= max_len:
+        return title
+    for f in FILLER_WORDS:
+        if len(title) <= max_len:
+            break
+        if f in title:
+            title = title.replace(f, '', 1)
+    if len(title) > max_len:
+        title = title[:max_len]
+    return title
+
+
 def _get_forced_category(product: Dict) -> str:
     """基于商品名称/分类判断强制品类（用于标题兜底，不影响服装分类字段）"""
     name_hint = (product.get('productName') or product.get('title') or '').lower()
@@ -535,19 +566,10 @@ def optimize_title(title: str, product: Dict = None) -> str:
 
     # 确保"高尔夫"只出现一次
     if title.count('高尔夫') > 1:
-        first_idx = title.find('高尔夫')
-        title = title[: first_idx + len('高尔夫')] + title.replace('高尔夫', '', 1).replace('高尔夫', '')
+        title = _ensure_single_golf(title)
 
     # 3. 如长度因补“高尔夫”超长，优先移除修饰词/低优先占位再截断
-    if len(title) > 30:
-        fillers = ['时尚', '新款', '运动', '舒适', '经典', '优雅', '精品', '轻便', '透气', '款']
-        for f in fillers:
-            if len(title) <= 30:
-                break
-            if f in title:
-                title = title.replace(f, '', 1)
-        if len(title) > 30:
-            title = title[:30]
+    title = _truncate_with_fillers(title, max_len=30)
 
     # 4. 根据强制品类兜底修正结尾
     if forced_cat:
@@ -579,12 +601,7 @@ def optimize_title(title: str, product: Dict = None) -> str:
                 title = title.rstrip('夹克外套毛衣长裤短裤裤') + '连帽衫'
         # 再次长度校验，若因补品类超长，尝试移除修饰词后截断到30
         if len(title) > 30:
-            fillers = ['时尚', '新款', '运动', '舒适', '经典', '优雅', '精品', '轻便', '透气', '款']
-            for f in fillers:
-                if len(title) <= 30:
-                    break
-                if f in title:
-                    title = title.replace(f, '', 1)
+            title = _truncate_with_fillers(title, max_len=30)
             if len(title) > 30:
                 # 尽量保留结尾品类
                 if len(forced_cat) < 30:
@@ -638,33 +655,20 @@ def optimize_title(title: str, product: Dict = None) -> str:
     if len(title) > 30:
         title = title[:30]
     elif len(title) < 26:
-        # 如果太短，尝试在适当位置加修饰词
-        modifiers = ['新款', '时尚', '轻便', '透气', '运动', '专业', '经典', '优雅', '高级', '精品']
-
-        # 寻找插入位置（在品牌后或功能词前）
+        # 如果太短，尝试在"高尔夫"后插入修饰词
         insert_pos = -1
-
-        # 尝试在"高尔夫"后插入
         golf_idx = title.find('高尔夫')
         if golf_idx > 0 and golf_idx + 3 < len(title):
             insert_pos = golf_idx + 3
 
-        # 如果找到合适位置，插入修饰词
         if insert_pos > 0:
-            # 计算需要增加的长度
             need_len = 26 - len(title)
-
-            # 灵活组合修饰词以达到目标长度
-            # 生成所有可能的组合
-
-            # 尝试1-4个修饰词的组合
             found = False
-            for n in range(1, 5):  # 尝试1到4个修饰词
+            for n in range(1, 5):
                 from itertools import product as iter_product
-                for combo in combinations(modifiers, n):
-                    # 生成所有排列
+                for combo in combinations(MODIFIERS, n):
                     for perm in iter_product(combo, repeat=n):
-                        if len(set(perm)) != n:  # 确保不重复
+                        if len(set(perm)) != n:
                             continue
                         test_title = title[:insert_pos] + ''.join(perm) + title[insert_pos:]
                         if 26 <= len(test_title) <= 30:
@@ -676,11 +680,8 @@ def optimize_title(title: str, product: Dict = None) -> str:
                 if found:
                     break
 
-            # 如果还是没有合适的，直接填充以达到最小长度
             if not found and len(title) < 26:
-                need_len = 26 - len(title)  # 计算需要补充的字数
-
-                # 根据需要的字数选择合适的修饰词
+                need_len = 26 - len(title)
                 if need_len <= 2:
                     add_mod = '新款'
                 elif need_len <= 4:
@@ -688,16 +689,13 @@ def optimize_title(title: str, product: Dict = None) -> str:
                 elif need_len <= 6:
                     add_mod = '新款时尚轻便'
                 else:
-                    # 需要更多字数，组合多个修饰词（不重复）
-                    all_mods = ['新款', '时尚', '轻便', '透气', '运动']
                     add_mod = ''
-                    for mod in all_mods:
+                    for mod in ['新款', '时尚', '轻便', '透气', '运动']:
                         if len(add_mod) + len(mod) <= need_len:
                             add_mod += mod
                         if len(add_mod) >= need_len:
                             break
 
-                # 只插入一次
                 title = title[:insert_pos] + add_mod + title[insert_pos:]
 
                 # 最终检查：如果还是不够26字或超过30字，截断/补充
