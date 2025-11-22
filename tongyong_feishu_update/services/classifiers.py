@@ -70,7 +70,7 @@ def determine_clothing_type(product_data):
         category = getattr(product_data, 'category', '') or ''
         detail_url = getattr(product_data, 'detailUrl', '') or getattr(product_data, 'url', '')
     else:
-        return '其他'
+        return '场训服'
 
     name_lower = product_name.lower()
     category_lower = category.lower()
@@ -78,6 +78,14 @@ def determine_clothing_type(product_data):
 
     def has_any(words):
         return any(w in name_lower or w in category_lower or w in url_lower for w in words)
+
+    # 套装/成套
+    if has_any(['套装', 'set', 'コーデ', 'セトアップ']):
+        return '套装'
+
+    # 比赛服
+    if has_any(['比赛', '競技', 'competition', 'tournament']):
+        return '比赛服'
 
     # 卫衣/连帽衫/抓绒（名称优先于 URL 模糊路径）
     if has_any(['hoodie', 'sweatshirt', 'sweat', 'crewneck', 'pullover', 'フーディ', 'プルオーバー', 'fleece', 'パーカー', 'スウェット', 'フリース']):
@@ -109,8 +117,8 @@ def determine_clothing_type(product_data):
     if has_any(['紧身', '压缩', '打底', 'compression']):
         return '紧身衣裤'
 
-    # 训练服
-    if has_any(['训练', 'training', '场训']):
+    # 训练服 / 场训服
+    if has_any(['训练', 'training', '场训', '场练', 'practice']):
         return '训练服'
 
     # 下装：短裤优先于长裤
@@ -120,8 +128,10 @@ def determine_clothing_type(product_data):
         return '长裤'
 
     # 裙装
-    if has_any(['skirt', 'skort', 'dress', 'スカート', '裙']):
+    if has_any(['skirt', 'skort', 'スカート', '裙']):
         return '短裙'
+    if has_any(['dress', 'ドレス', '连衣裙']):
+        return '连衣裙'
 
     # 腰带/袜子
     if has_any(['belt', '腰带', '皮带', 'ベルト']):
@@ -129,17 +139,17 @@ def determine_clothing_type(product_data):
     if has_any(['sock', 'socks', 'ソックス', '袜']):
         return '袜子'
 
-    # 配件类
+    # 配件类（当前单选列表未覆盖，统一回落到场训服）
     if has_any(['glove', 'グローブ', '手套']):
-        return '手套'
+        return '场训服'
     if has_any(['cap', 'hat', 'ハット', 'キャップ', 'バイザー', '帽']):
-        return '帽子'
+        return '场训服'
     if has_any(['ball', 'ボール', '高尔夫球']):
-        return '高尔夫球'
+        return '场训服'
     if has_any(['bag', 'バッグ', 'キャディ', 'caddy', 'tote', 'トート', 'pouch', 'ポーチ']):
-        return '球包'
+        return '场训服'
 
-    return '其他'
+    return '场训服'
 
 def map_to_taobao_category(product_data, clothing_type: str) -> str:
     """
@@ -153,7 +163,7 @@ def map_to_taobao_category(product_data, clothing_type: str) -> str:
         product_name = ''
 
     name_lower = product_name.lower()
-    ctype = clothing_type or '其他'
+    ctype = clothing_type or '场训服'
 
     # 特殊关键词优先
     if any(k in name_lower for k in ['紧身', '压缩', '打底', 'compression']):
@@ -164,6 +174,8 @@ def map_to_taobao_category(product_data, clothing_type: str) -> str:
         return '短袖'
     if any(k in name_lower for k in ['长袖', 'long sleeve', '長袖']):
         return '长袖'
+    if '连衣裙' in name_lower or 'dress' in name_lower or 'ドレス' in name_lower:
+        return '连衣裙'
 
     mapping = {
         'POLO': 'POLO',
@@ -177,23 +189,24 @@ def map_to_taobao_category(product_data, clothing_type: str) -> str:
         '外套': '外套',
         '马甲/背心': '马甲',
         '马甲': '马甲',
+        '背心': '背心',
         '针织衫/毛衣': '长袖',
         '衬衫': '长袖',
         '长裤': '长裤',
         '短裤': '短裤',
         '裙装': '短裙',
         '短裙': '短裙',
+        '连衣裙': '连衣裙',
         '腰带': '腰带',
         '袜子': '袜子',
         '短袖': '短袖',
         '长袖': '长袖',
         '训练服': '训练服',
+        '场训服': '场训服',
         '紧身衣裤': '紧身衣裤',
-        '手套': '手套',
-        '帽子': '帽子',
-        '高尔夫球': '高尔夫球',
-        '球包': '球包',
-        '包': '球包'
+        '比赛服': '比赛服',
+        '套装': '套装'
     }
 
-    return mapping.get(ctype, '其他')
+    # 其他非服装类或未在映射表中的，统一落到场训服以满足单选限制
+    return mapping.get(ctype, '场训服')

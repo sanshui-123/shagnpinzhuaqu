@@ -492,7 +492,7 @@ class StreamingUpdateOrchestrator:
         """检查字段是否有变化"""
         for key, new_value in new_fields.items():
             existing_value = existing_fields.get(key, '')
-            if str(new_value).strip() != str(existing_value).strip():
+            if self._normalize_field_value(new_value) != self._normalize_field_value(existing_value):
                 return True
         return False
 
@@ -500,7 +500,25 @@ class StreamingUpdateOrchestrator:
         """检查指定字段中哪些为空需要补齐"""
         empty_fields = []
         for field in target_fields:
-            existing_value = existing_fields.get(field, '').strip()
+            existing_value = self._normalize_field_value(existing_fields.get(field, ''))
             if not existing_value:
                 empty_fields.append(field)
         return empty_fields
+
+    def _normalize_field_value(self, value: any) -> str:
+        """将飞书字段值统一转成可比对的字符串，兼容单选/多选结构"""
+        if isinstance(value, dict):
+            # 单选/多选可能返回 {text, option_id}
+            if 'text' in value:
+                return str(value.get('text') or '').strip()
+            return str(value).strip()
+        if isinstance(value, list):
+            # 多选/单选数组：提取文本后用换行拼接保持顺序
+            normalized_items = []
+            for item in value:
+                if isinstance(item, dict) and 'text' in item:
+                    normalized_items.append(str(item.get('text') or '').strip())
+                else:
+                    normalized_items.append(str(item).strip())
+            return '\n'.join(filter(None, normalized_items))
+        return str(value or '').strip()
