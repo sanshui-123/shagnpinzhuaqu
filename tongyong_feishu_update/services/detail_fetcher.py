@@ -24,7 +24,7 @@ class DetailFetcher:
             project_root: 项目根目录路径，默认自动查找
         """
         self.project_root = project_root or self._find_project_root()
-        self.scrape_script = os.path.join(self.project_root, 'scripts', 'scrape_product_detail.js')
+        self.default_scrape_script = os.path.join(self.project_root, 'scripts', 'scrape_product_detail.js')
         self.last_fetch_time = 0
         self.fetch_interval = float(os.getenv('DETAIL_FETCH_INTERVAL', '2.0'))  # 默认2秒间隔
         
@@ -38,7 +38,27 @@ class DetailFetcher:
         
         # 如果找不到，使用相对路径
         return os.getcwd()
-    
+
+    def _get_scraper_for_url(self, product_url: str) -> tuple[str, str]:
+        """根据URL确定使用哪个scraper脚本和输出格式
+
+        Args:
+            product_url: 产品URL
+
+        Returns:
+            (scraper_path, output_format): scraper脚本路径和输出格式类型
+        """
+        # PEARLY GATES (mix.tokyo)使用专用scraper
+        if 'mix.tokyo' in product_url:
+            scraper = os.path.join(
+                self.project_root,
+                'scripts', 'multi_brand', 'brands', 'pg', 'single_unified_processor.js'
+            )
+            return (scraper, 'single_unified')
+
+        # 其他品牌使用默认scraper
+        return (self.default_scrape_script, 'default')
+
     def needs_detail_fetch(self, product: Dict) -> bool:
         """检查产品是否需要抓取详情
 
@@ -90,47 +110,67 @@ class DetailFetcher:
         try:
             print(f"🔍 正在抓取产品详情: {product_id or 'unknown'}")
             self.last_fetch_time = time.time()
-            
+
+            # 根据URL选择scraper
+            scraper_script, output_format = self._get_scraper_for_url(product_url)
+
             # 创建临时输出目录
             with tempfile.TemporaryDirectory() as temp_dir:
-                # 构建命令参数
-                cmd = [
-                    'node', self.scrape_script,
-                    '--url', product_url,
-                    '--output-dir', temp_dir
-                ]
-                
-                if product_id:
-                    cmd.extend(['--product-id', product_id])
-                
+                # 根据scraper类型构建不同的命令参数
+                if output_format == 'single_unified':
+                    # PG使用single_unified_processor: node script.js <url> <output_file>
+                    output_file = os.path.join(temp_dir, f'product_{product_id or "detail"}.json')
+                    cmd = ['node', scraper_script, product_url, output_file]
+                else:
+                    # 默认scraper: node script.js --url <url> --output-dir <dir> --product-id <id>
+                    cmd = [
+                        'node', scraper_script,
+                        '--url', product_url,
+                        '--output-dir', temp_dir
+                    ]
+                    if product_id:
+                        cmd.extend(['--product-id', product_id])
+
                 # 执行node脚本
                 result = subprocess.run(
                     cmd,
                     capture_output=True,
                     text=True,
-                    timeout=180,  # 3分钟超时
+                    timeout=300,  # 5分钟超时（从180秒增加）
                     cwd=self.project_root
                 )
-                
+
                 if result.returncode != 0:
                     print(f"❌ 抓取失败: {result.stderr}")
                     return None
-                
+
                 # 查找生成的JSON文件
-                json_files = list(Path(temp_dir).glob(f'product_details_{product_id}_*.json'))
-                if not json_files:
-                    json_files = list(Path(temp_dir).glob('product_details_*.json'))
-                
+                if output_format == 'single_unified':
+                    # single_unified_processor输出到指定文件
+                    json_files = [Path(output_file)] if os.path.exists(output_file) else []
+                else:
+                    # 默认scraper输出到目录
+                    json_files = list(Path(temp_dir).glob(f'product_details_{product_id}_*.json'))
+                    if not json_files:
+                        json_files = list(Path(temp_dir).glob('product_details_*.json'))
+
                 if not json_files:
                     print(f"❌ 未找到输出文件")
                     return None
-                
+
                 # 读取最新的JSON文件
                 latest_file = sorted(json_files)[-1]
                 with open(latest_file, 'r', encoding='utf-8') as f:
                     detail_data = json.load(f)
-                
-                print(f"✅ 抓取成功: {detail_data['scrapeInfo']['totalImages']}张图片, {detail_data['scrapeInfo']['totalColors']}种颜色, {detail_data['scrapeInfo']['totalSizes']}个尺码")
+
+                # 根据输出格式解析结果
+                if output_format == 'single_unified':
+                    # single_unified_processor返回的是完整产品数据，需要提取scrapeInfo
+                    scrape_info = detail_data.get('scrapeInfo', {})
+                    print(f"✅ 抓取成功: {scrape_info.get('totalImages', 0)}张图片, {scrape_info.get('totalColors', 0)}种颜色, {scrape_info.get('totalSizes', 0)}个尺码")
+                else:
+                    print(f"✅ 抓取成功: {detail_data['scrapeInfo']['totalImages']}张图片, {detail_data['scrapeInfo']['totalColors']}种颜色, {detail_data['scrapeInfo']['totalSizes']}个尺码")
+
                 return detail_data
                 
         except subprocess.TimeoutExpired:

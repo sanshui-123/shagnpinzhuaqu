@@ -411,4 +411,7 @@ class FieldAssembler:
             # 兜底：空值
             fields['详情页文字'] = ''
 
+        # 同步成功后将上传状态标记为“待检测”，方便飞书侧筛选
+        fields['上传状态'] = '待检测'
+
         return fields
