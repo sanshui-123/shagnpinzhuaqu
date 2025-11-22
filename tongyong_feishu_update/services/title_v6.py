@@ -411,7 +411,6 @@ def optimize_title(title: str, product: Dict = None) -> str:
     if not title:
         return title
 
-ç
     # 1. 去除连续重复的词
     words = list(title)
     i = 1

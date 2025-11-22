@@ -169,6 +169,9 @@ class UnifiedDetailScraper {
             // 首先进行多颜色抓取
             const multiColorData = await this.extractMultiColorData(page);
 
+            // 在提取其他信息前确保尺寸tab已展开
+            await this.ensureSizeTabVisible(page);
+
             // 提取产品数据（包含价格信息）
             const extractedData = await this.extractProductData(page);
 
@@ -645,9 +648,39 @@ class UnifiedDetailScraper {
                 result.dataSources.push('dom_enhanced');
 
                 // 提取尺码表
-                const sizeSection = document.querySelector('#size .product-html');
+                const sizeSelectors = [
+                    '#size .product-html',
+                    '.tabs-content__panel.is-active .product-html',
+                    '.tabs-content__panel[aria-hidden="false"] .product-html',
+                    '[data-tab-content="size"] .product-html',
+                    '.product-detail__size .product-html',
+                    '.product-html[data-section="size"]',
+                    '.product-size .product-html'
+                ];
+
+                let sizeSection = null;
+                for (const selector of sizeSelectors) {
+                    const element = document.querySelector(selector);
+                    const text = element?.innerText?.trim() || '';
+                    if (element && text.length > 20) {
+                        sizeSection = element;
+                        break;
+                    }
+                }
+
+                if (!sizeSection) {
+                    const fallbackBlocks = Array.from(document.querySelectorAll('.product-html, .product-detail__content, [data-section="size"]'));
+                    for (const block of fallbackBlocks) {
+                        const text = block.textContent?.trim() || '';
+                        if (text.includes('商品サイズ') || text.includes('サイズ') || text.includes('ウエスト')) {
+                            sizeSection = block;
+                            break;
+                        }
+                    }
+                }
+
                 if (sizeSection) {
-                    const sizeSectionHtml = sizeSection.innerHTML.trim();
+                    const sizeSectionHtml = sizeSection.innerHTML?.trim() || '';
                     const sizeSectionText = sizeSection.innerText
                         .replace(/\u00a0/g, ' ')
                         .replace(/\r\n/g, '\n')
@@ -812,6 +845,84 @@ class UnifiedDetailScraper {
 
         console.log('❌ 所有下拉菜单尝试都失败了');
         return extractedSizes;
+    }
+
+    /**
+     * 尝试点击“サイズ/Size”标签，确保尺码表内容可见
+     */
+    async ensureSizeTabVisible(page) {
+        console.log('🗂️ 检查尺寸标签并尝试展开...');
+        const tabSelectors = [
+            'button[role="tab"]',
+            '.tabs-nav__item button',
+            '.tabs-nav__item',
+            '.pdp-tabs button',
+            '.product-tabs button',
+            '[data-tab-target]',
+            '[data-tabs-target]'
+        ];
+        const textRegex = /(サイズ|サイズ表記|size)/i;
+
+        try {
+            for (const selector of tabSelectors) {
+                const handles = await page.$$(selector);
+                if (!handles.length) continue;
+
+                for (const handle of handles) {
+                    const text = (await handle.innerText())?.trim();
+                    if (!text || !textRegex.test(text)) continue;
+
+                    try {
+                        if (handle.scrollIntoViewIfNeeded) {
+                            await handle.scrollIntoViewIfNeeded();
+                        } else {
+                            await handle.evaluate(el => el.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+                        }
+                    } catch (_) { /* 忽略滚动失败 */ }
+
+                    await handle.click({ delay: 80 });
+                    await page.waitForTimeout(800);
+                    console.log(`✅ 已点击 "${text}" 标签`);
+
+                    try {
+                        await page.waitForSelector('#size .product-html, .tabs-content__panel.is-active .product-html, [data-tab-content="size"] .product-html', { timeout: 2000 });
+                    } catch (_) { /* 内容可能已在DOM中，无需等待 */ }
+
+                    return true;
+                }
+            }
+        } catch (error) {
+            console.log(`⚠️ 直接点击尺寸标签失败: ${error.message}`);
+        }
+
+        try {
+            const clicked = await page.evaluate(() => {
+                const regex = /(サイズ|サイズ表記|size)/i;
+                const candidates = Array.from(document.querySelectorAll('button, a, li, div'));
+                for (const el of candidates) {
+                    const text = el.textContent?.trim() || '';
+                    if (!text || !regex.test(text)) continue;
+                    const role = el.getAttribute('role');
+                    const hasTabsAncestor = !!el.closest('[data-tabs], .tabs-nav, .product-tabs, .tabs');
+                    if (role !== 'tab' && !hasTabsAncestor) continue;
+                    el.scrollIntoView({ block: 'center' });
+                    el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+                    return true;
+                }
+                return false;
+            });
+
+            if (clicked) {
+                await page.waitForTimeout(800);
+                console.log('✅ 通过脚本触发尺寸标签');
+                return true;
+            }
+        } catch (error) {
+            console.log(`⚠️ 通过脚本点击尺寸标签失败: ${error.message}`);
+        }
+
+        console.log('ℹ️ 未找到单独的尺寸标签，可能页面默认展示尺码信息');
+        return false;
     }
 
     /**
