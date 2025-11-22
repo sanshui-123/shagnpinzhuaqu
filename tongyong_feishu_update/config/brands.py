@@ -20,7 +20,7 @@ BRAND_KEYWORDS = {
 
 # 品牌完整中文名（用于标题）
 BRAND_MAP = {
-    'callawaygolf': '卡拉威Callaway',
+    'callawaygolf': 'Callaway/卡拉威',
     'titleist': '泰特利斯Titleist',
     'taylormade': '泰勒梅TaylorMade',
     'ping': 'PING',
@@ -67,7 +67,7 @@ BRAND_MAP = {
 
 # 品牌简短名（用于飞书"品牌名"字段）
 BRAND_SHORT_NAME = {
-    'callawaygolf': '卡拉威',
+    'callawaygolf': 'Callaway/卡拉威',
     'titleist': '泰特利斯',
     'taylormade': '泰勒梅',
     'ping': 'PING',

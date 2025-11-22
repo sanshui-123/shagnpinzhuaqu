@@ -957,7 +957,20 @@ class EnhancedDetailScraper {
 
     async extractAndTranslateSizeChart(page) {
         try {
-            // 使用Playwright的方法查找按钮
+            // 优先点击「サイズ表記」tab，确保尺码表加载
+            const sizeTab = page.locator('button.tabs-nav__item.heading.heading--small', { hasText: 'サイズ表記' }).first();
+            if (await sizeTab.count() > 0) {
+                try {
+                    await sizeTab.scrollIntoViewIfNeeded();
+                    await sizeTab.click();
+                    console.log('✅ 点击了「サイズ表記」tab');
+                    await page.waitForSelector('div.table-wrapper table, div.table-wrapper', { timeout: 5000 });
+                } catch (e) {
+                    console.log('⚠️ 点击サイズ表記失败，继续使用旧逻辑:', e.message);
+                }
+            }
+
+            // 使用Playwright的方法查找按钮（旧逻辑保留作为兜底）
             const sizeButton = await page.locator('button, a', { hasText: '商品サイズ' }).first();
             const sizeDetailButton = await page.locator('button, a', { hasText: 'サイズ詳細' }).first();
 
@@ -978,28 +991,30 @@ class EnhancedDetailScraper {
                 console.log('🔘 找到尺码表按钮，准备点击...');
                 await buttonToClick.click();
                 await page.waitForTimeout(2000);
-
-                // 提取尺码表内容 - 只抓取原文，不翻译
-                const sizeChartData = await page.evaluate(() => {
-                    const sizeChartArea = document.querySelector('table, [class*="size-table"], [class*="chart"]');
-
-                    if (sizeChartArea) {
-                        let tableHtml = sizeChartArea.outerHTML; // 获取完整HTML包括table标签
-                        let tableText = sizeChartArea.textContent || '';
-
-                        return {
-                            html: tableHtml,
-                            text: tableText.trim()
-                        };
-                    }
-                    return null;
-                });
-
-                return sizeChartData || {
-                    html: '',
-                    text: ''
-                };
             }
+
+            // 提取尺码表内容 - 只抓取原文，不翻译
+            const sizeChartData = await page.evaluate(() => {
+                const sizeChartArea = document.querySelector('div.table-wrapper table') ||
+                    document.querySelector('div.table-wrapper') ||
+                    document.querySelector('table, [class*="size-table"], [class*="chart"]');
+
+                if (sizeChartArea) {
+                    let tableHtml = sizeChartArea.outerHTML; // 获取完整HTML包括table标签
+                    let tableText = sizeChartArea.textContent || '';
+
+                    return {
+                        html: tableHtml,
+                        text: tableText.trim()
+                    };
+                }
+                return null;
+            });
+
+            return sizeChartData || {
+                html: '',
+                text: ''
+            };
         } catch (error) {
             console.log('⚠️ 尺码表提取失败:', error.message);
         }

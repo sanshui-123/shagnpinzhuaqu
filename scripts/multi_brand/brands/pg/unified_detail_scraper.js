@@ -280,6 +280,19 @@ class UnifiedDetailScraper {
      */
     async extractAdvancedSizeChart(page) {
         try {
+            // 先尝试点击「サイズ表記」Tab，确保尺码表渲染
+            try {
+                const sizeTab = page.locator('button.tabs-nav__item.heading.heading--small', { hasText: 'サイズ表記' }).first();
+                if (await sizeTab.count() > 0) {
+                    await sizeTab.scrollIntoViewIfNeeded();
+                    await sizeTab.click();
+                    await page.waitForSelector('div.c_table--wrapper, div.table-wrapper table, div.table-wrapper', { timeout: 5000 });
+                    console.log('✅ 点击了「サイズ表記」tab');
+                }
+            } catch (e) {
+                console.log('⚠️ 点击サイズ表記失败，继续后续策略:', e.message);
+            }
+
             console.log('🔍 方法1: 检查尺码表相关链接...');
             const sizeLinks = await page.evaluate(() => {
                 const links = document.querySelectorAll('a[href], button[onclick], div[onclick]');
@@ -408,8 +421,19 @@ class UnifiedDetailScraper {
                 tables: []
             };
 
-            // 查找所有表格
-            const tables = document.querySelectorAll('table');
+            // 优先查找 c_table--wrapper 和 table-wrapper 下的表格（尺寸表记区域）
+            let preferredTables = document.querySelectorAll('div.c_table--wrapper table');
+            if (preferredTables.length === 0) {
+                preferredTables = document.querySelectorAll('div.table-wrapper table');
+            }
+            // 如果 div.c_table--wrapper 本身就是表格容器但内部没有table标签，则直接使用它
+            if (preferredTables.length === 0) {
+                const wrapper = document.querySelector('div.c_table--wrapper');
+                if (wrapper && wrapper.textContent.includes('サイズ')) {
+                    preferredTables = [wrapper];
+                }
+            }
+            const tables = preferredTables.length > 0 ? preferredTables : document.querySelectorAll('table');
             for (const table of tables) {
                 const tableText = table.textContent.trim();
 
