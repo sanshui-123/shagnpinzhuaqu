@@ -127,11 +127,33 @@ class ConvertedJsonProductLoader(BaseProductLoader):
                 if 'stockStatus' in product_info:
                     product.stockStatus = product_info['stockStatus']
 
+                # 处理 legacy/brand 产品ID
+                legacy_id = (
+                    product_info.get('legacyProductId')
+                    or product_info.get('legacy_product_id')
+                )
+                if legacy_id:
+                    product.legacy_product_id = legacy_id
+                    product.legacyProductId = legacy_id
+
+                brand_pid = (
+                    product_info.get('brandProductId')
+                    or product_info.get('brand_product_id')
+                )
+                if brand_pid:
+                    product.brand_product_id = brand_pid
+                    product.brandProductId = brand_pid
+
                 # 设置extra字段用于透传
                 product.extra = {
                     'variantInventory': product_info.get('variantInventory', []),
                     'stockStatus': product_info.get('stockStatus', 'in_stock'),
-                    '_original_data': product_info.get('_original_data', {})
+                    '_original_data': product_info.get('_original_data', {}),
+                }
+                if legacy_id:
+                    product.extra['legacyProductId'] = legacy_id
+                if brand_pid:
+                    product.extra['brandProductId'] = brand_pid
                 }
 
                 products.append(product)

@@ -1,0 +1,257 @@
+{
+  "processedIds": [
+    "LE1872EW011337",
+    "LE1872EW008774",
+    "LE1872EW011482",
+    "LE1872EW009873",
+    "LE1872EM012758",
+    "LE1872EM011037",
+    "LE1872EW011404",
+    "LE1872EM011257",
+    "LE1872EM012724",
+    "LE1872EW009284",
+    "LE1872EW012702",
+    "LE1872EW009632",
+    "LE1872EW012717",
+    "LE1872EW011395",
+    "LE1872EW012631",
+    "LE1872EW013025",
+    "LE1872EW009652",
+    "LE1872EW012592",
+    "LE1872EW011317",
+    "LE1872EM013062",
+    "LE1872EM009427",
+    "LE1872EM011238",
+    "LE1872EM012566",
+    "LE1872EW009756",
+    "LE1872EM011114",
+    "LE1872EM009589",
+    "LE1872EW009414",
+    "LE1872EW009565",
+    "LE1872EM009676",
+    "LE1872EW011664",
+    "LE1872EM011353",
+    "LE1872EW009610",
+    "LE1872EM009105",
+    "LE1872EW011159",
+    "LE1872EW012833",
+    "LE1872EM011410",
+    "LE1872EW011658",
+    "LE1872EW009392",
+    "LE1872EM011669",
+    "LE1872EW012596",
+    "LE1872EW012573",
+    "LE1872EW011119",
+    "LE1872EM011585",
+    "LE1872EM012555",
+    "LE1872EM011018",
+    "LE1872EW009842",
+    "LE1872EM011301",
+    "LE1872EM011534",
+    "LE1872EM009100",
+    "LE1872EW013052",
+    "LE1872EW009623",
+    "LE1872EW009112",
+    "LE1872EW012665",
+    "LE1872EW011450",
+    "LE1872EW011510",
+    "LE1872EM009864",
+    "LE1872EM011052",
+    "LE1872EM009695",
+    "LE1872EM012753",
+    "LE1872EW009703",
+    "LE1872EM009404",
+    "LE1872EW013063",
+    "LE1872EM010689",
+    "LE1872EM008969",
+    "LE1872EW012798",
+    "LE1872EW012803",
+    "LE1872EM009681",
+    "LE1872EW012851",
+    "LE1872EW012863",
+    "LE1872EW012676",
+    "LE1872EM009747",
+    "LE1872EW012970",
+    "LE1872EW009659",
+    "LE1872EM012827",
+    "LE1872EM012964",
+    "LE1872EM011252",
+    "LE1872EM011305",
+    "LE1872EW009418",
+    "LE1872EM009367",
+    "LE1872EW009827",
+    "LE1872EW011642",
+    "LE1872EM009563",
+    "LE1872EM011329",
+    "LE1872EM011110",
+    "LE1872EM012714",
+    "LE1872EM012928",
+    "LE1872EM012854",
+    "LE1872EW011245",
+    "LE1872EM011153",
+    "LE1872EW011601",
+    "LE1872EM011107",
+    "LE1872EM011144",
+    "LE1872EM008962",
+    "LE1872EM011440",
+    "LE1872EM011426",
+    "LE1872EM010980",
+    "LE1872EM009690",
+    "LE1872EW008999",
+    "LE1872EM009240",
+    "LE1872EM013029",
+    "LE1872EM011401",
+    "LE1872EM011224",
+    "LE1872EM013113",
+    "LE1872EW009010",
+    "LE1872EW009443",
+    "LE1872EM011203",
+    "LE1872EW011468",
+    "LE1872EM010703",
+    "LE1872EM009221",
+    "LE1872EM011288",
+    "05351845",
+    "05352861",
+    "05351834",
+    "05352629",
+    "05351314",
+    "05552349",
+    "05351814",
+    "05352238",
+    "05351825",
+    "05359854",
+    "05351605",
+    "05552340",
+    "05359844",
+    "05552629",
+    "05552720",
+    "05352828",
+    "05352826",
+    "05349843",
+    "05351805",
+    "05361310",
+    "05552346",
+    "05352819",
+    "05359808",
+    "05361851",
+    "05352721",
+    "05352808",
+    "05552619",
+    "05349844",
+    "05352640",
+    "05351703",
+    "05552210",
+    "05359815",
+    "05549319",
+    "05552676",
+    "05359848",
+    "05352810",
+    "05361621",
+    "05352800",
+    "05361840",
+    "05361721",
+    "05552580",
+    "05551323",
+    "05359846",
+    "05361311",
+    "05352329",
+    "05552249",
+    "05559603",
+    "05351664"
+  ],
+  "failedIds": [
+    [
+      "LE1872EM010696",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EM010696.json\" --verbose"
+    ],
+    [
+      "LE1872EM011629",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EM011629.json\" --verbose"
+    ],
+    [
+      "LE1872EW009637",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/lecoqgolf && node single_unified_processor.js \"https://store.descente.co.jp/commodity/SDSC0140D/LE1872EW009637/\" \"LE1872EW009637\" --output \"/tmp/pending_LE1872EW009637.json\""
+    ],
+    [
+      "LE1872EM011009",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EM011009.json\" --verbose"
+    ],
+    [
+      "LE1872EM011382",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EM011382.json\" --verbose"
+    ],
+    [
+      "LE1872EW011120",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EW011120.json\" --verbose"
+    ],
+    [
+      "LE1872EM013131",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EM013131.json\" --verbose"
+    ],
+    [
+      "LE1872EM013046",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EM013046.json\" --verbose"
+    ],
+    [
+      "LE1872EM009634",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_LE1872EM009634.json\" --verbose"
+    ],
+    [
+      "05361661",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP && python3 -m tongyong_feishu_update.run_pipeline \"/tmp/pending_05361661.json\" --verbose"
+    ],
+    [
+      "05352831",
+      "Product not found in source file"
+    ],
+    [
+      "05352741",
+      "Product not found in source file"
+    ],
+    [
+      "05361831",
+      "Product not found in source file"
+    ],
+    [
+      "05352870",
+      "Product not found in source file"
+    ],
+    [
+      "05369811",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/pg && node single_unified_processor.js \"https://mix.tokyo/products/0536981122\" \"05369811\" --output \"/tmp/pending_05369811.json\""
+    ],
+    [
+      "05352676",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/pg && node single_unified_processor.js \"https://mix.tokyo/products/0535267601\" \"05352676\" --output \"/tmp/pending_05352676.json\""
+    ],
+    [
+      "05351363",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/pg && node single_unified_processor.js \"https://mix.tokyo/products/0535136343\" \"05351363\" --output \"/tmp/pending_05351363.json\""
+    ],
+    [
+      "05351815",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/pg && node single_unified_processor.js \"https://mix.tokyo/products/0535181503\" \"05351815\" --output \"/tmp/pending_05351815.json\""
+    ],
+    [
+      "26851360",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/pg && node single_unified_processor.js \"https://mix.tokyo/products/2685136001\" \"26851360\" --output \"/tmp/pending_26851360.json\""
+    ],
+    [
+      "05361871",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/pg && node single_unified_processor.js \"https://mix.tokyo/products/0536187141\" \"05361871\" --output \"/tmp/pending_05361871.json\""
+    ],
+    [
+      "05552326",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/pg && node single_unified_processor.js \"https://mix.tokyo/products/0555232646\" \"05552326\" --output \"/tmp/pending_05552326.json\""
+    ],
+    [
+      "05361601",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/pg && node single_unified_processor.js \"https://mix.tokyo/products/0536160131\" \"05361601\" --output \"/tmp/pending_05361601.json\""
+    ],
+    [
+      "05359874",
+      "Command failed: cd /Users/sanshui/Desktop/CallawayJP/scripts/multi_brand/brands/pg && node single_unified_processor.js \"https://mix.tokyo/products/0535987404\" \"05359874\" --output \"/tmp/pending_05359874.json\""
+    ]
+  ],
+  "lastUpdate": "2025-11-22T15:58:10.692Z"
+}

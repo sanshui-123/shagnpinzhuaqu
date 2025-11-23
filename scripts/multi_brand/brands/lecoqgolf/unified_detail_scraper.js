@@ -473,13 +473,22 @@ class UnifiedDetailScraper {
                 }
             }
 
-            // 优先使用品牌货号，其次使用商品番号
-            if (productItemCode && productItemCode.length > 0) {
-                result.productId = productItemCode;
+            const legacyProductId = (extraData.productId || productNumber || '').trim();
+            const brandProductId = (productItemCode || '').trim();
+
+            if (legacyProductId) {
+                result.legacyProductId = legacyProductId;
+            }
+
+            if (brandProductId) {
+                result.productId = brandProductId;
+                result.brandProductId = brandProductId;
+            } else if (legacyProductId) {
+                result.productId = legacyProductId;
+                result.brandProductId = legacyProductId;
             } else if (productNumber && productNumber.length > 0) {
                 result.productId = productNumber;
-            } else if (extraData.productId) {
-                result.productId = extraData.productId;
+                result.brandProductId = productNumber;
             }
 
             // 🎯 改进的性别判断 - 从页面的"性别类型"字段获取

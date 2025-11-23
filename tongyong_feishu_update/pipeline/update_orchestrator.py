@@ -76,20 +76,30 @@ class UpdateOrchestrator:
         existing_records_by_url = self.feishu_client.get_records_by_url()
 
         # 3. 确保记录存在（步骤4实现）- 在正式处理前补齐缺失记录
-        # 3.1 先尝试通过URL匹配找到现有记录
+        # 3.1 先尝试通过URL/legacy ID匹配找到现有记录
         missing_ids = []
         for pid in products.keys():
             if pid not in existing_records:
-                # 尝试通过URL查找
                 product = products[pid]
+
+                extra_data = getattr(product, 'extra', {}) or {}
+                legacy_id = (
+                    getattr(product, 'legacy_product_id', '') or
+                    getattr(product, 'legacyProductId', '') or
+                    (extra_data.get('legacyProductId') if isinstance(extra_data, dict) else '')
+                )
+                legacy_id = str(legacy_id).strip()
+                if legacy_id and legacy_id in existing_records:
+                    existing_records[pid] = existing_records[legacy_id]
+                    print(f"🔁 使用 legacyProductId 匹配到现有记录: {pid} <- {legacy_id}")
+                    continue
+
                 detail_url = (getattr(product, 'detail_url', None) or
                              getattr(product, 'detailUrl', None) or '').strip().rstrip('/')
                 if detail_url and detail_url in existing_records_by_url:
-                    # 找到了！使用URL匹配到的记录
                     existing_records[pid] = existing_records_by_url[detail_url]
                     print(f"🔁 使用商品链接匹配到现有记录: {pid} -> {detail_url}")
                 else:
-                    # 确实没找到
                     missing_ids.append(pid)
         if missing_ids:
             print(f"发现 {len(missing_ids)} 个缺失的product_id，正在批量创建...")

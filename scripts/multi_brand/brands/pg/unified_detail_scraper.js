@@ -1038,11 +1038,6 @@ class UnifiedDetailScraper {
             const colorButtons = await page.$$('button.product__thumbnail-item');
             console.log(`🐛 找到 ${colorButtons.length} 个 button.product__thumbnail-item 元素`);
 
-            if (colorButtons.length === 0) {
-                console.log('⚠️ 未找到颜色按钮');
-                return { variantInventory: [] };
-            }
-
             // 获取所有颜色按钮的信息（只选择可见的）
             const visibleColorButtons = [];
             for (let i = 0; i < colorButtons.length; i++) {
@@ -1144,27 +1139,44 @@ class UnifiedDetailScraper {
 
                 // 配件专用兜底：从select获取颜色，从尺码表获取FR，检查库存状态
                 console.log('🐛 尝试配件专用解析（select颜色 + FR尺码）...');
-                const accessoryInventory = await page.evaluate(() => {
-                    const variants = [];
 
-                    // 1. 从select获取所有颜色选项
-                    const colorSelect = document.querySelector('select[aria-label="colorを選択"]');
+                // 第1步：获取颜色和尺码列表
+                const colorSizeInfo = await page.evaluate(() => {
+                    // 1. 从select获取所有颜色选项 - 支持多种网站结构
+                    const colorSelectors = [
+                        'select[aria-label="colorを選択"]',  // descente.co.jp
+                        'select[name="Color"]',              // mix.tokyo Shopify
+                        'select[name="color"]',              // 通用
+                        'select[id*="color"]',               // 通用
+                        'select[id*="Color"]',               // 通用
+                        '.product-form__input select:first-of-type', // Shopify通用
+                        'select.product-form__select'        // Shopify通用
+                    ];
+
+                    let colorSelect = null;
+                    for (const selector of colorSelectors) {
+                        colorSelect = document.querySelector(selector);
+                        if (colorSelect) {
+                            console.log(`✅ 找到颜色select: ${selector}`);
+                            break;
+                        }
+                    }
+
                     if (!colorSelect) {
-                        console.log('❌ 未找到颜色select');
-                        return [];
+                        console.log('❌ 未找到颜色select（尝试了所有选择器）');
+                        return null;
                     }
 
                     const colors = Array.from(colorSelect.options)
-                        .map(opt => opt.textContent.trim())
-                        .filter(c => c && c !== '選択してください');
+                        .map(opt => ({ value: opt.value, text: opt.textContent.trim() }))
+                        .filter(c => c.text && c.text !== '選択してください');
 
                     if (colors.length === 0) {
                         console.log('❌ 颜色列表为空');
-                        return [];
+                        return null;
                     }
 
                     // 2. 查找尺码（通常配件只有FR）
-                    // 尝试从多个位置查找尺码
                     let sizes = [];
 
                     // 方法A: 从尺码表的表头查找
@@ -1192,28 +1204,170 @@ class UnifiedDetailScraper {
                         sizes = ['FR'];
                     }
 
-                    // 3. 检查库存状态
-                    const stockStatus = document.querySelector('.c_stock-status, .stock-status, span.c_stock-status, span.stock-status');
-                    const stockText = stockStatus ? stockStatus.textContent.trim() : '';
+                    return { colors, sizes };
+                });
 
-                    // 判断是否有货：包含○或△，不包含×
-                    const inStock = /[○◯△]/.test(stockText) && !/[×✕]/.test(stockText);
+                if (!colorSizeInfo) {
+                    console.log('❌ 无法获取颜色和尺码信息');
+                    return { variantInventory: [] };
+                }
 
-                    // 4. 为每个颜色+尺码组合创建变体
-                    for (const color of colors) {
-                        for (const size of sizes) {
-                            variants.push({
-                                color: color,
+                // 第2步：为每个颜色单独检查库存
+                const accessoryInventory = [];
+                for (const color of colorSizeInfo.colors) {
+                    // 选择该颜色 - 支持多种网站结构
+                    await page.evaluate((colorValue) => {
+                        const colorSelectors = [
+                            'select[aria-label="colorを選択"]',
+                            'select[name="Color"]',
+                            'select[name="color"]',
+                            'select[id*="color"]',
+                            'select[id*="Color"]',
+                            '.product-form__input select:first-of-type',
+                            'select.product-form__select'
+                        ];
+
+                        let colorSelect = null;
+                        for (const selector of colorSelectors) {
+                            colorSelect = document.querySelector(selector);
+                            if (colorSelect) break;
+                        }
+
+                        if (colorSelect) {
+                            colorSelect.value = colorValue;
+                            colorSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    }, color.value);
+
+                    // 等待库存状态更新（增加等待时间）
+                    await page.waitForTimeout(1000);
+
+                    // 检查该颜色的库存状态 - 传入当前颜色文本用于匹配
+                    const stockInfo = await page.evaluate((currentColorText) => {
+                        // 方法1: 通过data-variant-title属性匹配当前颜色的库存状态
+                        const selectors = [
+                            'span.c_stock-status',
+                            '.c-stock-status',
+                            '.stock-status',
+                            '[class*="stock-status"]',
+                            '[class*="stock"]'
+                        ];
+
+                        let allStockTexts = [];
+                        let matchedStockText = '';
+                        let stockText = '';
+                        let classList = [];
+                        let foundMatch = false;
+
+                        // 优先尝试通过data-variant-title匹配
+                        for (const selector of selectors) {
+                            const stockElements = document.querySelectorAll(selector);
+                            for (const stockEl of stockElements) {
+                                const text = stockEl.textContent.trim();
+                                const variantTitle = stockEl.getAttribute('data-variant-title') || '';
+
+                                allStockTexts.push({
+                                    text,
+                                    variantTitle,
+                                    selector
+                                });
+
+                                // 如果有data-variant-title，检查是否包含当前颜色名
+                                if (variantTitle && currentColorText && variantTitle.includes(currentColorText)) {
+                                    matchedStockText = text;
+                                    stockText = text;
+                                    classList = Array.from(stockEl.classList);
+                                    foundMatch = true;
+                                    break;
+                                }
+                            }
+                            if (foundMatch) break;
+                        }
+
+                        // 如果没有通过data-variant-title匹配到，则使用可见性检查（兜底）
+                        if (!foundMatch) {
+                            for (const selector of selectors) {
+                                const stockElements = document.querySelectorAll(selector);
+                                for (const stockEl of stockElements) {
+                                    const text = stockEl.textContent.trim();
+
+                                    // 检查元素是否可见
+                                    const style = window.getComputedStyle(stockEl);
+                                    const isVisible = style.display !== 'none' &&
+                                                    style.visibility !== 'hidden' &&
+                                                    style.opacity !== '0' &&
+                                                    stockEl.offsetParent !== null;
+
+                                    if (!isVisible) continue;
+
+                                    // 优先检查是否有缺货标识
+                                    if (text.includes('在庫×') ||
+                                        text.includes('在庫 ×') ||
+                                        text.includes('×') ||
+                                        text.includes('✕') ||
+                                        stockEl.classList.contains('is-soldout')) {
+                                        stockText = text;
+                                        classList = Array.from(stockEl.classList);
+                                        break;
+                                    }
+
+                                    // 如果还没找到库存文本，保存第一个可见的
+                                    if (!stockText && text) {
+                                        stockText = text;
+                                        classList = Array.from(stockEl.classList);
+                                    }
+                                }
+                                if (stockText) break;
+                            }
+                        }
+
+                        // 方法2: 检查购买按钮状态
+                        const addToCartBtn = document.querySelector('button[name="add"], button.product-form__submit, button[type="submit"]');
+                        const btnDisabled = addToCartBtn && (addToCartBtn.disabled || addToCartBtn.classList.contains('disabled'));
+                        const btnText = addToCartBtn ? addToCartBtn.textContent.trim() : '';
+
+                        // 综合判断缺货
+                        const isSoldOut =
+                            stockText.includes('在庫×') ||
+                            stockText.includes('在庫 ×') ||
+                            stockText.includes('×') ||
+                            stockText.includes('✕') ||
+                            classList.includes('is-soldout') ||
+                            classList.includes('c_stock-status--out-of-stock') ||
+                            btnDisabled ||
+                            btnText.includes('売り切れ') ||
+                            btnText.includes('完売');
+
+                        const allStocksStr = allStockTexts.map(s => `${s.text}(${s.variantTitle})`).join(', ');
+
+                        if (isSoldOut) {
+                            return { inStock: false, debug: `缺货: stockText="${stockText}", matched="${matchedStockText}", foundMatch=${foundMatch}, all=[${allStocksStr}]` };
+                        }
+
+                        // 检查是否有货
+                        if (/[○◯△]/.test(stockText)) {
+                            return { inStock: true, debug: `有货: ${stockText}, matched="${matchedStockText}", foundMatch=${foundMatch}, all=[${allStocksStr}]` };
+                        }
+
+                        return { inStock: false, debug: `默认缺货: stockText="${stockText}", matched="${matchedStockText}", foundMatch=${foundMatch}, all=[${allStocksStr}]` };
+                    }, color.text);
+
+                    console.log(`  🐛 ${color.text} 库存检测: ${stockInfo.debug}`);
+                    const inStock = stockInfo.inStock;
+
+                    // 只添加有货的颜色
+                    if (inStock) {
+                        for (const size of colorSizeInfo.sizes) {
+                            accessoryInventory.push({
+                                color: color.text,
                                 size: size,
-                                inStock: inStock
+                                inStock: true
                             });
                         }
                     }
+                }
 
-                    return variants;
-                });
-
-                if (accessoryInventory && accessoryInventory.length > 0) {
+                if (accessoryInventory.length > 0) {
                     console.log(`✅ 采用配件布局解析，获得 ${accessoryInventory.length} 个变体`);
 
                     // 显示每个变体的详情

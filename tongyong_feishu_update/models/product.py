@@ -122,6 +122,10 @@ class Product:
     """完整产品信息 - 终稿版本，覆盖脚本实际访问的所有字段"""
     # 基本信息
     product_id: str = ""               # 产品ID
+    legacy_product_id: str = ""        # 旧的产品ID（用于兼容早期导入）
+    brand_product_id: str = ""         # 品牌方商品编号
+    legacyProductId: str = ""          # 兼容字段 - legacy_product_id
+    brandProductId: str = ""           # 兼容字段 - brand_product_id
     product_name: str = ""             # 产品名称
     description: str = ""              # 产品描述
     brand: str = ""                    # 品牌
@@ -188,6 +192,17 @@ class Product:
             self.detailUrl = self.detail_url
         elif self.detailUrl and not self.detail_url:
             self.detail_url = self.detailUrl
+
+        # legacy/product id 同步
+        if self.legacy_product_id and not self.legacyProductId:
+            self.legacyProductId = self.legacy_product_id
+        elif self.legacyProductId and not self.legacy_product_id:
+            self.legacy_product_id = self.legacyProductId
+
+        if self.brand_product_id and not self.brandProductId:
+            self.brandProductId = self.brand_product_id
+        elif self.brandProductId and not self.brand_product_id:
+            self.brand_product_id = self.brandProductId
 
         # 同步性别字段
         if hasattr(self, 'gender') and not hasattr(self, '_synced_gender'):
